@@ -1,0 +1,31 @@
+@use 'sass:map';
+
+$themes: (
+  light: (
+    pageBg: #d7d7d7,
+    textColor: #777
+  ),
+  dark: (
+    pageBg: #282d2a,
+    textColor: #eee,
+    // pageFilter: hue-rotate(40deg)
+  )
+);
+
+// 定义全局变量每次改变主意重新赋值
+$curTheme: light;
+
+@mixin useTheme() {
+  @each $key, $value in $themes {
+    $curTheme: $key !global; // 告诉他是一个全局变量
+    html[data-theme='#{$key}'] & {
+      @content;
+    }
+  }
+}
+
+// 获取对应主题的属性
+@function getVar($key, $curTheme: $curTheme) {
+  // 新代码
+  @return map.get(map.get($themes, $curTheme), $key);
+}

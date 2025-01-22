@@ -1,0 +1,35 @@
+@use 'theme.scss';
+@use 'variables.scss';
+
+// components
+// @use 'animations/transitions';
+
+// 滚动条
+::-webkit-scrollbar {
+  width: 20px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 12px;
+  border: 8px solid rgba(0, 0, 0, 0);
+  box-shadow: 8px 0 0 #a5adb7 inset;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  box-shadow: 8px 0 0 #7e7e7e inset;
+}
+
+// page
+.theme-page {
+  @include theme.useTheme() {
+    background: theme.getVar('pageBg');
+    color: theme.getVar('textColor');
+    transition: all 0.3s;
+  }
+}
+
+.page {
+  width: 100%;
+  height: 100%;
+}

@@ -1,0 +1,8 @@
+// variables
+@use 'theme.scss';
+
+:root {
+  // layouts > page > content
+  --layout-page-content-min-height: calc(100vh - 42px - 64px);
+  --todoBg: getVar('todoBg');
+}
