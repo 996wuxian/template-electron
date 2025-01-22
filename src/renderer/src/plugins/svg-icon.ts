@@ -1,5 +1,5 @@
 import { type App } from 'vue'
-import SvgIcon from '@/components/common/svg-icon.vue'
+import SvgIcon from '@renderer/components/common/svg-icon.vue'
 import 'virtual:svg-icons-register'
 /**
  * Svg图标插件
