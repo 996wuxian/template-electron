@@ -19,7 +19,7 @@
  * @param footerHeight {Number} 默认底部宽度
  */
 export const setting = {
-  title: 'template-admin',
+  title: 'template-electron',
   isHashRouterMode: true,
   routesWhiteList: ['/login', '/register', '/404', '/403'],
   authentication: 'intelligence',

@@ -23,9 +23,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-
 onMounted(() => {
-  const type = JSON.parse(localStorage.getItem('theme') as string)
+  const type = JSON.parse(localStorage.getItem('theme') as string) || { themeType: 'light' }
   window.document.documentElement.setAttribute('data-theme', type.themeType)
 })
 

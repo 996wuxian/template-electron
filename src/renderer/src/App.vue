@@ -15,7 +15,6 @@ const themeOverrides = getThemeOverrides()
 watch(
   () => [themeType.value, osThemeType.value],
   ([newType, newOsTheme]) => {
-    console.log('🚀 ~ newType, newOsTheme:', newType, newOsTheme)
     if (newType === 'dark') {
       theme.value = darkTheme
     } else if (newType === 'default' && newOsTheme === 'dark') {
@@ -29,8 +28,7 @@ watch(
   }
 )
 
-onMounted(() => {
-  console.log(useTheme.$state.themeType, 'useTheme.$state.themeType')
+onMounted(async () => {
   window.document.documentElement.setAttribute('data-theme', useTheme.$state.themeType)
 })
 </script>
@@ -45,4 +43,8 @@ onMounted(() => {
   </n-config-provider>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+body {
+  user-select: none;
+}
+</style>

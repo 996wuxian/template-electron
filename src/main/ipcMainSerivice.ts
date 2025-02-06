@@ -2,33 +2,9 @@ import { is } from '@electron-toolkit/utils'
 import { BrowserWindow, ipcMain, IpcMainInvokeEvent, screen } from 'electron'
 import { join } from 'path'
 
-let isDragging = false
-let startPosition = { x: 0, y: 0 }
 let floatingWindow: BrowserWindow | null = null // 全局悬浮窗引用
 
 export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
-  // 窗口拖拽控制
-  ipcMain.handle('start-drag', (_, mousePosition) => {
-    isDragging = true
-    const winPosition = mainWindow?.getPosition() || [0, 0]
-    startPosition = {
-      x: mousePosition.x - winPosition[0],
-      y: mousePosition.y - winPosition[1]
-    }
-  })
-
-  ipcMain.handle('end-drag', () => {
-    isDragging = false
-  })
-
-  ipcMain.handle('window-drag', (_, mousePosition) => {
-    if (isDragging && mainWindow) {
-      const x = mousePosition.x - startPosition.x
-      const y = mousePosition.y - startPosition.y
-      mainWindow.setPosition(x, y)
-    }
-  })
-
   // 隐藏主窗口
   ipcMain.handle('hide-main-window', () => {
     if (mainWindow) {

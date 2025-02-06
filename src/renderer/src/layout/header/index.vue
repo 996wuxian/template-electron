@@ -1,11 +1,5 @@
 <template>
-  <header
-    class="header theme-page"
-    @mousedown="startDrag"
-    @mousemove="onDrag"
-    @mouseup="endDrag"
-    @mouseleave="endDrag"
-  >
+  <header class="header theme-page">
     <!-- 左侧插槽 -->
     <div class="left">
       <slot name="left"></slot>
@@ -32,11 +26,12 @@
             @click="handleFixedDesktop('fix-window')"
           ></i>
           <template v-if="isShow">
-            <i i-solar-widget-bold @click="toggleFloating"></i>
+            <i i-solar-minimize-square-3-broken class="rotate-270" @click="toggleFloating"></i>
+            <i i-solar-upload-square-broken @click="handleWindowResizeAndAnimate"></i>
             <i i-solar-maximize-square-3-broken @click="handlePinToDesktop"></i>
             <i v-if="!size" i-solar-maximize-square-broken @click="handleMaximize"></i>
             <i v-else i-solar-minimize-square-minimalistic-broken @click="handleMaximize"></i>
-            <i i-solar-minimize-square-3-broken class="rotate-270" @click="handleMinimize"></i>
+            <i i-solar-minimize-square-3-broken @click="handleMinimize"></i>
           </template>
           <i v-if="isShow" i-solar-widget-4-broken @click="handleDrawer"></i>
           <i v-if="theme" i-solar-sun-bold @click="toggleTheme('light')"></i>
@@ -55,7 +50,6 @@ import Drawer from './components/Drawer.vue'
 import useThemeStore from '@renderer/stores/modules/theme'
 
 const useTheme = useThemeStore()
-const isDragging = ref(false)
 const drawerVisible = ref(false)
 const isShow = ref(true)
 const isFixed = ref(false)
@@ -64,28 +58,7 @@ const handleDrawer = () => {
   drawerVisible.value = !drawerVisible.value
 }
 
-const startDrag = async (e: MouseEvent) => {
-  if (e.target !== e.currentTarget) return // 如果点击的是子元素则不处理
-  isDragging.value = true
-  await window.electron.ipcRenderer.invoke('start-drag', {
-    x: e.screenX,
-    y: e.screenY
-  })
-}
-
-const onDrag = async (e: MouseEvent) => {
-  if (!isDragging.value) return
-  await window.electron.ipcRenderer.invoke('window-drag', {
-    x: e.screenX,
-    y: e.screenY
-  })
-}
-
-const endDrag = async () => {
-  if (!isDragging.value) return
-  isDragging.value = false
-  await window.electron.ipcRenderer.invoke('end-drag')
-}
+const handleWindowResizeAndAnimate = async () => {}
 
 const handleDeskCenter = async () => {
   useTheme.setStatus({ type: 'collapsed', bool: false })
