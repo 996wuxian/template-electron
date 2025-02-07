@@ -28,11 +28,11 @@ pnpm版本: 9.3.0
 ### 页面示例
 
 <p align="center"><img src="./images/img1.png" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img2.png" /></p>
 
 ### 主题配置
 
 <p align="center" style="margin-top: 10px"><img src="./images/img6.jpg" /></p>
-<p align="center" style="margin-top: 10px"><img src="./images/img2.png" /></p>
 
 ### 悬浮窗
 
@@ -48,7 +48,7 @@ pnpm版本: 9.3.0
 
 ### 贴边隐藏/显示
 
-<p align="center" style="margin-top: 10px"><img src="./images/img7.jpg" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img7.png" /></p>
 
 ## Project Setup
 
