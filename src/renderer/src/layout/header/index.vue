@@ -1,5 +1,5 @@
 <template>
-  <header class="header theme-page">
+  <header ref="header" class="header theme-page rd-t-10px">
     <!-- 左侧插槽 -->
     <div class="left">
       <slot name="left"></slot>
@@ -14,28 +14,104 @@
     <div class="right">
       <slot name="right">
         <div class="flex gap-15px text-18px cursor-pointer icons">
-          <i v-if="!isShow" i-solar-minimize-square-3-broken @click="handleDeskCenter"></i>
-          <i
-            v-if="!isShow && isFixed"
-            i-solar-pin-bold
-            @click="handleFixedDesktop('unfix-window')"
-          ></i>
-          <i
-            v-if="!isShow && !isFixed"
-            i-solar-pin-broken
-            @click="handleFixedDesktop('fix-window')"
-          ></i>
-          <template v-if="isShow">
-            <i i-solar-minimize-square-3-broken class="rotate-270" @click="toggleFloating"></i>
-            <i i-solar-upload-square-broken @click="handleWindowResizeAndAnimate"></i>
-            <i i-solar-maximize-square-3-broken @click="handlePinToDesktop"></i>
-            <i v-if="!size" i-solar-maximize-square-broken @click="handleMaximize"></i>
-            <i v-else i-solar-minimize-square-minimalistic-broken @click="handleMaximize"></i>
-            <i i-solar-minimize-square-3-broken @click="handleMinimize"></i>
+          <template v-if="!isShow">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-minimize-square-3-broken @click="handleDeskCenter"></i>
+              </template>
+              恢复窗口
+            </n-tooltip>
           </template>
-          <i v-if="isShow" i-solar-widget-4-broken @click="handleDrawer"></i>
-          <i v-if="theme" i-solar-sun-bold @click="toggleTheme('light')"></i>
-          <i v-else i-solar-moon-fog-bold @click="toggleTheme('dark')"></i>
+
+          <template v-if="!isShow && isFixed">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-pin-bold @click="handleFixedDesktop('unfix-window')"></i>
+              </template>
+              取消固定
+            </n-tooltip>
+          </template>
+
+          <template v-if="!isShow && !isFixed">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-pin-broken @click="handleFixedDesktop('fix-window')"></i>
+              </template>
+              固定
+            </n-tooltip>
+          </template>
+
+          <template v-if="isShow">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-minimize-square-3-broken class="rotate-270" @click="toggleFloating"></i>
+              </template>
+              悬浮窗
+            </n-tooltip>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-upload-square-broken @click="handleWindowResizeAndAnimate"></i>
+              </template>
+              收缩至顶部
+            </n-tooltip>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-maximize-square-3-broken @click="handlePinToDesktop"></i>
+              </template>
+              固定至右上角
+            </n-tooltip>
+
+            <template v-if="!size">
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <i i-solar-maximize-square-broken @click="handleFullScreen"></i>
+                </template>
+                全屏
+              </n-tooltip>
+            </template>
+
+            <template v-else>
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <i i-solar-minimize-square-minimalistic-broken @click="handleDeskCenter"></i>
+                </template>
+                缩小
+              </n-tooltip>
+            </template>
+
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-minimize-square-3-broken @click="handleMinimize"></i>
+              </template>
+              最小化
+            </n-tooltip>
+          </template>
+
+          <template v-if="isShow">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-widget-4-broken @click="handleDrawer"></i>
+              </template>
+              主题
+            </n-tooltip>
+          </template>
+
+          <template v-if="theme">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-sun-bold @click="toggleTheme('light')"></i>
+              </template>
+              亮色模式
+            </n-tooltip>
+          </template>
+          <template v-else>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-moon-fog-bold @click="toggleTheme('dark')"></i>
+              </template>
+              暗色模式
+            </n-tooltip>
+          </template>
           <i i-solar-close-circle-bold @click="handleClose"></i>
         </div>
       </slot>
@@ -48,46 +124,82 @@
 import { ref } from 'vue'
 import Drawer from './components/Drawer.vue'
 import useThemeStore from '@renderer/stores/modules/theme'
+import useUserStore from '@renderer/stores/modules/user'
 
 const useTheme = useThemeStore()
+const useUser = useUserStore()
 const drawerVisible = ref(false)
 const isShow = ref(true)
 const isFixed = ref(false)
+
+const header = ref<HTMLElement | null>(null)
 
 const handleDrawer = () => {
   drawerVisible.value = !drawerVisible.value
 }
 
-const handleWindowResizeAndAnimate = async () => {}
+// 定义鼠标进入和离开的事件处理函数
+const handleMouseEnter = async () => {
+  useUser.setTop({ type: 'winTop', value: '0' })
+}
 
-const handleDeskCenter = async () => {
-  useTheme.setStatus({ type: 'collapsed', bool: false })
-  useTheme.setSize({ type: 'sideWidth', size: 200 })
-  isShow.value = true
+const handleMouseLeave = async () => {
+  useUser.setTop({ type: 'winTop', value: '1' })
+}
+
+// 贴边隐藏
+const handleWindowResizeAndAnimate = async () => {
+  handlePinToDesktop()
 
   // 获取当前窗口所在的显示器信息
   const currentDisplay = await window.electron.ipcRenderer.invoke('get-current-display')
   if (!currentDisplay) return
+  const { width: screenWidth } = currentDisplay.workAreaSize
+  // 设置窗口目标位置和大小
+  const targetWidth = 300
+  const targetHeight = 400
+  const targetX = currentDisplay.bounds.x + screenWidth - targetWidth - 100
+  const targetY = currentDisplay.bounds.y - 390
 
-  await window.electron.ipcRenderer.invoke('set-window-size', {
-    width: 900,
-    height: 670,
-    center: true
+  window.electron.ipcRenderer.invoke('set-window-draggable', false)
+  toggleDragState(false)
+
+  setTimeout(() => {
+    animateWindow(targetX, targetY, targetWidth, targetHeight)
+    useUser.setTop({ type: 'isTop', value: '1' })
+    useUser.setTop({ type: 'winTop', value: '1' })
+
+    window.document.addEventListener('mouseenter', handleMouseEnter)
+
+    window.document.addEventListener('mouseleave', handleMouseLeave)
+  }, 1000)
+}
+
+const toggleDragState = (isDraggable: boolean) => {
+  console.log('🚀 ~ toggleDragState ~ isDraggable:', isDraggable)
+  if (header.value) {
+    ;(header.value.style as any).webkitAppRegion = isDraggable ? 'drag' : 'no-drag'
+    console.log('🚀 ~ toggleDragState ~ header.value.style:', header.value.style)
+  }
+}
+
+// 通用的 animateWindow 方法，用于触发窗口的动画
+const animateWindow = async (
+  targetX: number,
+  targetY: number,
+  targetWidth: number,
+  targetHeight: number
+) => {
+  // 通过 IPC 命令触发主进程窗口动画
+  await window.electron.ipcRenderer.invoke('animate-window', {
+    targetX,
+    targetY,
+    targetWidth,
+    targetHeight
   })
-
-  // 将窗口居中到当前显示器
-  const { width: screenWidth, height: screenHeight } = currentDisplay.workAreaSize
-  const { x: screenX, y: screenY } = currentDisplay.bounds
-  const x = screenX + (screenWidth - 900) / 2 // 居中 x 坐标
-  const y = screenY + (screenHeight - 670) / 2 // 居中 y 坐标
-  await window.electron.ipcRenderer.invoke('restore-window-position', { x, y })
 }
 
-const handleFixedDesktop = async (type: string) => {
-  isFixed.value = !isFixed.value
-  await window.electron.ipcRenderer.invoke(type)
-}
-
+// 处理窗口缩小到右上角
 const handlePinToDesktop = async () => {
   useTheme.setStatus({ type: 'collapsed', bool: true })
   useTheme.setSize({ type: 'sideWidth', size: 90 })
@@ -99,17 +211,76 @@ const handlePinToDesktop = async () => {
 
   const { width: screenWidth } = currentDisplay.workAreaSize
 
-  // 设置窗口大小为 300px 宽，400px 高
-  await window.electron.ipcRenderer.invoke('set-window-size', {
-    width: 300,
-    height: 400,
-    center: false
-  })
+  // 设置窗口目标位置和大小
+  const targetWidth = 300
+  const targetHeight = 400
+  const targetX = currentDisplay.bounds.x + screenWidth - targetWidth - 100
+  const targetY = currentDisplay.bounds.y + 50
 
-  // 将窗口移动到当前显示器的右上角
-  const x = currentDisplay.bounds.x + screenWidth - 300 // 当前显示器的左上角 x 坐标 + 屏幕宽度 - 窗口宽度
-  const y = currentDisplay.bounds.y // 当前显示器的左上角 y 坐标
-  await window.electron.ipcRenderer.invoke('set-window-position', { x, y })
+  // 调用公共动画方法
+  await animateWindow(targetX, targetY, targetWidth, targetHeight)
+}
+
+// 处理窗口恢复到居中
+const handleDeskCenter = async () => {
+  useTheme.setStatus({ type: 'collapsed', bool: false })
+  useTheme.setSize({ type: 'sideWidth', size: 200 })
+  isShow.value = true
+  size.value = !size.value
+
+  // 获取当前窗口所在的显示器信息
+  const currentDisplay = await window.electron.ipcRenderer.invoke('get-current-display')
+  if (!currentDisplay) return
+
+  const { width: screenWidth, height: screenHeight } = currentDisplay.workAreaSize
+  const { x: screenX, y: screenY } = currentDisplay.bounds
+
+  // 设置窗口目标位置和大小
+  const targetWidth = 900
+  const targetHeight = 670
+  const targetX = screenX + (screenWidth - 900) / 2
+  const targetY = screenY + (screenHeight - 670) / 2
+
+  // 调用公共动画方法
+  await animateWindow(targetX, targetY, targetWidth, targetHeight)
+
+  // 移除鼠标进入事件
+  window.document.removeEventListener('mouseenter', handleMouseEnter)
+
+  // 移除鼠标离开事件
+  window.document.removeEventListener('mouseleave', handleMouseLeave)
+
+  await useUser.setTop({ type: 'isTop', value: '0' })
+  useUser.setTop({ type: 'winTop', value: '0' })
+
+  toggleDragState(true)
+  window.electron.ipcRenderer.invoke('set-window-draggable', true)
+}
+
+// 处理窗口全屏
+const handleFullScreen = async () => {
+  size.value = !size.value
+
+  // 获取当前窗口所在的显示器信息
+  const currentDisplay = await window.electron.ipcRenderer.invoke('get-current-display')
+  if (!currentDisplay) return
+
+  const { width: screenWidth, height: screenHeight } = currentDisplay.workAreaSize
+  const { x: screenX, y: screenY } = currentDisplay.bounds
+
+  // 设置窗口目标位置和大小为全屏
+  const targetWidth = screenWidth
+  const targetHeight = screenHeight
+  const targetX = screenX
+  const targetY = screenY
+
+  // 调用公共动画方法
+  await animateWindow(targetX, targetY, targetWidth, targetHeight)
+}
+
+const handleFixedDesktop = async (type: string) => {
+  isFixed.value = !isFixed.value
+  await window.electron.ipcRenderer.invoke(type)
 }
 
 const size = ref(false)
@@ -121,12 +292,6 @@ const toggleFloating = async () => {
 
   // 隐藏主窗口
   await window.electron.ipcRenderer.invoke('hide-main-window')
-}
-
-// 放大
-const handleMaximize = () => {
-  size.value = !size.value
-  window.electron.ipcRenderer.invoke('maximize-window')
 }
 
 // 缩小
@@ -146,6 +311,14 @@ const handleClose = () => {
   localStorage.removeItem('theme')
   window.electron.ipcRenderer.invoke('close-window')
 }
+
+onMounted(() => {
+  if (header.value) {
+    // 这里可以动态设置 -webkit-app-region
+    console.log(header.value.style, 'header.value.style')
+    ;(header.value.style as any).webkitAppRegion = 'drag' // 设置为可拖拽
+  }
+})
 </script>
 
 <style scoped lang="scss">

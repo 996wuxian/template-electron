@@ -86,11 +86,7 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   ipcMain.handle('fix-window', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (win) {
-      // 禁止调整窗口大小
-      win.setResizable(false)
-
-      // 禁止拖拽窗口
-      win.setMovable(false)
+      disableWindowResizingAndDragging(win, false)
 
       // 禁止最大化
       win.setMaximizable(false)
@@ -106,15 +102,27 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
     }
   })
 
+  // 禁止调整窗口大小和禁止拖拽窗口
+  const disableWindowResizingAndDragging = (win, bool) => {
+    // 禁止调整窗口大小
+    win.setResizable(bool)
+
+    // 禁止拖拽窗口
+    win.setMovable(bool)
+  }
+
+  ipcMain.handle('set-window-draggable', (event, bool) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (win) {
+      disableWindowResizingAndDragging(win, bool)
+    }
+  })
+
   // 恢复窗口
   ipcMain.handle('unfix-window', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (win) {
-      // 允许调整窗口大小
-      win.setResizable(true)
-
-      // 允许拖拽窗口
-      win.setMovable(true)
+      disableWindowResizingAndDragging(win, true)
 
       // 允许最大化
       win.setMaximizable(true)
@@ -132,11 +140,7 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
 
   // 最大化窗口
   ipcMain.handle('maximize-window', () => {
-    if (mainWindow?.isMaximized()) {
-      mainWindow.unmaximize()
-    } else {
-      mainWindow?.maximize()
-    }
+    mainWindow?.maximize() // 如果窗口是正常状态，则最大化
   })
 
   // 最小化窗口
@@ -148,6 +152,48 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   ipcMain.handle('close-window', () => {
     mainWindow?.close()
   })
+
+  // 窗口缩放动画
+  ipcMain.handle(
+    'animate-window',
+    async (event, { targetX, targetY, targetWidth, targetHeight }) => {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (!win) return
+
+      const {
+        x: initialX,
+        y: initialY,
+        width: initialWidth,
+        height: initialHeight
+      } = win.getBounds()
+      const steps = 15
+      const stepX = (targetX - initialX) / steps
+      const stepY = (targetY - initialY) / steps
+      const stepWidth = (targetWidth - initialWidth) / steps
+      const stepHeight = (targetHeight - initialHeight) / steps
+
+      let currentStep = 0
+      const interval = setInterval(() => {
+        if (currentStep >= steps) {
+          clearInterval(interval) // 停止动画
+        } else {
+          currentStep++
+          const newX = initialX + stepX * currentStep
+          const newY = initialY + stepY * currentStep
+          const newWidth = initialWidth + stepWidth * currentStep
+          const newHeight = initialHeight + stepHeight * currentStep
+
+          // 更新窗口位置和大小
+          win.setBounds({
+            x: Math.round(newX),
+            y: Math.round(newY),
+            width: Math.round(newWidth),
+            height: Math.round(newHeight)
+          })
+        }
+      }, 10) // 每10ms更新一次
+    }
+  )
 
   // 切换悬浮窗
   ipcMain.handle('toggle-floating-window', () => {

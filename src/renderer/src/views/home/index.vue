@@ -1,10 +1,10 @@
 <template>
-  <div class="page theme-page"></div>
+  <div class="page"></div>
 </template>
 
 <script setup lang="ts"></script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .page {
   width: 100%;
   height: 100%;

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex w-100% h-100% flex-items-center overflow-hidden theme-page aside"
+    class="flex w-100% h-100% flex-items-center overflow-hidden theme-page aside rd-lb-10px"
     :class="containerClass"
   >
     <n-menu

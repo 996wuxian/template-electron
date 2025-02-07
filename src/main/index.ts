@@ -16,7 +16,7 @@ function createWindow(): void {
       sandbox: false
     },
     frame: false,
-    transparent: false
+    transparent: true
   })
 
   mainWindow.on('ready-to-show', () => {

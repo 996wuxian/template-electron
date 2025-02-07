@@ -5,7 +5,7 @@
     </div>
     <div class="flex" :style="{ height: `calc(100vh - ${headerHeight}px)` }">
       <Aside :style="{ width: sideWidth + 'px' }"></Aside>
-      <div class="flex-1">
+      <div class="flex-1 theme-page rd-rb-10px">
         <router-view />
       </div>
     </div>
@@ -27,4 +27,4 @@ const headerHeight = computed(() => {
 })
 </script>
 
-<style lang="scss"></style>
+<style lang="scss" scoped></style>
