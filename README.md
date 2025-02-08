@@ -13,7 +13,7 @@ This template should help get you started developing with Vue 3 in Electron.
 
 ## Introduction
 
-该模板使用Electron + Vue3 + Ts + Vite + Pinia + UnoCss + Naive UI搭建，配置了Prettier和Eslint，提供了自定义头部，全屏，固定到右上角置顶，悬浮窗，贴边显示隐藏，前端路由和动态路由，请求封装，全局loading，进度条、主题布局配置、全局颜色修改、Icon使用[UnoCss图标预设](https://icones.js.org/collection/solar)，封装了对应的svg-icon组件，可以通过使用`svg-icon name="..."`引入对应的svg图标，对应[Svg图标预设](https://yesicon.app/logos/?lang=zh-hans)，希望这个可以作为您的初始化项目模板，供您拓展和自定义属于您的项目。
+该模板使用Electron + Vue3 + Ts + Vite + Pinia + UnoCss + Naive UI搭建，配置了Prettier和Eslint，提供了自定义头部，全屏，固定到右上角置顶，悬浮窗，贴边显示隐藏，最小化动画，前端路由和动态路由，请求封装，全局loading，进度条、主题布局配置、全局颜色修改、Icon使用[UnoCss图标预设](https://icones.js.org/collection/solar)，封装了对应的svg-icon组件，可以通过使用`svg-icon name="..."`引入对应的svg图标，对应[Svg图标预设](https://yesicon.app/logos/?lang=zh-hans)，希望这个可以作为您的初始化项目模板，供您拓展和自定义属于您的项目。
 
 ## Recommended IDE Setup
 
