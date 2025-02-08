@@ -52,7 +52,8 @@ watch(
         targetX,
         targetY,
         targetWidth,
-        targetHeight
+        targetHeight,
+        step: 15
       })
     } else if (isTop.value === '1' && val === '1') {
       // 显示应用窗口，调用 IPC 恢复窗口位置
@@ -71,7 +72,8 @@ watch(
         targetX,
         targetY,
         targetWidth,
-        targetHeight
+        targetHeight,
+        step: 15
       })
     }
   }

@@ -14,7 +14,7 @@
     <div class="right">
       <slot name="right">
         <div class="flex gap-15px text-18px cursor-pointer icons">
-          <template v-if="!isShow">
+          <template v-if="!isShow && !isFixed">
             <n-tooltip trigger="hover">
               <template #trigger>
                 <i i-solar-minimize-square-3-broken @click="handleDeskCenter"></i>
@@ -37,7 +37,7 @@
               <template #trigger>
                 <i i-solar-pin-broken @click="handleFixedDesktop('fix-window')"></i>
               </template>
-              固定
+              锁定
             </n-tooltip>
           </template>
 
@@ -165,7 +165,7 @@ const handleWindowResizeAndAnimate = async () => {
   toggleDragState(false)
 
   setTimeout(() => {
-    animateWindow(targetX, targetY, targetWidth, targetHeight)
+    animateWindow(targetX, targetY, targetWidth, targetHeight, 15)
     useUser.setTop({ type: 'isTop', value: '1' })
     useUser.setTop({ type: 'winTop', value: '1' })
 
@@ -186,14 +186,16 @@ const animateWindow = async (
   targetX: number,
   targetY: number,
   targetWidth: number,
-  targetHeight: number
+  targetHeight: number,
+  step: number
 ) => {
   // 通过 IPC 命令触发主进程窗口动画
   await window.electron.ipcRenderer.invoke('animate-window', {
     targetX,
     targetY,
     targetWidth,
-    targetHeight
+    targetHeight,
+    step
   })
 }
 
@@ -216,7 +218,7 @@ const handlePinToDesktop = async () => {
   const targetY = currentDisplay.bounds.y + 50
 
   // 调用公共动画方法
-  await animateWindow(targetX, targetY, targetWidth, targetHeight)
+  await animateWindow(targetX, targetY, targetWidth, targetHeight, 15)
 }
 
 // 处理窗口恢复到居中
@@ -240,7 +242,7 @@ const handleDeskCenter = async () => {
   const targetY = screenY + (screenHeight - 670) / 2
 
   // 调用公共动画方法
-  await animateWindow(targetX, targetY, targetWidth, targetHeight)
+  await animateWindow(targetX, targetY, targetWidth, targetHeight, 10)
 
   // 移除鼠标进入事件
   window.document.removeEventListener('mouseenter', handleMouseEnter)
@@ -273,7 +275,7 @@ const handleFullScreen = async () => {
   const targetY = screenY
 
   // 调用公共动画方法
-  await animateWindow(targetX, targetY, targetWidth, targetHeight)
+  await animateWindow(targetX, targetY, targetWidth, targetHeight, 5)
 }
 
 const handleFixedDesktop = async (type: string) => {

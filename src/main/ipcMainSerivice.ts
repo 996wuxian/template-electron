@@ -222,7 +222,7 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   // 窗口缩放动画
   ipcMain.handle(
     'animate-window',
-    async (event, { targetX, targetY, targetWidth, targetHeight }) => {
+    async (event, { targetX, targetY, targetWidth, targetHeight, step }) => {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) return
 
@@ -232,7 +232,7 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
         width: initialWidth,
         height: initialHeight
       } = win.getBounds()
-      const steps = 15
+      const steps = step
       const stepX = (targetX - initialX) / steps
       const stepY = (targetY - initialY) / steps
       const stepWidth = (targetWidth - initialWidth) / steps
