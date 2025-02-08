@@ -162,15 +162,23 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   })
 
   const changeMinimizeAnimation = async () => {
-    const currentBounds = mainWindow?.getBounds()
+    const currentWindow = mainWindow!
+    const currentBounds = currentWindow.getBounds()
+
+    // 获取窗口所在的显示器
+    const currentScreen = screen.getDisplayNearestPoint({
+      x: currentBounds.x,
+      y: currentBounds.y
+    })
     if (isMinimizing) {
       originalBounds = currentBounds!
       oldSize = currentBounds!
     }
 
-    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize
-    const targetX = (screenWidth - 10) / 2
-    const targetY = screenHeight - 10 // 稍微上移，确保可见
+    // 使用当前显示器的尺寸
+    const { workArea } = currentScreen
+    const targetX = workArea.x + (workArea.width - 10) / 2 // 基于当前显示器的工作区
+    const targetY = workArea.y + workArea.height - 30 // 留出任务栏空间
 
     const steps = 20
     const duration = 100
@@ -194,16 +202,14 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
     }
 
     if (isMinimizing) {
-      mainWindow?.minimize()
+      currentWindow.minimize()
     } else {
-      mainWindow?.setBounds(oldSize!)
+      currentWindow.setBounds(oldSize!)
     }
   }
 
   // 监听窗口恢复事件
   mainWindow?.on('restore', () => {
-    console.log('restore')
-
     isMinimizing = false
     changeMinimizeAnimation()
   })
