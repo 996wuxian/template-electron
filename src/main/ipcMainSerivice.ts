@@ -3,7 +3,13 @@ import { BrowserWindow, ipcMain, IpcMainInvokeEvent, screen } from 'electron'
 import { join } from 'path'
 
 let floatingWindow: BrowserWindow | null = null // 全局悬浮窗引用
+let originalBounds: Electron.Rectangle | null = null
+let oldSize: Electron.Rectangle | null = null
+let isMinimizing = false
 
+function easeInOutQuad(t: number): number {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+}
 export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   // 隐藏主窗口
   ipcMain.handle('hide-main-window', () => {
@@ -143,9 +149,69 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
     mainWindow?.maximize() // 如果窗口是正常状态，则最大化
   })
 
-  // 最小化窗口
-  ipcMain.handle('minimize-window', () => {
-    mainWindow?.minimize()
+  // 获取窗口大小
+  ipcMain.handle('get-window-size', () => {
+    const [width, height] = mainWindow!.getSize()
+    return { width, height }
+  })
+
+  // 最小化动画
+  ipcMain.handle('toggle-minimize-animation', async () => {
+    isMinimizing = true
+    changeMinimizeAnimation()
+  })
+
+  const changeMinimizeAnimation = async () => {
+    const currentBounds = mainWindow?.getBounds()
+    if (isMinimizing) {
+      originalBounds = currentBounds!
+      oldSize = currentBounds!
+    }
+
+    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize
+    const targetX = (screenWidth - 10) / 2
+    const targetY = screenHeight - 10 // 稍微上移，确保可见
+
+    const steps = 20
+    const duration = 100
+
+    for (let i = 0; i <= steps; i++) {
+      const progress = isMinimizing ? easeInOutQuad(i / steps) : 1 - easeInOutQuad(i / steps)
+
+      const newWidth = originalBounds!.width - (originalBounds!.width - 10) * progress
+      const newHeight = originalBounds!.height - (originalBounds!.height - 10) * progress
+      const newX = originalBounds!.x + (targetX - originalBounds!.x) * progress
+      const newY = originalBounds!.y + (targetY - originalBounds!.y) * progress
+
+      mainWindow?.setBounds({
+        x: Math.round(newX),
+        y: Math.round(newY),
+        width: Math.round(Math.max(newWidth, 10)),
+        height: Math.round(Math.max(newHeight, 10))
+      })
+
+      await new Promise((resolve) => setTimeout(resolve, duration / steps))
+    }
+
+    if (isMinimizing) {
+      mainWindow?.minimize()
+    } else {
+      mainWindow?.setBounds(oldSize!)
+    }
+  }
+
+  // 监听窗口恢复事件
+  mainWindow?.on('restore', () => {
+    console.log('restore')
+
+    isMinimizing = false
+    changeMinimizeAnimation()
+  })
+
+  mainWindow?.on('minimize', () => {
+    if (isMinimizing) return
+    isMinimizing = true
+    changeMinimizeAnimation()
   })
 
   // 关闭窗口
@@ -247,6 +313,7 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   })
 }
 
+// 创建悬浮窗窗口
 function createFloatingWindow(mainWindow: BrowserWindow | null): BrowserWindow | null {
   // 如果悬浮窗已经存在，则直接返回现有的悬浮窗
   if (floatingWindow && !floatingWindow.isDestroyed()) {

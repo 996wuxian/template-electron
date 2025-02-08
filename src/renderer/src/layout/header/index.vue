@@ -176,10 +176,8 @@ const handleWindowResizeAndAnimate = async () => {
 }
 
 const toggleDragState = (isDraggable: boolean) => {
-  console.log('🚀 ~ toggleDragState ~ isDraggable:', isDraggable)
   if (header.value) {
     ;(header.value.style as any).webkitAppRegion = isDraggable ? 'drag' : 'no-drag'
-    console.log('🚀 ~ toggleDragState ~ header.value.style:', header.value.style)
   }
 }
 
@@ -294,11 +292,10 @@ const toggleFloating = async () => {
   await window.electron.ipcRenderer.invoke('hide-main-window')
 }
 
-// 缩小
-const handleMinimize = () => {
-  window.electron.ipcRenderer.invoke('minimize-window')
+// 最小化
+const handleMinimize = async () => {
+  await window.electron.ipcRenderer.invoke('toggle-minimize-animation')
 }
-
 // 主题
 const toggleTheme = (type: string) => {
   theme.value = !theme.value
@@ -314,8 +311,6 @@ const handleClose = () => {
 
 onMounted(() => {
   if (header.value) {
-    // 这里可以动态设置 -webkit-app-region
-    console.log(header.value.style, 'header.value.style')
     ;(header.value.style as any).webkitAppRegion = 'drag' // 设置为可拖拽
   }
 })
