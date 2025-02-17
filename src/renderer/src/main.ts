@@ -1,6 +1,7 @@
 import './assets/css/global.css'
 import 'nprogress/nprogress.css'
 import 'virtual:uno.css'
+import 'animate.css'
 import { createApp } from 'vue'
 import App from './App.vue'
 import store from './stores'

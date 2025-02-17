@@ -1,8 +1,12 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
-const api = {}
+const api = {
+  sendMessage: (channel: string, data: any) => ipcRenderer.send(channel, data),
+  onMessage: (channel: string, callback: (event: any, data: any) => void) =>
+    ipcRenderer.on(channel, callback)
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

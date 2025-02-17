@@ -220,6 +220,13 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
     changeMinimizeAnimation()
   })
 
+  // 监听窗口大小变化并触发自定义方法
+  mainWindow?.on('resize', () => {
+    const [width, height] = mainWindow.getSize()
+    // 向渲染进程发送 IPC 消息
+    mainWindow.webContents.send('resize-detected', { width, height })
+  })
+
   // 关闭窗口
   ipcMain.handle('close-window', () => {
     mainWindow?.close()

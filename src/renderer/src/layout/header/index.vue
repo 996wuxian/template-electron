@@ -203,6 +203,7 @@ const animateWindow = async (
 const handlePinToDesktop = async () => {
   useTheme.setStatus({ type: 'collapsed', bool: true })
   useTheme.setSize({ type: 'sideWidth', size: 90 })
+  // useUser.setStatus({ type: 'isRightTop', value: true })
   isShow.value = false
 
   // 获取当前窗口所在的显示器信息
@@ -225,6 +226,7 @@ const handlePinToDesktop = async () => {
 const handleDeskCenter = async () => {
   useTheme.setStatus({ type: 'collapsed', bool: false })
   useTheme.setSize({ type: 'sideWidth', size: 200 })
+  // useUser.setStatus({ type: 'isRightTop', value: false })
   isShow.value = true
   size.value = !size.value
 

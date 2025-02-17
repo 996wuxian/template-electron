@@ -14,6 +14,7 @@ interface State {
   userInfo: User
   isTop?: string
   winTop?: string
+  isRightTop?: boolean
 }
 
 interface Action<T extends keyof State> {
@@ -27,7 +28,8 @@ const useUserStore = defineStore(
     const state = reactive<State>({
       userInfo: {} as User,
       winTop: Session.get('winTop') || '0',
-      isTop: Session.get('isTop') || '0'
+      isTop: Session.get('isTop') || '0',
+      isRightTop: false
     })
 
     const setUserInfo = async (action: any) => {
@@ -38,10 +40,15 @@ const useUserStore = defineStore(
       state[action.type] = action.value
     }
 
+    const setStatus = async <T extends keyof State>(action: Action<T>) => {
+      state[action.type] = action.value
+    }
+
     return {
       ...toRefs(state),
       setUserInfo,
-      setTop
+      setTop,
+      setStatus
     }
   },
   {

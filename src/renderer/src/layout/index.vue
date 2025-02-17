@@ -15,8 +15,8 @@
 <script setup lang="ts">
 import Header from './header/index.vue'
 import Aside from './aside/index.vue'
-
 import useThemeStore from '@renderer/stores/modules/theme'
+
 const themeStore = useThemeStore()
 const sideWidth = computed(() => {
   return themeStore.sideWidth
@@ -24,6 +24,20 @@ const sideWidth = computed(() => {
 
 const headerHeight = computed(() => {
   return themeStore.headerHeight
+})
+
+// 监听主进程发送的 "resize-detected" 消息
+window.electron.ipcRenderer.on('resize-detected', (event, data) => {
+  const { width, height } = data
+
+  // 当宽高大于 300x400 时，触发渲染进程的某个方法
+  if (width > 303 && height > 403) {
+    themeStore.setStatus({ type: 'collapsed', bool: false })
+    themeStore.setSize({ type: 'sideWidth', size: 200 })
+  } else {
+    themeStore.setStatus({ type: 'collapsed', bool: true })
+    themeStore.setSize({ type: 'sideWidth', size: 90 })
+  }
 })
 </script>
 

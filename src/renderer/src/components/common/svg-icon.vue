@@ -4,7 +4,10 @@
     :width="width"
     :height="height"
     :class="['svg-icon', { hoverable: hoverable }]"
-    :style="{ fill: currentFill }"
+    :style="{
+      '--icon-color': currentFill,
+      '--icon-hover-color': hoverFill
+    }"
     @mouseover="handleMouseOver"
     @mouseout="handleMouseOut"
   >
@@ -29,8 +32,8 @@ const useTheme = useThemeStore()
 const props = withDefaults(
   defineProps<{
     name: string
-    width?: number
-    height?: number
+    width?: string | number
+    height?: string | number
     fill?: string
     hoverFill?: string
     hoverable?: boolean
@@ -53,11 +56,7 @@ const themeType = computed(() => useTheme.themeType)
 watch(
   () => themeType.value,
   (val) => {
-    if (val === 'dark') {
-      currentFill.value = '#fff'
-    } else {
-      currentFill.value = props.fill
-    }
+    currentFill.value = val === 'dark' ? '#fff' : props.fill
   },
   {
     immediate: true
@@ -73,7 +72,7 @@ const handleMouseOver = () => {
 
 // 处理鼠标移出事件
 const handleMouseOut = () => {
-  currentFill.value = props.fill
+  currentFill.value = themeType.value === 'dark' ? '#fff' : props.fill
 }
 </script>
 
@@ -81,5 +80,26 @@ const handleMouseOut = () => {
 .svg-icon {
   transition: fill 0.3s;
   cursor: pointer;
+  fill: var(--icon-color);
+}
+
+.svg-icon.hoverable:hover {
+  fill: var(--icon-hover-color);
+}
+
+.svg-icon :deep(path),
+.svg-icon :deep(rect),
+.svg-icon :deep(circle) {
+  fill: var(--icon-color) !important;
+}
+
+/* 处理渐变色 */
+.svg-icon :deep(stop) {
+  stop-color: var(--icon-color) !important;
+}
+
+/* 处理描边 */
+.svg-icon :deep([stroke]) {
+  stroke: var(--icon-color) !important;
 }
 </style>
