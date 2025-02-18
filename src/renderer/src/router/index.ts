@@ -61,7 +61,7 @@ export const asyncRoutes = [
       {
         path: '/recently',
         name: 'Recently',
-        component: () => import('@renderer/views/home/index.vue'),
+        component: () => import('@renderer/views/recently/index.vue'),
         meta: {
           title: '最近待办'
         }

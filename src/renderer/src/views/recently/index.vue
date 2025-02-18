@@ -2,17 +2,6 @@
   <div class="page p-10px flex flex-1">
     <!-- 左侧区域：Todo 列表和操作 -->
     <div class="w-100% item-transition">
-      <!-- 输入框 -->
-      <n-input
-        v-model:value="value"
-        type="text"
-        placeholder="输入后按回车添加"
-        clearable
-        size="large"
-        class="text-14px"
-        @keyup.enter="addTodo"
-      />
-
       <!-- Todo 列表 -->
       <div class="todo-list mt-4 flex flex-col h-[calc(100%-100px)]">
         <div v-if="todos.length === 0" class="flex-center flex-1">
@@ -203,7 +192,6 @@ export interface Todo {
 }
 
 const useTheme = useThemeStore()
-const value = ref('')
 const todos = ref<Todo[]>([])
 const selectedTodo = ref<Todo | null>(null)
 const selectIndex = ref(0)
@@ -213,24 +201,6 @@ const collapsed = computed(() => useTheme.$state.collapsed)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)
-
-// 添加 Todo 项
-const addTodo = () => {
-  if (value.value.trim()) {
-    const newTodo = {
-      id: Date.now(),
-      text: value.value,
-      completed: false,
-      isRemove: false,
-      createdAt: new Date().toLocaleString(), // 格式化当前时间
-      subTodos: [], // 初始化子项为空数组
-      level: 1,
-      description: ''
-    }
-    todos.value.push(newTodo)
-    value.value = ''
-  }
-}
 
 // 删除 Todo 项
 const deleteTodo = (data: any, index: number) => {
