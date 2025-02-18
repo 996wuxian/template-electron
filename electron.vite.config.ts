@@ -18,7 +18,7 @@ export default defineConfig({
   renderer: {
     resolve: {
       alias: {
-        '@renderer': resolve(__dirname, 'src/renderer/src')
+        '@renderer': resolve(__dirname, './src/renderer/src')
       }
     },
     plugins: [
@@ -40,7 +40,7 @@ export default defineConfig({
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: `@use "./src/renderer/src/assets/sass/global.scss" as *;`
+          additionalData: `@use "@renderer/assets/sass/global.scss" as *;`
         }
       }
     },

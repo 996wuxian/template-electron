@@ -63,5 +63,13 @@
     "vite-plugin-svg-icons": "^2.0.1",
     "vue": "^3.4.30",
     "vue-tsc": "^2.0.22"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "@parcel/watcher",
+      "electron",
+      "esbuild",
+      "vue-demi"
+    ]
   }
 }
