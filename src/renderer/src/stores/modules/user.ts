@@ -15,6 +15,10 @@ interface State {
   isTop?: string
   winTop?: string
   isRightTop?: boolean
+  fileType?: string
+  filePath?: string
+  historyPath?: string
+  fileFullPath?: string
 }
 
 interface Action<T extends keyof State> {
@@ -29,7 +33,11 @@ const useUserStore = defineStore(
       userInfo: {} as User,
       winTop: Session.get('winTop') || '0',
       isTop: Session.get('isTop') || '0',
-      isRightTop: false
+      isRightTop: false,
+      fileType: Session.get('fileType') || 'txt',
+      filePath: Session.get('filePath') || '',
+      historyPath: Session.get('historyPath') || '',
+      fileFullPath: Session.get('fileFullPath') || ''
     })
 
     const setUserInfo = async (action: any) => {
@@ -44,11 +52,16 @@ const useUserStore = defineStore(
       state[action.type] = action.value
     }
 
+    const setValue = async <T extends keyof State>(action: Action<T>) => {
+      state[action.type] = action.value
+    }
+
     return {
       ...toRefs(state),
       setUserInfo,
       setTop,
-      setStatus
+      setStatus,
+      setValue
     }
   },
   {

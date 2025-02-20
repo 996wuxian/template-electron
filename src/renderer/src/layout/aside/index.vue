@@ -24,6 +24,13 @@
       }"
       @update:value="(key, item) => change(key, item)"
     />
+
+    <i
+      class="mt-auto mb-20px w-20px h-20px cursor-pointer hover:text-#89C1E8 transition transition-duration-[.3s]"
+      i-solar-settings-broken
+      @click="showModal"
+    ></i>
+    <Setting :show="modalVisible" @update:show="(value) => (modalVisible = value)" />
   </div>
 </template>
 
@@ -32,6 +39,7 @@ import { ref, h, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NIcon } from 'naive-ui'
 import tinycolor from 'tinycolor2'
+import Setting from './components/Setting.vue'
 
 import useRoutesStore from '@renderer/stores/modules/routes'
 import useThemeStore from '@renderer/stores/modules/theme'
@@ -57,6 +65,7 @@ const containerClass = computed(() => ({
 }))
 
 const menuOptions = ref(routes)
+const modalVisible = ref(false)
 
 type ModeType = 'vertical' | 'horizontal' | undefined
 
@@ -91,6 +100,10 @@ const change = (key: any, item: any) => {
     }
   })
   useRoutes.setCurrentRoute({ route: item })
+}
+
+const showModal = () => {
+  modalVisible.value = true
 }
 </script>
 

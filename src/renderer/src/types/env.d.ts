@@ -16,6 +16,7 @@ interface Window {
       // Add other ipcRenderer methods you're using
     }
   }
+  api: any
 }
 
 declare module 'mockjs'

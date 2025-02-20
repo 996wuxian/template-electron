@@ -188,7 +188,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import useThemeStore from '@renderer/stores/modules/theme'
+import useUserStore from '@renderer/stores/modules/user'
 import TodoItem from '@renderer/components/common/TodoItem.vue'
+import { $msg } from '@renderer/config/interaction.config'
+// import fs from 'fs'
 
 // 定义 Todo 类型，包括子项
 export interface Todo {
@@ -203,6 +206,8 @@ export interface Todo {
 }
 
 const useTheme = useThemeStore()
+const useUser = useUserStore()
+
 const value = ref('')
 const todos = ref<Todo[]>([])
 const selectedTodo = ref<Todo | null>(null)
@@ -215,20 +220,48 @@ const detailAnimate = ref(false)
 const inputVisible = ref(false)
 
 // 添加 Todo 项
-const addTodo = () => {
+const addTodo = async () => {
+  if (!useUser.filePath) {
+    $msg({
+      type: 'warning',
+      msg: '请前往设置记录存放地址'
+    })
+    return
+  }
+
   if (value.value.trim()) {
-    const newTodo = {
-      id: Date.now(),
-      text: value.value,
-      completed: false,
-      isRemove: false,
-      createdAt: new Date().toLocaleString(), // 格式化当前时间
-      subTodos: [], // 初始化子项为空数组
-      level: 1,
-      description: ''
+    try {
+      // 检查文件存在性
+      const fileExists = window.api.readFile(useUser.filePath, `todo.${useUser.fileType}`)
+
+      if (!fileExists) {
+        $msg({
+          type: 'warning',
+          msg: '文件创建失败,请重试'
+        })
+        return
+      }
+
+      useUser.setValue({ type: 'fileFullPath', value: fileExists })
+
+      const newTodo = {
+        id: Date.now(),
+        text: value.value,
+        completed: false,
+        isRemove: false,
+        createdAt: new Date().toLocaleString(), // 格式化当前时间
+        subTodos: [], // 初始化子项为空数组
+        level: 1,
+        description: ''
+      }
+      todos.value.push(newTodo)
+      value.value = ''
+
+      // 写入内容
+      await window.api.writeFile(fileExists, JSON.stringify(todos.value))
+    } catch (error) {
+      console.error('保存失败:', error)
     }
-    todos.value.push(newTodo)
-    value.value = ''
   }
 }
 
@@ -237,6 +270,7 @@ const deleteTodo = (data: any, index: number) => {
   data[index].isRemove = true
   setTimeout(() => {
     data.splice(index, 1)
+    window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
   }, 500)
   hided()
 }
@@ -303,9 +337,11 @@ const deleteSelected = () => {
     })
   })
 
-  setTimeout(() => {
+  setTimeout(async () => {
     todos.value = todos.value.filter((todo) => !todo.completed)
     selectAll.value = false // 取消全选
+    // 写入内容
+    await window.api.writeFile(useUser.fileFullPath, JSON.stringify([]))
   }, 500)
 
   hided()

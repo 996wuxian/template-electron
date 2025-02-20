@@ -1,5 +1,5 @@
 import { is } from '@electron-toolkit/utils'
-import { BrowserWindow, ipcMain, IpcMainInvokeEvent, screen } from 'electron'
+import { BrowserWindow, ipcMain, IpcMainInvokeEvent, screen, dialog } from 'electron'
 import { join } from 'path'
 
 let floatingWindow: BrowserWindow | null = null // 全局悬浮窗引用
@@ -273,6 +273,12 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
       }, 10) // 每10ms更新一次
     }
   )
+
+  ipcMain.handle('selectDirectory', () => {
+    return dialog.showOpenDialog({
+      properties: ['openDirectory']
+    })
+  })
 
   // 切换悬浮窗
   ipcMain.handle('toggle-floating-window', () => {
