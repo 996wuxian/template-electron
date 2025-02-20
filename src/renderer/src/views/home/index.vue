@@ -43,7 +43,9 @@
         v-if="todos.length > 0"
         class="todo-actions mt-4 flex justify-between items-center mt-auto"
       >
-        <n-checkbox v-model:checked="selectAll" @update:checked="toggleSelectAll">全选</n-checkbox>
+        <n-checkbox v-model:checked="selectAll" @update:checked="toggleSelectAll"
+          >全选 {{ selected.length }} / {{ todos.length }}</n-checkbox
+        >
         <i
           i-solar-trash-bin-minimalistic-2-linear
           class="w-20px h-20px hover:text-red-500 cursor-pointer"
@@ -217,6 +219,8 @@ const collapsed = computed(() => useTheme.$state.collapsed)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)
+
+const selected = computed(() => todos.value.filter((todo) => todo.completed))
 
 // 添加 Todo 项
 const addTodo = async () => {
