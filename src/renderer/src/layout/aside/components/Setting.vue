@@ -3,7 +3,11 @@
     <n-modal v-model:show="modalShow" @mask-click="closeModal">
       <n-card style="width: 500px" title="设置" :bordered="false" size="small" role="dialog">
         <template #header-extra>
-          <i i-solar-close-circle-bold class="w-20px h-20px text-gray cursor-pointer"></i>
+          <i
+            i-solar-close-circle-bold
+            class="w-20px h-20px text-gray cursor-pointer"
+            @click="closeModal"
+          ></i>
         </template>
         <div class="w-100% h-1px bg-gray opacity-20 mb-10px"></div>
         <div class="flex gap-10px flex-col">
@@ -31,7 +35,7 @@
           <div class="flex justify-between">
             历史记录存放位置：
             <div class="flex items-center">
-              {{ filePath?.filePaths[0] }}
+              {{ historyPath?.filePaths[0] }}
               <i
                 i-solar-pen-2-broken
                 class="mx-10px cursor-pointer"
@@ -77,8 +81,12 @@ const filePath = ref<{
 const historyPath = ref<{
   filePaths: string[]
 }>({
-  filePaths: [useUser.filePath!] || []
+  filePaths: [useUser.historyPath!] || []
 })
+
+const getFileExit = (type: string, path: string) => {
+  window.api.fileExit(path, `${type}.${useUser.fileType}`)
+}
 
 const selectDirectory = async (type: string) => {
   // 调用 Electron 暴露的 API 选择文件夹
@@ -87,13 +95,29 @@ const selectDirectory = async (type: string) => {
     if (type === 'new') {
       filePath.value = selectedPath // 更新显示的路径
       useUser.setValue({ type: 'filePath', value: selectedPath.filePaths[0] })
-      if (!historyPath.value) {
+      useUser.setValue({
+        type: 'fileFullPath',
+        value: `${selectedPath.filePaths[0]}\\todo.${useUser.fileType}`
+      })
+      getFileExit('todo', useUser.filePath!)
+
+      if (!historyPath.value.filePaths[0]) {
         historyPath.value = selectedPath
         useUser.setValue({ type: 'historyPath', value: selectedPath.filePaths[0] })
+        useUser.setValue({
+          type: 'historyFullPath',
+          value: `${selectedPath.filePaths[0]}\\todoHistory.${useUser.fileType}`
+        })
+        getFileExit('todoHistory', useUser.historyPath!)
       }
     } else {
       historyPath.value = selectedPath
       useUser.setValue({ type: 'historyPath', value: selectedPath.filePaths[0] })
+      useUser.setValue({
+        type: 'historyFullPath',
+        value: `${selectedPath.filePaths[0]}\\todoHistory.${useUser.fileType}`
+      })
+      getFileExit('todoHistory', useUser.historyPath!)
     }
   }
 }

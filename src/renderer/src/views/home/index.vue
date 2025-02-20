@@ -9,7 +9,7 @@
         placeholder="输入后按回车添加"
         clearable
         size="large"
-        class="text-14px"
+        class="text-14px animate__animated animate__fadeInDown"
         @keyup.enter="addTodo"
       />
 
@@ -46,7 +46,7 @@
         <n-checkbox v-model:checked="selectAll" @update:checked="toggleSelectAll">全选</n-checkbox>
         <i
           i-solar-trash-bin-minimalistic-2-linear
-          class="w-20px h-20px hover:text-red-500"
+          class="w-20px h-20px hover:text-red-500 cursor-pointer"
           @click.stop="deleteSelected"
         ></i>
       </div>
@@ -88,9 +88,9 @@
                   <n-input
                     v-if="inputVisible && selectedTodo"
                     v-model:value="selectedTodo.description"
-                    placeholder="输入子任务内容"
+                    placeholder="输入描述"
                     size="medium"
-                    @blur="inputVisible = false"
+                    @blur="descChange"
                   />
                   <div v-else class="flex items-center gap-1">
                     <p v-if="selectedTodo?.description" @click="inputVisible = true">
@@ -191,7 +191,6 @@ import useThemeStore from '@renderer/stores/modules/theme'
 import useUserStore from '@renderer/stores/modules/user'
 import TodoItem from '@renderer/components/common/TodoItem.vue'
 import { $msg } from '@renderer/config/interaction.config'
-// import fs from 'fs'
 
 // 定义 Todo 类型，包括子项
 export interface Todo {
@@ -231,19 +230,6 @@ const addTodo = async () => {
 
   if (value.value.trim()) {
     try {
-      // 检查文件存在性
-      const fileExists = window.api.readFile(useUser.filePath, `todo.${useUser.fileType}`)
-
-      if (!fileExists) {
-        $msg({
-          type: 'warning',
-          msg: '文件创建失败,请重试'
-        })
-        return
-      }
-
-      useUser.setValue({ type: 'fileFullPath', value: fileExists })
-
       const newTodo = {
         id: Date.now(),
         text: value.value,
@@ -258,7 +244,8 @@ const addTodo = async () => {
       value.value = ''
 
       // 写入内容
-      await window.api.writeFile(fileExists, JSON.stringify(todos.value))
+      await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
+      await window.api.writeFile(useUser.historyFullPath, JSON.stringify(todos.value))
     } catch (error) {
       console.error('保存失败:', error)
     }
@@ -299,7 +286,7 @@ const hideDetails = () => {
 }
 
 // 添加子项
-const addSubTodo = () => {
+const addSubTodo = async () => {
   if (newSubTodoText.value.trim() && selectedTodo.value) {
     const newSubTodo = {
       id: Date.now(),
@@ -312,6 +299,8 @@ const addSubTodo = () => {
       description: ''
     }
     selectedTodo.value.subTodos.push(newSubTodo)
+    await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
+    await window.api.writeFile(useUser.historyFullPath, JSON.stringify(todos.value))
     newSubTodoText.value = ''
   }
 }
@@ -329,6 +318,7 @@ const toggleSelectAll = () => {
 // 删除选中的 Todo 项
 const deleteSelected = () => {
   todos.value.forEach((element) => {
+    if (!element.completed) return
     element.isRemove = true
     element.subTodos.forEach((subTodo) => {
       if (subTodo.completed) {
@@ -362,6 +352,18 @@ const toggleSubItemsSelection = (todo: Todo) => {
 const editDescription = () => {
   inputVisible.value = !inputVisible.value
 }
+
+const descChange = () => {
+  inputVisible.value = false
+  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
+}
+
+onMounted(() => {
+  const data = window.api.readFile(useUser.fileFullPath)
+  if (data) {
+    todos.value = data
+  }
+})
 </script>
 
 <style lang="scss">

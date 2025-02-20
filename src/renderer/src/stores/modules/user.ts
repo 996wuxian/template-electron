@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { reactive, toRefs } from 'vue'
 import piniaPersistConfig from '@renderer/utils/persist'
-import { Session } from '@renderer/utils/storage'
+import { Local } from '@renderer/utils/storage'
 
 interface User {
   id?: number
@@ -19,6 +19,7 @@ interface State {
   filePath?: string
   historyPath?: string
   fileFullPath?: string
+  historyFullPath?: string
 }
 
 interface Action<T extends keyof State> {
@@ -31,13 +32,14 @@ const useUserStore = defineStore(
   () => {
     const state = reactive<State>({
       userInfo: {} as User,
-      winTop: Session.get('winTop') || '0',
-      isTop: Session.get('isTop') || '0',
+      winTop: Local.get('winTop') || '0',
+      isTop: Local.get('isTop') || '0',
       isRightTop: false,
-      fileType: Session.get('fileType') || 'txt',
-      filePath: Session.get('filePath') || '',
-      historyPath: Session.get('historyPath') || '',
-      fileFullPath: Session.get('fileFullPath') || ''
+      fileType: Local.get('fileType') || 'txt',
+      filePath: Local.get('filePath') || '',
+      historyPath: Local.get('historyPath') || '',
+      fileFullPath: Local.get('fileFullPath') || '',
+      historyFullPath: Local.get('historyFullPath') || ''
     })
 
     const setUserInfo = async (action: any) => {

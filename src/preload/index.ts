@@ -1,12 +1,12 @@
 import { contextBridge } from 'electron'
-import { existsSync, appendFile, writeFileSync } from 'fs'
+import { existsSync, appendFile, writeFileSync, readFileSync } from 'fs'
 import path from 'path'
 import os from 'os'
 import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  readFile: (filePath: string, fileName: string) => {
+  fileExit: (filePath: string, fileName: string) => {
     try {
       // 处理 ~ 符号路径
       const processedDir = filePath.startsWith('~')
@@ -26,9 +26,11 @@ const api = {
       return existsSync(normalizedPath)
         ? normalizedPath
         : appendFile(fullPath, '', (err) => {
+            console.log('🚀 ~ :appendFile ~ err:', err)
+            console.log('123123')
+
             if (err) return null
-            // return true
-            console.log('File is created successfully.')
+            return true
           })
     } catch (err) {
       return null
@@ -36,9 +38,23 @@ const api = {
   },
   writeFile: (filePath: string, data: string) => {
     try {
-      writeFileSync(filePath, data, 'utf-8') // 使用同步写入文件的方法
+      writeFileSync(filePath, data, 'utf-8')
     } catch (err) {
       console.error('Error writing file:', err)
+    }
+  },
+  readFile: (filePath: string) => {
+    console.log('🚀 ~ filePath:', filePath)
+    try {
+      if (!filePath) {
+        return
+      }
+      const content = readFileSync(filePath, 'utf-8')
+      if (content) {
+        return JSON.parse(content) // 转换当前格式为数组
+      }
+    } catch (err) {
+      console.error('Error readFile file:', err)
     }
   }
 }

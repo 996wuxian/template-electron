@@ -54,7 +54,7 @@ export const asyncRoutes = [
     component: Layout,
     meta: {
       title: '最近待办',
-      icon: 'i-solar-sun-2-bold',
+      icon: 'i-solar-widget-5-bold-duotone',
       hide: false
     },
     children: [
@@ -72,7 +72,10 @@ export const asyncRoutes = [
   {
     path: '/floating',
     name: 'Floating',
-    component: () => import('@renderer/views/floating/index.vue')
+    component: () => import('@renderer/views/floating/index.vue'),
+    meta: {
+      hide: true
+    }
   },
 
   {

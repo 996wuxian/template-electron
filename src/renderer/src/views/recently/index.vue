@@ -3,7 +3,7 @@
     <!-- 左侧区域：Todo 列表和操作 -->
     <div class="w-100% item-transition">
       <!-- Todo 列表 -->
-      <div class="todo-list mt-4 flex flex-col h-[calc(100%-100px)]">
+      <div class="todo-list flex flex-col h-[calc(100%-44px)]">
         <div v-if="todos.length === 0" class="flex-center flex-1">
           <svg-icon
             name="empty"
@@ -13,17 +13,29 @@
           />
         </div>
         <div v-else class="h-[calc(100%-20px)] overflow-y-auto">
-          <TodoItem
-            v-for="(todo, index) in todos"
-            :key="todo.id"
-            :todo="todo"
-            :index="index"
-            :todos="todos"
-            :collapsed="collapsed"
-            @delete-todo="deleteTodo"
-            @toggle-details="toggleDetails"
-            @toggle-sub-items-selection="toggleSubItemsSelection"
-          />
+          <div
+            v-for="group in groupedTodos"
+            :key="group.dateKey"
+            class="mb-6 animate__animated animate__fadeInDown"
+          >
+            <div class="group-header flex items-center mb-2 px-2">
+              <span class="text-gray-600 font-medium mr-2">{{ group.title }}</span>
+              <span class="text-gray-400 text-sm">({{ group.tasks.length }}项)</span>
+              <div class="flex-1 border-b border-dashed border-gray-200 ml-2"></div>
+            </div>
+
+            <TodoItem
+              v-for="(todo, index) in group.tasks"
+              :key="todo.id"
+              :todo="todo"
+              :index="index"
+              :todos="group.tasks"
+              :collapsed="collapsed"
+              @delete-todo="deleteTodo"
+              @toggle-details="toggleDetails"
+              @toggle-sub-items-selection="toggleSubItemsSelection"
+            />
+          </div>
         </div>
       </div>
 
@@ -35,7 +47,7 @@
         <n-checkbox v-model:checked="selectAll" @update:checked="toggleSelectAll">全选</n-checkbox>
         <i
           i-solar-trash-bin-minimalistic-2-linear
-          class="w-20px h-20px hover:text-red-500"
+          class="w-20px h-20px hover:text-red-500 cursor-pointer"
           @click.stop="deleteSelected"
         ></i>
       </div>
@@ -74,20 +86,12 @@
                 <label class="text-sm font-medium text-gray-500">详细描述</label>
 
                 <div class="mt-1 text-gray-400 flex items-center gap-1">
-                  <n-input
-                    v-if="inputVisible && selectedTodo"
-                    v-model:value="selectedTodo.description"
-                    placeholder="输入子任务内容"
-                    size="medium"
-                    @blur="inputVisible = false"
-                  />
-                  <div v-else class="flex items-center gap-1">
+                  <div class="flex items-center gap-1">
                     <p v-if="selectedTodo?.description" @click="inputVisible = true">
                       {{ selectedTodo?.description }}
                     </p>
                     <div v-else class="flex items-center gap-1">
                       {{ '无附加描述' }}
-                      <i i-solar-pen-2-broken @click="editDescription"></i>
                     </div>
                   </div>
                 </div>
@@ -122,22 +126,6 @@
                 <i i-solar-paperclip-bold-duotone class="w-4 h-4 text-blue-500" />
                 子任务 ({{ selectedTodo?.subTodos?.length || 0 }})
               </h3>
-              <span class="text-xs text-gray-400">最大支持4级嵌套</span>
-            </div>
-
-            <!-- 添加子项 -->
-            <div v-if="selectedTodo && selectedTodo?.level < 4" class="mb-4">
-              <n-input
-                v-model:value="newSubTodoText"
-                placeholder="输入子任务内容"
-                size="medium"
-                round
-                @keyup.enter="addSubTodo"
-              >
-                <template #suffix>
-                  <i class="i-solar-add-circle-line-duotone text-gray-400" />
-                </template>
-              </n-input>
             </div>
 
             <!-- 子项列表 -->
@@ -177,7 +165,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import useThemeStore from '@renderer/stores/modules/theme'
+import useUserStore from '@renderer/stores/modules/user'
 import TodoItem from '@renderer/components/common/TodoItem.vue'
+import dayjs from 'dayjs'
+import isToday from 'dayjs/plugin/isToday'
+import isYesterday from 'dayjs/plugin/isYesterday'
 
 // 定义 Todo 类型，包括子项
 export interface Todo {
@@ -192,21 +184,82 @@ export interface Todo {
 }
 
 const useTheme = useThemeStore()
+const useUser = useUserStore()
+
 const todos = ref<Todo[]>([])
 const selectedTodo = ref<Todo | null>(null)
 const selectIndex = ref(0)
-const newSubTodoText = ref('')
 const selectAll = ref(false)
 const collapsed = computed(() => useTheme.$state.collapsed)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)
 
+// 配置 dayjs 插件
+dayjs.extend(isToday)
+dayjs.extend(isYesterday)
+
+// 新增日期分组计算属性
+const groupedTodos = computed(() => {
+  const groups = new Map<
+    string,
+    {
+      dateKey: string
+      title: string
+      tasks: Todo[]
+    }
+  >()
+
+  todos.value.forEach((todo) => {
+    // 统一日期格式处理
+    const rawDate = todo.createdAt.replace(/\//g, '-') // 处理不同分隔符
+    const dateObj = dayjs(rawDate.split(' ')[0]) // 取日期部分
+
+    // 生成分组key
+    let dateKey = ''
+    if (dateObj.isToday()) {
+      dateKey = 'today'
+    } else if (dateObj.isYesterday()) {
+      dateKey = 'yesterday'
+    } else {
+      dateKey = dateObj.format('YYYY-MM-DD')
+    }
+
+    // 初始化或更新分组
+    if (!groups.has(dateKey)) {
+      groups.set(dateKey, {
+        dateKey,
+        title: getGroupTitle(dateKey, dateObj),
+        tasks: []
+      })
+    }
+    groups.get(dateKey)?.tasks.push(todo)
+  })
+
+  // 转换为数组并按日期倒序排序
+  return Array.from(groups.values()).sort(
+    (a, b) => dayjs(b.dateKey).unix() - dayjs(a.dateKey).unix()
+  )
+})
+
+// 获取分组标题
+const getGroupTitle = (dateKey: string, dateObj: dayjs.Dayjs) => {
+  switch (dateKey) {
+    case 'today':
+      return '今天'
+    case 'yesterday':
+      return '昨天'
+    default:
+      return dateObj.format('YYYY-MM-DD')
+  }
+}
+
 // 删除 Todo 项
 const deleteTodo = (data: any, index: number) => {
   data[index].isRemove = true
   setTimeout(() => {
     data.splice(index, 1)
+    window.api.writeFile(useUser.historyFullPath, JSON.stringify(todos.value))
   }, 500)
   hided()
 }
@@ -234,24 +287,6 @@ const hideDetails = () => {
   hided()
 }
 
-// 添加子项
-const addSubTodo = () => {
-  if (newSubTodoText.value.trim() && selectedTodo.value) {
-    const newSubTodo = {
-      id: Date.now(),
-      completed: false,
-      isRemove: false,
-      createdAt: new Date().toLocaleString(), // 格式化当前时间
-      subTodos: [], // 初始化子项为空数组
-      text: newSubTodoText.value,
-      level: selectedTodo.value.level + 1,
-      description: ''
-    }
-    selectedTodo.value.subTodos.push(newSubTodo)
-    newSubTodoText.value = ''
-  }
-}
-
 // 切换全选状态
 const toggleSelectAll = () => {
   todos.value.forEach((todo) => {
@@ -265,6 +300,7 @@ const toggleSelectAll = () => {
 // 删除选中的 Todo 项
 const deleteSelected = () => {
   todos.value.forEach((element) => {
+    if (!element.completed) return
     element.isRemove = true
     element.subTodos.forEach((subTodo) => {
       if (subTodo.completed) {
@@ -273,9 +309,11 @@ const deleteSelected = () => {
     })
   })
 
-  setTimeout(() => {
+  setTimeout(async () => {
     todos.value = todos.value.filter((todo) => !todo.completed)
     selectAll.value = false // 取消全选
+    // 写入内容
+    await window.api.writeFile(useUser.historyFullPath, JSON.stringify([]))
   }, 500)
 
   hided()
@@ -293,9 +331,13 @@ const toggleSubItemsSelection = (todo: Todo) => {
   })
 }
 
-const editDescription = () => {
-  inputVisible.value = !inputVisible.value
-}
+onMounted(() => {
+  // 读取文件内容
+  const data = window.api.readFile(useUser.historyFullPath)
+  if (data) {
+    todos.value = data
+  }
+})
 </script>
 
 <style lang="scss">
