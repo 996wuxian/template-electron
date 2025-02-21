@@ -2,8 +2,8 @@ import { autoUpdater } from 'electron-updater'
 import { BrowserWindow } from 'electron'
 
 export function setupUpdate(mainWindow: BrowserWindow) {
-  // 检查更新
-  autoUpdater.autoDownload = true
+  // 默认不自动下载，等待用户确认
+  autoUpdater.autoDownload = false
 
   // 检测下载进度
   autoUpdater.on('download-progress', (progressObj) => {
@@ -33,6 +33,11 @@ export function setupUpdate(mainWindow: BrowserWindow) {
   // 检查更新出错
   autoUpdater.on('error', (err) => {
     mainWindow.webContents.send('update-error', err)
+  })
+
+  // 监听开始下载的请求
+  ipcMain.on('start-download', () => {
+    autoUpdater.downloadUpdate()
   })
 
   // 开始检查更新
