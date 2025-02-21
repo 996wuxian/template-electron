@@ -10,10 +10,19 @@ import UnoCSS from 'unocss/vite'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      minify: true,
+      rollupOptions: {
+        external: ['electron']
+      }
+    }
   },
   preload: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      minify: true
+    }
   },
   renderer: {
     resolve: {
@@ -46,6 +55,19 @@ export default defineConfig({
     },
     define: {
       __dirname: JSON.stringify(__dirname)
+    },
+    build: {
+      minify: true,
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              return 'vendor'
+            }
+          }
+        }
+      }
     }
   }
 })

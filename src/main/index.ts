@@ -23,6 +23,16 @@ function createWindow(): void {
   // 设置自动更新
   setupUpdate(mainWindow)
 
+  mainWindow.on('minimize', () => {
+    if (process.platform === 'win32') {
+      mainWindow?.webContents.setBackgroundThrottling(true)
+    }
+  })
+
+  mainWindow.on('restore', () => {
+    mainWindow?.webContents.setBackgroundThrottling(false)
+  })
+
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
   })
