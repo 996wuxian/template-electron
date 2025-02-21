@@ -8,7 +8,6 @@
     <!-- 中间插槽 -->
     <div class="center">
       <slot name="center"></slot>
-      更新一下
     </div>
 
     <!-- 右侧插槽，如果没有插槽内容则显示默认按钮 -->
