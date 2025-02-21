@@ -1,5 +1,5 @@
 import { autoUpdater } from 'electron-updater'
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, ipcMain } from 'electron'
 
 export function setupUpdate(mainWindow: BrowserWindow) {
   // 默认不自动下载，等待用户确认
@@ -38,6 +38,11 @@ export function setupUpdate(mainWindow: BrowserWindow) {
   // 监听开始下载的请求
   ipcMain.on('start-download', () => {
     autoUpdater.downloadUpdate()
+  })
+
+  // 监听安装更新的请求
+  ipcMain.on('quit-and-install', () => {
+    autoUpdater.quitAndInstall(false, true)
   })
 
   // 开始检查更新
