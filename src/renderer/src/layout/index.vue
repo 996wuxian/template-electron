@@ -150,7 +150,6 @@ window.electron.ipcRenderer.on('update-available', (event, info) => {
   updateInfo.show = true
   updateInfo.needConfirm = true
   updateInfo.version = info.version
-  updateInfo.message = '检测到新版本，是否更新？'
 })
 
 // 监听没有新版本
