@@ -83,11 +83,9 @@ window.electron.ipcRenderer.on('update-downloaded', () => {
 
   $msg({
     type: 'success',
-    msg: '新版本已下载完成，点击确定立即安装',
-    onOk: () => {
-      window.electron.ipcRenderer.send('quit-and-install')
-    }
+    msg: '新版本已下载完成，点击确定立即安装'
   })
+  window.electron.ipcRenderer.send('quit-and-install')
 })
 
 // 监听检测到新版本
