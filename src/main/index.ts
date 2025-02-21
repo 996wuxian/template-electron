@@ -2,18 +2,9 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { setupIpcMainHandlers } from './ipcMainSerivice'
-import { autoUpdater } from 'electron-updater'
+import { setupUpdate } from './update'
 
 let mainWindow: BrowserWindow | null = null
-
-const checkUpdate = (win, ipcMain) => {
-  autoUpdater.autoDownload = true // 自动下载
-  autoUpdater.autoInstallOnAppQuit = true // 应用退出后自动安装
-  // 检测是否有更新包并通知
-  autoUpdater.checkForUpdatesAndNotify().catch()
-  // 监听渲染进程的 install 事件，触发退出应用并安装
-  ipcMain.handle('install', () => autoUpdater.quitAndInstall())
-}
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -29,8 +20,8 @@ function createWindow(): void {
     transparent: true
   })
 
-  // 检查更新
-  checkUpdate(mainWindow, ipcMain)
+  // 设置自动更新
+  setupUpdate(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()

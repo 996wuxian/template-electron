@@ -1,5 +1,6 @@
 import { is } from '@electron-toolkit/utils'
 import { BrowserWindow, ipcMain, IpcMainInvokeEvent, screen, dialog } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
 
 let floatingWindow: BrowserWindow | null = null // 全局悬浮窗引用
@@ -331,6 +332,11 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
     }
   })
 }
+
+// 添加退出并安装更新的处理
+ipcMain.on('quit-and-install', () => {
+  autoUpdater.quitAndInstall()
+})
 
 // 创建悬浮窗窗口
 function createFloatingWindow(mainWindow: BrowserWindow | null): BrowserWindow | null {
