@@ -44,9 +44,11 @@
         v-if="todos.length > 0"
         class="todo-actions mt-4 flex justify-between items-center mt-auto"
       >
-        <n-checkbox v-model:checked="selectAll" @update:checked="toggleSelectAll"
-          >全选 {{ selected.length }} / {{ todos.length }}</n-checkbox
-        >
+        <n-checkbox v-model:checked="selectAll" @update:checked="toggleSelectAll">
+          <div class="flex items-center">
+            全选 已完成 : {{ selected.length }} / 总数量 : {{ todos.length }}
+          </div>
+        </n-checkbox>
         <i
           i-solar-trash-bin-minimalistic-2-linear
           class="w-20px h-20px hover:text-red-500 cursor-pointer"
