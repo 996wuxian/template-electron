@@ -5,6 +5,7 @@
   >
     <div class="flex items-center w-100%">
       <n-checkbox
+        v-show="checkBox"
         v-model:checked="todo!.completed"
         class="mr-2"
         @click.stop="toggleSubItemsSelection(todo)"
@@ -32,6 +33,7 @@
         :index="i"
         :todos="todo.subTodos"
         :collapsed="collapsed"
+        :check-box="checkBox"
         @delete-todo="deleteTodo"
         @toggle-details="toggleDetails"
         @toggle-sub-items-selection="toggleSubItemsSelection"
@@ -57,6 +59,7 @@ interface Props {
   index: number
   todos: Todo[]
   collapsed: boolean
+  checkBox: boolean
 }
 
 defineProps<Props>()

@@ -30,6 +30,7 @@
               :todo="todo"
               :index="index"
               :todos="group.tasks"
+              :check-box="false"
               :collapsed="collapsed"
               @delete-todo="deleteTodo"
               @toggle-details="toggleDetails"
@@ -37,21 +38,6 @@
             />
           </div>
         </div>
-      </div>
-
-      <!-- 全选和批量删除 -->
-      <div
-        v-if="todos.length > 0"
-        class="todo-actions mt-4 flex justify-between items-center mt-auto"
-      >
-        <n-checkbox v-model:checked="selectAll" @update:checked="toggleSelectAll"
-          >全选 {{ selected.length }} / {{ todos.length }}</n-checkbox
-        >
-        <i
-          i-solar-trash-bin-minimalistic-2-linear
-          class="w-20px h-20px hover:text-red-500 cursor-pointer"
-          @click.stop="deleteSelected"
-        ></i>
       </div>
     </div>
 
@@ -191,13 +177,10 @@ const useUser = useUserStore()
 const todos = ref<Todo[]>([])
 const selectedTodo = ref<Todo | null>(null)
 const selectIndex = ref(0)
-const selectAll = ref(false)
 const collapsed = computed(() => useTheme.$state.collapsed)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)
-
-const selected = computed(() => todos.value.filter((todo) => todo.completed))
 
 // 配置 dayjs 插件
 dayjs.extend(isToday)
@@ -288,38 +271,6 @@ const toggleDetails = (todo: Todo, index: number) => {
 
 // 隐藏详情页
 const hideDetails = () => {
-  hided()
-}
-
-// 切换全选状态
-const toggleSelectAll = () => {
-  todos.value.forEach((todo) => {
-    todo.completed = selectAll.value
-    todo.subTodos.forEach((subTodo) => {
-      subTodo.completed = selectAll.value
-    })
-  })
-}
-
-// 删除选中的 Todo 项
-const deleteSelected = () => {
-  todos.value.forEach((element) => {
-    if (!element.completed) return
-    element.isRemove = true
-    element.subTodos.forEach((subTodo) => {
-      if (subTodo.completed) {
-        subTodo.isRemove = true
-      }
-    })
-  })
-
-  setTimeout(async () => {
-    todos.value = todos.value.filter((todo) => !todo.completed)
-    selectAll.value = false // 取消全选
-    // 写入内容
-    await window.api.writeFile(useUser.historyFullPath, JSON.stringify([]))
-  }, 500)
-
   hided()
 }
 

@@ -25,12 +25,13 @@
         </div>
         <div v-else class="h-[calc(100%-20px)] overflow-y-auto">
           <TodoItem
-            v-for="(todo, index) in todos"
+            v-for="(todo, index) in todayTodos"
             :key="todo.id"
             :todo="todo"
             :index="index"
             :todos="todos"
             :collapsed="collapsed"
+            :check-box="true"
             @delete-todo="deleteTodo"
             @toggle-details="toggleDetails"
             @toggle-sub-items-selection="toggleSubItemsSelection"
@@ -193,6 +194,7 @@ import useThemeStore from '@renderer/stores/modules/theme'
 import useUserStore from '@renderer/stores/modules/user'
 import TodoItem from '@renderer/components/common/TodoItem.vue'
 import { $msg } from '@renderer/config/interaction.config'
+import dayjs from 'dayjs'
 
 // 定义 Todo 类型，包括子项
 export interface Todo {
@@ -221,6 +223,12 @@ const detailAnimate = ref(false)
 const inputVisible = ref(false)
 
 const selected = computed(() => todos.value.filter((todo) => todo.completed))
+const historyData = ref<Todo[]>([])
+
+// 获取今天创建的所有 todos
+const todayTodos = computed(() => {
+  return todos.value.filter((todo) => isTodoCreatedToday(todo.createdAt))
+})
 
 // 添加 Todo 项
 const addTodo = async () => {
@@ -245,11 +253,12 @@ const addTodo = async () => {
         description: ''
       }
       todos.value.push(newTodo)
+      historyData.value.push(newTodo)
       value.value = ''
 
       // 写入内容
-      await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
-      await window.api.writeFile(useUser.historyFullPath, JSON.stringify(todos.value))
+      await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+      await window.api.writeFile(useUser.historyFullPath, JSON.stringify(historyData.value))
     } catch (error) {
       console.error('保存失败:', error)
     }
@@ -261,7 +270,7 @@ const deleteTodo = (data: any, index: number) => {
   data[index].isRemove = true
   setTimeout(() => {
     data.splice(index, 1)
-    window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
+    window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
   }, 500)
   hided()
 }
@@ -302,9 +311,10 @@ const addSubTodo = async () => {
       level: selectedTodo.value.level + 1,
       description: ''
     }
+    historyData.value.push(newSubTodo)
     selectedTodo.value.subTodos.push(newSubTodo)
-    await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
-    await window.api.writeFile(useUser.historyFullPath, JSON.stringify(todos.value))
+    await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+    await window.api.writeFile(useUser.historyFullPath, JSON.stringify(historyData.value))
     newSubTodoText.value = ''
   }
 }
@@ -317,6 +327,8 @@ const toggleSelectAll = () => {
       subTodo.completed = selectAll.value
     })
   })
+
+  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
 }
 
 // 删除选中的 Todo 项
@@ -351,6 +363,12 @@ const toggleSubItemsSelection = (todo: Todo) => {
       subSubTodo.completed = isSelected
     })
   })
+
+  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+  if (todos.value.length > 0) {
+    const allSelected = todos.value.every((todo) => todo.completed)
+    selectAll.value = allSelected
+  }
 }
 
 const editDescription = () => {
@@ -359,13 +377,28 @@ const editDescription = () => {
 
 const descChange = () => {
   inputVisible.value = false
-  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
+  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+}
+
+// 判断 todo 是否是今天创建的
+const isTodoCreatedToday = (createdAt: string) => {
+  return dayjs(createdAt).isSame(dayjs(), 'day')
 }
 
 onMounted(() => {
-  const data = window.api.readFile(useUser.fileFullPath)
+  const data = Array.isArray(window.api.readFile(useUser.fileFullPath))
+    ? window.api.readFile(useUser.fileFullPath)
+    : []
+  historyData.value = Array.isArray(window.api.readFile(useUser.historyFullPath))
+    ? window.api.readFile(useUser.historyFullPath)
+    : []
   if (data) {
     todos.value = data
+    // 检查是否所有项目都被选中
+    if (todos.value.length > 0) {
+      const allSelected = todos.value.every((todo) => todo.completed)
+      selectAll.value = allSelected
+    }
   }
 })
 </script>
