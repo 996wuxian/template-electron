@@ -42,6 +42,11 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  // 获取应用版本号
+  ipcMain.handle('get-version', () => {
+    return app.getVersion()
+  })
+
   // 设置 IPC 处理器
   setupIpcMainHandlers(mainWindow)
 

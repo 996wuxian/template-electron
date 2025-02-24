@@ -43,6 +43,12 @@
               ></i>
             </div>
           </div>
+          <div class="flex justify-between">
+            当前版本：
+            <div class="flex items-center">
+              <span>v{{ version }}</span>
+            </div>
+          </div>
         </div>
       </n-card>
     </n-modal>
@@ -83,6 +89,8 @@ const historyPath = ref<{
 }>({
   filePaths: [useUser.historyPath!] || []
 })
+// 获取当前版本号
+const version = ref('')
 
 const getFileExit = (type: string, path: string) => {
   window.api.fileExit(path, `${type}.${useUser.fileType}`)
@@ -138,6 +146,11 @@ const emit = defineEmits(['update:show'])
 const closeModal = () => {
   emit('update:show', false)
 }
+
+onMounted(async () => {
+  // 从主进程获取版本号
+  version.value = await window.electron.ipcRenderer.invoke('get-version')
+})
 </script>
 
 <style scoped></style>
