@@ -44,9 +44,10 @@
     <!-- 右侧区域：Todo 详情 -->
     <div
       class="todo-details border-l border-gray-200 animate__animated overflow-hidden item-transition bg-white shadow-xl"
-      :class="
-        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-6' : 'animate__fadeOutRight w-0'
-      "
+      :class="[
+        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-6' : 'animate__fadeOutRight w-0',
+        collapsed ? 'absolute top-0 w-190px h-400px' : ''
+      ]"
     >
       <div v-show="detailVisible" class="h-full flex flex-col">
         <!-- 头部区域 -->
@@ -100,7 +101,9 @@
                   <i i-solar-history-2-outline></i>
                   创建时间</label
                 >
-                <div class="mt-1 text-sm text-gray-400">
+                <div
+                  class="mt-1 text-sm text-gray-400 max-w-140px overflow-hidden text-ellipsis text-nowrap"
+                >
                   {{ selectedTodo?.createdAt }}
                 </div>
               </div>

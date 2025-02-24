@@ -46,7 +46,10 @@
       >
         <n-checkbox v-model:checked="selectAll" @update:checked="toggleSelectAll">
           <div class="flex items-center">
-            全选 已完成 : {{ selected.length }} / 总数量 : {{ todos.length }}
+            全选
+            <div v-if="!collapsed" class="flex-1">
+              已完成 : {{ selected.length }} / 总数量 : {{ todos.length }}
+            </div>
           </div>
         </n-checkbox>
         <i
@@ -60,9 +63,10 @@
     <!-- 右侧区域：Todo 详情 -->
     <div
       class="todo-details border-l border-gray-200 animate__animated overflow-hidden item-transition bg-white shadow-xl"
-      :class="
-        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-6' : 'animate__fadeOutRight w-0'
-      "
+      :class="[
+        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-6' : 'animate__fadeOutRight w-0',
+        collapsed ? 'absolute top-0 w-190px h-400px' : ''
+      ]"
     >
       <div v-show="detailVisible" class="h-full flex flex-col">
         <!-- 头部区域 -->
@@ -124,7 +128,9 @@
                   <i i-solar-history-2-outline></i>
                   创建时间</label
                 >
-                <div class="mt-1 text-sm text-gray-400">
+                <div
+                  class="mt-1 text-sm text-gray-400 max-w-140px overflow-hidden text-ellipsis text-nowrap"
+                >
                   {{ selectedTodo?.createdAt }}
                 </div>
               </div>
@@ -138,7 +144,7 @@
                 <i i-solar-paperclip-bold-duotone class="w-4 h-4 text-blue-500" />
                 子任务 ({{ selectedTodo?.subTodos?.length || 0 }})
               </h3>
-              <span class="text-xs text-gray-400">最大支持4级嵌套</span>
+              <span v-if="!collapsed" class="text-xs text-gray-400">最大支持4级嵌套</span>
             </div>
 
             <!-- 添加子项 -->

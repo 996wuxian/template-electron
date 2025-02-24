@@ -26,7 +26,11 @@
           <template v-if="!isShow && isFixed">
             <n-tooltip trigger="hover">
               <template #trigger>
-                <i i-solar-pin-bold @click="handleFixedDesktop('unfix-window')"></i>
+                <i
+                  ref="allowedButton"
+                  i-solar-pin-bold
+                  @click="handleFixedDesktop('unfix-window')"
+                ></i>
               </template>
               取消固定
             </n-tooltip>
@@ -133,6 +137,7 @@ const isShow = ref(true)
 const isFixed = ref(false)
 
 const header = ref<HTMLElement | null>(null)
+const allowedButton = ref()
 
 const handleDrawer = () => {
   drawerVisible.value = !drawerVisible.value
@@ -283,6 +288,11 @@ const handleFullScreen = async () => {
 const handleFixedDesktop = async (type: string) => {
   isFixed.value = !isFixed.value
   await window.electron.ipcRenderer.invoke(type)
+  if (isFixed.value) {
+    document.addEventListener('click', interceptClicks, true)
+  } else {
+    document.removeEventListener('click', interceptClicks, true)
+  }
 }
 
 const size = ref(false)
@@ -312,6 +322,21 @@ const handleClose = () => {
   localStorage.removeItem('theme')
   window.electron.ipcRenderer.invoke('close-window')
 }
+
+// 全局事件拦截
+const interceptClicks = (event: any) => {
+  console.log('🚀 ~ interceptClicks ~ event:', event)
+  if (isFixed.value) {
+    if (event.target !== allowedButton.value) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
+  }
+}
+
+onUnmounted(() => {
+  document.removeEventListener('click', interceptClicks, true)
+})
 
 onMounted(() => {
   if (header.value) {
