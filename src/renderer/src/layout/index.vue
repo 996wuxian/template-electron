@@ -4,7 +4,7 @@
       <Header></Header>
     </div>
     <div class="flex" :style="{ height: `calc(100vh - ${headerHeight}px)` }">
-      <Aside :style="{ width: sideWidth + 'px' }"></Aside>
+      <Aside :style="{ width: isHideMenu ? 0 : sideWidth + 'px' }"></Aside>
       <div class="flex-1 theme-page rd-rb-10px">
         <router-view />
         <!-- 更新进度条 -->
@@ -70,11 +70,17 @@
 import Header from './header/index.vue'
 import Aside from './aside/index.vue'
 import useThemeStore from '@renderer/stores/modules/theme'
+import useUserStore from '@renderer/stores/modules/user'
 import { $msg } from '@renderer/config/interaction.config'
 
 const themeStore = useThemeStore()
+const userStore = useUserStore()
 const sideWidth = computed(() => {
   return themeStore.sideWidth
+})
+
+const isHideMenu = computed(() => {
+  return userStore.isHideMenu
 })
 
 const headerHeight = computed(() => {

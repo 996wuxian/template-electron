@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex w-100% h-100% flex-items-center overflow-hidden theme-page aside rd-lb-10px"
+    class="flex w-100% h-100% flex-items-center theme-page aside rd-lb-10px relative"
     :class="containerClass"
   >
     <n-menu
@@ -26,11 +26,23 @@
     />
 
     <i
-      v-if="!collapsed"
+      v-if="!collapsed && !useUser.$state.isHideMenu"
       class="mt-auto mb-20px w-20px h-20px cursor-pointer hover:text-#89C1E8 transition transition-duration-[.3s]"
       i-solar-settings-broken
       @click="showModal"
     ></i>
+
+    <div
+      class="absolute bottom-10px -right-13px bg-gray-400 rounded-50% p-4px flex-center shadow-lg cursor-pointer hover:scale-150% transition transition-duration-[.3s]"
+      @click="showMenu"
+    >
+      <i
+        i-solar-double-alt-arrow-right-line-duotone
+        class="w-15px h-15px color-#fff"
+        :class="useUser.$state.isHideMenu ? '' : 'rotate-180'"
+      ></i>
+    </div>
+
     <Setting :show="modalVisible" @update:show="(value) => (modalVisible = value)" />
   </div>
 </template>
@@ -44,8 +56,10 @@ import Setting from './components/Setting.vue'
 
 import useRoutesStore from '@renderer/stores/modules/routes'
 import useThemeStore from '@renderer/stores/modules/theme'
+import useUserStore from '@renderer/stores/modules/user'
 
 const useTheme = useThemeStore()
+const useUser = useUserStore()
 const routes = useRoutesStore().routes
 const useRoutes = useRoutesStore()
 const route = useRoute()
@@ -105,6 +119,13 @@ const change = (key: any, item: any) => {
 
 const showModal = () => {
   modalVisible.value = true
+}
+
+const showMenu = () => {
+  useUser.setStatus({
+    type: 'isHideMenu',
+    value: !useUser.$state.isHideMenu
+  })
 }
 </script>
 
