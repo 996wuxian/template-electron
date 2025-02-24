@@ -26,6 +26,7 @@
     />
 
     <i
+      v-if="!collapsed"
       class="mt-auto mb-20px w-20px h-20px cursor-pointer hover:text-#89C1E8 transition transition-duration-[.3s]"
       i-solar-settings-broken
       @click="showModal"

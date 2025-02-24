@@ -23,7 +23,7 @@
           </div>
           <div class="flex justify-between">
             记录存放位置：
-            <div class="flex items-center flex-1">
+            <div class="flex items-center">
               {{ filePath?.filePaths[0] }}
               <i
                 i-solar-pen-2-broken
@@ -32,7 +32,7 @@
               ></i>
             </div>
           </div>
-          <div class="flex justify-between flex-1">
+          <div class="flex justify-between">
             历史记录存放位置：
             <div class="flex items-center">
               {{ historyPath?.filePaths[0] }}
