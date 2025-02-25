@@ -29,7 +29,7 @@ pnpm版本: 8.8.0
 
 <p align="center"><img src="./images/page3.jpg" /></p>
 <p align="center" style="margin-top: 10px"><img src="./images/page2.jpg" /></p>
-<p align="center" style="margin-top: 10px"><img src="./images/img2.png" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img2.jpg" /></p>
 
 ### 主题配置
 
