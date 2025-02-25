@@ -1,15 +1,15 @@
-<p align="center"><img src="./images/logo.png" /></p>
+<p align="center"><img src="./resources/icon.png" /></p>
 
-<h1 align="center">template-electron</h1>
+<h1 align="center">todo-electron</h1>
 
-This template should help get you started developing with Vue 3 in Electron.
+It's a todo surrogate app.
 <br>
-这个模板应该有助于你开始在Electron中使用Vue 3进行开发。
+这是一个todo代办应用。
 
 > [!NOTE]
-> If you think `TemplateElectron` is helpful to you, or you like my project, please give my project a ⭐️ on GitHub. Your support is the driving force for me to continue to improve! Thank you for your support! If there are any areas that are not good enough, please raise an issue and I will improve it!
+> If you think `TodoElectron` is helpful to you, or you like my project, please give my project a ⭐️ on GitHub. Your support is the driving force for me to continue to improve! Thank you for your support! If there are any areas that are not good enough, please raise an issue and I will improve it!
 > <br>
-> 如果你认为TemplateElectron对你有帮助，或者你喜欢我的项目，请给我的项目一个⭐️ 在GitHub上。您的支持是我不断改进的动力！感谢您的支持！如果有什么地方不够好，请提出issue，我会改进的！
+> 如果你认为TodoElectron对你有帮助，或者你喜欢我的项目，请给我的项目一个⭐️ 在GitHub上。您的支持是我不断改进的动力！感谢您的支持！如果有什么地方不够好，请提出issue，我会改进的！
 
 ## Introduction
 
@@ -21,13 +21,14 @@ This template should help get you started developing with Vue 3 in Electron.
 
 [VSCode](https://code.visualstudio.com/)：我已配置了Prettier和Eslint，您可以结合VsCode对应的插件使用，这将减少您手动格式化代码的麻烦。
 node版本: v20.9.0
-pnpm版本: 9.3.0
+pnpm版本: 8.8.0
 
 ## Example Images
 
 ### 页面示例
 
-<p align="center"><img src="./images/img1.png" /></p>
+<p align="center"><img src="./images/page3.jpg" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/page2.jpg" /></p>
 <p align="center" style="margin-top: 10px"><img src="./images/img2.png" /></p>
 
 ### 主题配置
@@ -50,6 +51,10 @@ pnpm版本: 9.3.0
 
 <p align="center" style="margin-top: 10px"><img src="./images/img7.png" /></p>
 <p align="center" style="margin-top: 10px"><img src="./images/img8.png" /></p>
+
+### 本地存储数据
+
+<p align="center" style="margin-top: 10px"><img src="./images/page4.jpg" /></p>
 
 ## Project Setup
 

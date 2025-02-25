@@ -41,7 +41,7 @@ const useUserStore = defineStore(
       historyPath: Local.get('historyPath') || '',
       fileFullPath: Local.get('fileFullPath') || '',
       historyFullPath: Local.get('historyFullPath') || '',
-      isHideMenu: Local.get('isHideMenu') || true
+      isHideMenu: Local.get('isHideMenu') || false
     })
 
     const setUserInfo = async (action: any) => {

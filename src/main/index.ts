@@ -7,11 +7,14 @@ import { setupUpdate } from './update'
 let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
+  const iconPath = join(__dirname, '../../resources/icon.png')
   mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
     autoHideMenuBar: true,
+    icon: iconPath,
+    ...(process.platform === 'linux' ? { iconPath } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
