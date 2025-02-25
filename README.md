@@ -49,7 +49,7 @@ pnpm版本: 8.8.0
 
 ### 贴边隐藏/显示
 
-<p align="center" style="margin-top: 10px"><img src="./images/img7.png" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img7.jpg" /></p>
 <p align="center" style="margin-top: 10px"><img src="./images/img8.png" /></p>
 
 ### 本地存储数据
