@@ -75,7 +75,6 @@ const props = defineProps({
 })
 
 const drawerShow = computed(() => props.drawerShow)
-console.log('🚀 ~ drawerShow:', drawerShow)
 
 // 对于某些处理器不需要使用到的参数（如_text），可以通过下划线前缀来标记它是未使用的，这是一种常见的TS做法。
 const sizeChange = (value: number, type: keyof State) => {

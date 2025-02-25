@@ -65,7 +65,7 @@
       class="todo-details border-l border-gray-200 animate__animated overflow-hidden item-transition bg-white shadow-xl"
       :class="[
         detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-6' : 'animate__fadeOutRight w-0',
-        collapsed ? 'absolute top-0 w-190px h-400px' : ''
+        collapsed ? 'absolute top-0 w-190px h-400px right-0' : ''
       ]"
     >
       <div v-show="detailVisible" class="h-full flex flex-col">
@@ -226,6 +226,7 @@ const selectIndex = ref(0)
 const newSubTodoText = ref('')
 const selectAll = ref(false)
 const collapsed = computed(() => useTheme.$state.collapsed)
+const isHideMenu = computed(() => useUser.$state.isHideMenu)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)

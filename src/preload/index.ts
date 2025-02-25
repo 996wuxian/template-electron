@@ -27,7 +27,6 @@ const api = {
         ? normalizedPath
         : appendFile(fullPath, '', (err) => {
             console.log('🚀 ~ :appendFile ~ err:', err)
-            console.log('123123')
 
             if (err) return null
             return true
@@ -44,7 +43,6 @@ const api = {
     }
   },
   readFile: (filePath: string) => {
-    console.log('🚀 ~ filePath:', filePath)
     try {
       if (!filePath) {
         return

@@ -325,7 +325,6 @@ const handleClose = () => {
 
 // 全局事件拦截
 const interceptClicks = (event: any) => {
-  console.log('🚀 ~ interceptClicks ~ event:', event)
   if (isFixed.value) {
     if (event.target !== allowedButton.value) {
       event.preventDefault()

@@ -30,7 +30,6 @@ const useRoutesStore = defineStore(
       // const { userInfo } = useUserStore()
 
       // 设置后端路由(不需要可以删除)
-      console.log(setting.authentication, 'setting.authentication')
 
       if (setting.authentication === 'all') {
         // const { code, data } = await MenuList()
@@ -51,10 +50,8 @@ const useRoutesStore = defineStore(
         // state.routes = await mapRoute(newRoutes)
       } else {
         // 前端写死的动态路由
-        console.log('123123')
 
         const routes = await mapRoute(asyncRoutes)
-        console.log('🚀 ~ setRoutes ~ routes:', routes)
         state.routes = routes
       }
     }

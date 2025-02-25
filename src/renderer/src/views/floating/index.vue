@@ -98,7 +98,6 @@ const icons = ref([
 
 // 切换菜单状态
 const toggleMenu = () => {
-  console.log('点击了主图标') // 调试日志
   isMenuOpen.value = !isMenuOpen.value
 }
 
