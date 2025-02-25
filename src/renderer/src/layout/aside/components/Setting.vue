@@ -71,11 +71,11 @@ const songs = ref([
   {
     value: 'txt',
     label: 'txt'
-  },
-  {
-    value: 'excel',
-    label: 'excel'
   }
+  // {
+  //   value: 'excel',
+  //   label: 'excel'
+  // }
 ])
 
 const radioValue = ref(useUser.fileType || 'txt')
