@@ -68,6 +68,26 @@ export const asyncRoutes = [
       }
     ]
   },
+  {
+    path: '/count-page',
+    name: 'CountPage',
+    component: Layout,
+    meta: {
+      title: '统计',
+      icon: 'i-solar-widget-5-bold-duotone',
+      hide: false
+    },
+    children: [
+      {
+        path: '/count',
+        name: 'Count',
+        component: () => import('@renderer/views/count/index.vue'),
+        meta: {
+          title: '统计'
+        }
+      }
+    ]
+  },
 
   {
     path: '/floating',

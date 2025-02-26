@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import { RouterView } from 'vue-router'
-import { useOsTheme, darkTheme } from 'naive-ui'
+import { useOsTheme, darkTheme, zhCN, dateZhCN } from 'naive-ui'
 import type { GlobalTheme } from 'naive-ui'
 import { getThemeOverrides } from '@renderer/config/theme.config'
 import useThemeStore from '@renderer/stores/modules/theme'
@@ -86,7 +86,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <n-config-provider :theme-overrides="themeOverrides" :theme="theme">
+  <n-config-provider
+    :theme-overrides="themeOverrides"
+    :theme="theme"
+    :locale="zhCN"
+    :date-locale="dateZhCN"
+  >
     <n-dialog-provider>
       <n-message-provider>
         <RouterView />

@@ -26,8 +26,6 @@ const api = {
       return existsSync(normalizedPath)
         ? normalizedPath
         : appendFile(fullPath, '', (err) => {
-            console.log('🚀 ~ :appendFile ~ err:', err)
-
             if (err) return null
             return true
           })

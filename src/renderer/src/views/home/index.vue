@@ -41,14 +41,14 @@
 
       <!-- 全选和批量删除 -->
       <div
-        v-if="todos.length > 0"
+        v-if="todayTodos.length > 0"
         class="todo-actions mt-4 flex justify-between items-center mt-auto"
       >
         <n-checkbox v-model:checked="selectAll" @update:checked="toggleSelectAll">
           <div class="flex items-center">
             全选
             <div v-if="!collapsed" class="flex-1">
-              已完成 : {{ selected.length }} / 总数量 : {{ todos.length }}
+              已完成 : {{ selected.length }} / 总数量 : {{ todayTodos.length }}
             </div>
           </div>
         </n-checkbox>
@@ -226,12 +226,11 @@ const selectIndex = ref(0)
 const newSubTodoText = ref('')
 const selectAll = ref(false)
 const collapsed = computed(() => useTheme.$state.collapsed)
-const isHideMenu = computed(() => useUser.$state.isHideMenu)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)
 
-const selected = computed(() => todos.value.filter((todo) => todo.completed))
+const selected = computed(() => todayTodos.value.filter((todo) => todo.completed))
 const historyData = ref<Todo[]>([])
 
 // 获取今天创建的所有 todos
@@ -398,6 +397,8 @@ onMounted(() => {
   const data = Array.isArray(window.api.readFile(useUser.fileFullPath))
     ? window.api.readFile(useUser.fileFullPath)
     : []
+  console.log('🚀 ~ onMounted ~ data:', data)
+
   historyData.value = Array.isArray(window.api.readFile(useUser.historyFullPath))
     ? window.api.readFile(useUser.historyFullPath)
     : []
