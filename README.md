@@ -27,7 +27,7 @@ pnpm版本: 8.8.0
 
 ### 检测更新
 
-<p align="center"><img src="./images/img1.png" /></p>
+<p align="center"><img src="./images/img11.gif" /></p>
 
 ### 页面示例
 
