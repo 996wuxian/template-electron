@@ -43,11 +43,13 @@
               ></i>
             </div>
           </div>
-          <div class="flex justify-between">
+          <div class="flex items-center">
             当前版本：
             <div class="flex items-center">
               <span>v{{ version }}</span>
             </div>
+
+            <n-button class="ml-auto" size="small" @click="clearCache">清除缓存</n-button>
           </div>
         </div>
       </n-card>
@@ -145,6 +147,10 @@ const emit = defineEmits(['update:show'])
 
 const closeModal = () => {
   emit('update:show', false)
+}
+
+const clearCache = () => {
+  window.localStorage.clear()
 }
 
 onMounted(async () => {
