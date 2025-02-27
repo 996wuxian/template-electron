@@ -359,8 +359,8 @@ function createFloatingWindow(mainWindow: BrowserWindow | null): BrowserWindow |
 
   // 创建新的悬浮窗
   floatingWindow = new BrowserWindow({
-    width: 300,
-    height: 300,
+    width: 150,
+    height: 200,
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,

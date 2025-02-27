@@ -31,34 +31,30 @@ pnpm版本: 8.8.0
 
 ### 页面示例
 
-<p align="center"><img src="./images/page3.jpg" /></p>
-<p align="center" style="margin-top: 10px"><img src="./images/page2.jpg" /></p>
-<p align="center" style="margin-top: 10px"><img src="./images/img2.jpg" /></p>
+<p align="center"><img src="./images/img2.jpg" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img3.jpg" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img4.jpg" /></p>
 
 ### 主题配置
 
-<p align="center" style="margin-top: 10px"><img src="./images/img6.jpg" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img5.jpg" /></p>
 
 ### 悬浮窗
 
-<p align="center" style="margin-top: 10px"><img src="./images/img3.jpg" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img8.gif" /></p>
 
-### 固定到右上角
+### 固定到右上角与锁定
 
-<p align="center" style="margin-top: 10px"><img src="./images/img4.jpg" /></p>
-
-### 锁定
-
-<p align="center" style="margin-top: 10px"><img src="./images/img5.jpg" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img6.gif" /></p>
 
 ### 贴边隐藏/显示
 
-<p align="center" style="margin-top: 10px"><img src="./images/img7.jpg" /></p>
-<p align="center" style="margin-top: 10px"><img src="./images/img8.png" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img7.gif" /></p>
 
 ### 本地存储数据
 
-<p align="center" style="margin-top: 10px"><img src="./images/page4.jpg" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img9.jpg" /></p>
+<p align="center" style="margin-top: 10px"><img src="./images/img10.jpg" /></p>
 
 ## Project Setup
 

@@ -32,6 +32,7 @@
             :todos="todos"
             :collapsed="collapsed"
             :check-box="true"
+            :delete-show="true"
             @delete-todo="deleteTodo"
             @toggle-details="toggleDetails"
             @toggle-sub-items-selection="toggleSubItemsSelection"
@@ -40,21 +41,41 @@
       </div>
 
       <!-- 全选和批量删除 -->
-      <div
-        v-if="todayTodos.length > 0"
-        class="todo-actions mt-4 flex justify-between items-center mt-auto"
-      >
-        <n-checkbox v-model:checked="selectAll" @update:checked="toggleSelectAll">
-          <div class="flex items-center">
-            全选
-            <div v-if="!collapsed" class="flex-1">
-              已完成 : {{ selected.length }} / 总数量 : {{ todayTodos.length }}
-            </div>
-          </div>
+      <div v-if="todayTodos.length > 0" class="todo-actions mt-4 flex items-center mt-auto">
+        <n-checkbox
+          v-model:checked="selectAll"
+          class="min-w-60px"
+          @update:checked="toggleSelectAll"
+        >
+          全选
         </n-checkbox>
+        <div v-if="!collapsed" class="flex ml-10px">
+          已完成 : {{ selected.length }} / 总数量 : {{ todayTodos.length }}
+        </div>
+        <div
+          v-show="!detailVisible && !useUser.isRightTop && !useUser.isHide"
+          class="flex ml-40px gap-20px min-w-200px overflow-hidden"
+        >
+          <div class="flex items-center gap-5px text-13px">
+            <span class="w-15px h-15px rounded-50% bg-red"></span>
+            紧急
+          </div>
+          <div class="flex items-center gap-5px text-13px">
+            <span class="w-15px h-15px rounded-50% bg-orange"></span>
+            有点急
+          </div>
+          <div class="flex items-center gap-5px text-13px">
+            <span class="w-15px h-15px rounded-50% bg-gray"></span>
+            一般急
+          </div>
+          <div class="flex items-center gap-5px text-13px">
+            <span class="w-15px h-15px rounded-50% bg-green-500"></span>
+            不急
+          </div>
+        </div>
         <i
           i-solar-trash-bin-minimalistic-2-linear
-          class="w-20px h-20px hover:text-red-500 cursor-pointer"
+          class="w-20px h-20px hover:text-red-500 cursor-pointer ml-auto"
           @click.stop="deleteSelected"
         ></i>
       </div>
@@ -62,7 +83,7 @@
 
     <!-- 右侧区域：Todo 详情 -->
     <div
-      class="todo-details border-l border-gray-200 animate__animated overflow-hidden item-transition bg-white shadow-xl"
+      class="todo-details border-l border-gray-200 animate__animated overflow-hidden item-transition bg-white shadow-xl theme-page"
       :class="[
         detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-6' : 'animate__fadeOutRight w-0',
         collapsed ? 'absolute top-0 w-190px h-400px right-0' : ''
@@ -88,8 +109,8 @@
         <div class="flex-1 h-100%">
           <!-- 基本信息卡片 -->
           <div class="mb-3 bg-gray-50 rounded-lg">
-            <div class="space-y-6">
-              <div class="text-gray-600 text-16px">{{ selectedTodo?.text }}</div>
+            <div class="space-y-4 theme-page">
+              <div class="text-gray-600 text-14px">{{ selectedTodo?.text }}</div>
               <div>
                 <label class="text-sm font-medium text-gray-500">详细描述</label>
 
@@ -101,16 +122,31 @@
                     size="medium"
                     @blur="descChange"
                   />
-                  <div v-else class="flex items-center gap-1">
+                  <div v-else class="flex items-center gap-1 text-13px">
                     <p v-if="selectedTodo?.description" @click="inputVisible = true">
                       {{ selectedTodo?.description }}
                     </p>
-                    <div v-else class="flex items-center gap-1">
+                    <div v-else class="flex items-center gap-1 text-13px">
                       {{ '无附加描述' }}
                       <i i-solar-pen-2-broken @click="editDescription"></i>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div class="flex items-center gap-1">
+                <span class="text-sm font-medium text-gray-500 flex items-center gap-1 flex-1">
+                  <i i-solar-fire-minimalistic-broken></i>
+                  紧急程度：</span
+                >
+                <n-select
+                  v-if="selectedTodo"
+                  v-model:value="selectedTodo.status"
+                  size="small"
+                  class="w-100px"
+                  :options="options"
+                  @update:value="saveTodo"
+                />
               </div>
 
               <div class="flex items-center gap-1">
@@ -175,7 +211,7 @@
                   :class="{ 'opacity-50': subTodo.completed }"
                 />
                 <span
-                  class="flex-1 text-gray-700 transition-all"
+                  class="flex-1 text-gray-500 transition-all"
                   :class="{
                     'line-through text-gray-400': subTodo.completed,
                     'opacity-75 hover:opacity-100': !subTodo.completed
@@ -214,6 +250,7 @@ export interface Todo {
   subTodos: Todo[] // 子项
   level: number
   description: string
+  status: number
 }
 
 const useTheme = useThemeStore()
@@ -238,6 +275,25 @@ const todayTodos = computed(() => {
   return todos.value.filter((todo) => isTodoCreatedToday(todo.createdAt))
 })
 
+const options = [
+  {
+    label: '紧急',
+    value: 1
+  },
+  {
+    label: '有点急',
+    value: 2
+  },
+  {
+    label: '一般急',
+    value: 3
+  },
+  {
+    label: '不急',
+    value: 4
+  }
+]
+
 // 添加 Todo 项
 const addTodo = async () => {
   if (!useUser.filePath) {
@@ -258,7 +314,8 @@ const addTodo = async () => {
         createdAt: new Date().toLocaleString(), // 格式化当前时间
         subTodos: [], // 初始化子项为空数组
         level: 1,
-        description: ''
+        description: '',
+        status: 4
       }
       todos.value.push(newTodo)
       historyData.value.push(newTodo)
@@ -317,7 +374,8 @@ const addSubTodo = async () => {
       subTodos: [], // 初始化子项为空数组
       text: newSubTodoText.value,
       level: selectedTodo.value.level + 1,
-      description: ''
+      description: '',
+      status: 4
     }
     historyData.value.push(newSubTodo)
     selectedTodo.value.subTodos.push(newSubTodo)
@@ -383,9 +441,14 @@ const editDescription = () => {
   inputVisible.value = !inputVisible.value
 }
 
+const saveTodo = () => {
+  console.log(todayTodos.value, 'todayTodos.value')
+  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+}
+
 const descChange = () => {
   inputVisible.value = false
-  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+  saveTodo()
 }
 
 // 判断 todo 是否是今天创建的
@@ -397,7 +460,6 @@ onMounted(() => {
   const data = Array.isArray(window.api.readFile(useUser.fileFullPath))
     ? window.api.readFile(useUser.fileFullPath)
     : []
-  console.log('🚀 ~ onMounted ~ data:', data)
 
   historyData.value = Array.isArray(window.api.readFile(useUser.historyFullPath))
     ? window.api.readFile(useUser.historyFullPath)
@@ -433,7 +495,6 @@ onMounted(() => {
 
 .todo-actions {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 10px;
 }

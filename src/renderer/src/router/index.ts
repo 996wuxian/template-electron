@@ -74,7 +74,7 @@ export const asyncRoutes = [
     component: Layout,
     meta: {
       title: '统计',
-      icon: 'i-solar-widget-5-bold-duotone',
+      icon: 'i-solar-checklist-minimalistic-bold-duotone',
       hide: false
     },
     children: [

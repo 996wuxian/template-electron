@@ -34,6 +34,7 @@ const api = {
     }
   },
   writeFile: (filePath: string, data: string) => {
+    console.log('🚀 ~ data:', JSON.parse(data))
     try {
       writeFileSync(filePath, data, 'utf-8')
     } catch (err) {

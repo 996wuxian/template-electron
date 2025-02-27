@@ -1,21 +1,35 @@
 <template>
-  <div class="floating-window" :class="{ expanded: isExpanded }">
-    <!-- 主图标 -->
-    <div class="inner-circle theme-page" @mousedown.stop="handleMouseDown">
-      <div class="click-area">
-        <i i-solar-widget-bold></i>
-      </div>
+  <div class="floating-window theme-page" :class="{ 'is-menu-open': isMenuOpen }">
+    <div v-if="!isMenuOpen" class="click-area" @click="handleMouseDown">
+      <img src="@renderer/assets/img/float.gif" class="float_home" alt="" />
     </div>
-
-    <div v-show="isMenuOpen" class="menu-icons">
-      <div
-        v-for="(icon, index) in icons"
-        :key="index"
-        :style="getIconStyle(index)"
-        class="menu-icon theme-page"
-        @click.stop="handleIconClick(icon)"
-      >
-        <i :class="icon"></i>
+    <div v-else class="flex flex-col flex-1 h-full">
+      <div class="text-12px flex flex-col gap-5px">
+        正在进行的待办
+        <div v-if="todoList.length === 0" class="flex-center">
+          <svg-icon
+            name="empty"
+            width="50px"
+            height="50px"
+            style="filter: hue-rotate(350deg); opacity: 0.8"
+          />
+        </div>
+        <div v-else>
+          <div v-for="item in todoList" :key="item?.id">
+            {{ item?.text }}
+          </div>
+        </div>
+      </div>
+      <div class="mt-auto">
+        <div
+          v-for="(item, index) in icons"
+          :key="index"
+          class="menu-icon"
+          @click.stop="handleIconClick(item.icon)"
+        >
+          <i :class="item.icon" />
+          {{ item.name }}
+        </div>
       </div>
     </div>
   </div>
@@ -23,66 +37,41 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import useUserStore from '@renderer/stores/modules/user'
+
+interface Todo {
+  id: number
+  text: string
+  completed: boolean
+  isRemove: boolean
+  createdAt: string
+  subTodos: Todo[] // 子项
+  level: number
+  description: string
+  status: number
+}
+
+const useUser = useUserStore()
+
+const todos = ref<Todo[]>([])
+
+const todoList = computed(() => {
+  return todos.value.filter((todo: Todo) => todo.status === 1).splice(0, 3)
+})
+
 onMounted(() => {
   const type = JSON.parse(localStorage.getItem('theme') as string) || { themeType: 'light' }
   window.document.documentElement.setAttribute('data-theme', type.themeType)
+
+  const data = Array.isArray(window.api.readFile(useUser.fileFullPath))
+    ? window.api.readFile(useUser.fileFullPath)
+    : []
+
+  todos.value = data
 })
 
-const isExpanded = ref(false)
-let isDragging = false
-let initialMouseX = 0
-let initialMouseY = 0
-let mouseDownTime = 0
-let windowInitialX = 0
-let windowInitialY = 0
-
-// 处理鼠标按下事件
-const handleMouseDown = (e: MouseEvent) => {
-  if (isExpanded.value) return // 展开状态不允许拖动
-
-  isDragging = false
-  initialMouseX = e.screenX // 使用screenX/screenY获取相对于屏幕的坐标
-  initialMouseY = e.screenY
-  mouseDownTime = Date.now()
-  // 获取窗口初始位置
-  window.electron.ipcRenderer.invoke('get-position').then(([x, y]: [number, number]) => {
-    windowInitialX = x
-    windowInitialY = y
-
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-  })
-}
-
-// 处理鼠标移动事件
-const handleMouseMove = (e: MouseEvent) => {
-  if (e.target !== e.currentTarget) return // 如果点击的是子元素则不处理
-  const deltaX = e.screenX - initialMouseX
-  const deltaY = e.screenY - initialMouseY
-
-  // 判断是否达到拖动阈值
-  if (!isDragging && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
-    isDragging = true
-  }
-
-  if (isDragging) {
-    // 计算新位置
-    const newX = windowInitialX + deltaX
-    const newY = windowInitialY + deltaY
-
-    // 发送新位置到主进程
-    window.electron.ipcRenderer.invoke('set-position', { x: newX, y: newY })
-  }
-}
-
-const handleMouseUp = () => {
-  document.removeEventListener('mousemove', handleMouseMove)
-  document.removeEventListener('mouseup', handleMouseUp)
-
-  // 如果不是拖拽且点击时间小于200ms，则触发展开/收起
-  if (!isDragging && Date.now() - mouseDownTime < 200) {
-    toggleMenu()
-  }
+const handleMouseDown = () => {
+  isMenuOpen.value = !isMenuOpen.value
 }
 
 // 控制菜单是否打开
@@ -90,66 +79,55 @@ const isMenuOpen = ref(false)
 
 // 图标列表
 const icons = ref([
-  'i-solar-home-bold' // 首页
-  // 'i-solar-settings-bold', // 设置
-  // 'i-solar-chat-round-bold', // 聊天
-  // 'i-solar-star-bold' // 收藏
+  {
+    name: '还原',
+    icon: 'i-solar-planet-2-broken'
+  },
+  {
+    name: '返回',
+    icon: 'i-solar-undo-right-round-broken'
+  }
 ])
-
-// 切换菜单状态
-const toggleMenu = () => {
-  isMenuOpen.value = !isMenuOpen.value
-}
 
 // 处理图标点击事件
 const handleIconClick = (icon: string) => {
-  isMenuOpen.value = !isMenuOpen.value
-
-  if (icon === 'i-solar-home-bold') {
+  if (icon === 'i-solar-planet-2-broken') {
     // 打开主窗口
     window.electron.ipcRenderer.invoke('show-main-window')
     // 关闭悬浮窗
     window.electron.ipcRenderer.invoke('destroy-floating-window')
   }
-}
 
-// 计算每个图标的位置
-const getIconStyle = (index: number) => {
-  const angle = 35 * index - 180 // 扇形分布的角度
-  const radius = 100 // 半径
-  const x = radius * Math.cos((angle * Math.PI) / 180)
-  const y = radius * Math.sin((angle * Math.PI) / 180)
-  return {
-    transform: `translate(${x}px, ${y}px)`,
-    transitionDelay: `${index * 0.1}s` // 依次延迟显示
+  if (icon === 'i-solar-undo-right-round-broken') {
+    handleMouseDown()
   }
 }
 </script>
 
 <style scoped lang="scss">
 .floating-window {
-  width: 300px;
-  height: 300px;
   background: transparent;
-  /* background-color: red; */
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
-}
-
-.inner-circle {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  // background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease;
-  position: relative;
+  padding: 5px;
   -webkit-app-region: drag; /* 使整个header可拖拽 */
+  position: fixed; /* 添加固定定位 */
+  right: 10px; /* 固定在右侧 */
+  bottom: 10px; /* 固定在底部 */
+  transform-origin: right bottom;
+}
+
+.is-menu-open {
+  width: 130px;
+  height: 170px;
+  -webkit-app-region: no-drag;
+  border-radius: 10px;
+  align-items: flex-start;
 }
 
 /* 中心点击区域 */
@@ -157,64 +135,33 @@ const getIconStyle = (index: number) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* 确保点击区域在拖拽层上方 */
-  -webkit-app-region: no-drag; /* 使整个header可拖拽 */
+  -webkit-app-region: no-drag;
 }
 
-.inner-circle:hover {
-  transform: scale(1.05);
-  background: rgba(255, 255, 255, 1);
-}
-
-/* 扇形分布的图标容器 */
-.menu-icons {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 999;
-}
-
-/* 每个图标 */
 .menu-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  // background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  opacity: 0;
+  @apply flex w-100% items-center gap-10px text-13px p-10px rounded-10px cursor-pointer;
   transition: all 0.3s ease;
-  cursor: pointer;
+
+  i {
+    @apply w-16px h-16px mb-2px;
+  }
+
+  &:hover {
+    background: #e6f3fe;
+    color: #78b3e3;
+    transition: all 0.3s ease;
+  }
 }
 
-/* 图标显示时的动画 */
-.menu-icons .menu-icon {
-  opacity: 1;
-  transform: translate(var(--x), var(--y));
+.float_home {
+  user-drag: none;
+
+  -webkit-user-drag: none;
+
+  -moz-user-drag: none;
+
+  -ms-user-drag: none;
+  width: 30px;
+  height: 30px;
 }
-
-// /* 暗色主题支持 */
-// :root[data-theme='dark'] .inner-circle {
-//   background: rgba(40, 40, 40, 0.9);
-// }
-
-// :root[data-theme='dark'] .inner-circle:hover {
-//   background: rgba(40, 40, 40, 1);
-// }
-
-// :root[data-theme='dark'] .menu-icon {
-//   background: rgba(40, 40, 40, 0.9);
-// }
-
-// :root[data-theme='dark'] .menu-icon:hover {
-//   background: rgba(40, 40, 40, 1);
-// }
 </style>

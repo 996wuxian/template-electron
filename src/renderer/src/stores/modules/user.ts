@@ -21,6 +21,7 @@ interface State {
   fileFullPath?: string
   historyFullPath?: string
   isHideMenu?: boolean
+  isHide?: boolean
 }
 
 interface Action<T extends keyof State> {
@@ -35,13 +36,14 @@ const useUserStore = defineStore(
       userInfo: {} as User,
       winTop: Local.get('winTop') || '0',
       isTop: Local.get('isTop') || '0',
-      isRightTop: false,
+      isRightTop: Local.get('isRightTop') || false,
       fileType: Local.get('fileType') || 'txt',
       filePath: Local.get('filePath') || '',
       historyPath: Local.get('historyPath') || '',
       fileFullPath: Local.get('fileFullPath') || '',
       historyFullPath: Local.get('historyFullPath') || '',
-      isHideMenu: Local.get('isHideMenu') || false
+      isHideMenu: Local.get('isHideMenu') || false,
+      isHide: Local.get('isHide') || false
     })
 
     const setUserInfo = async (action: any) => {

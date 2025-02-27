@@ -99,6 +99,12 @@ window.electron.ipcRenderer.on('resize-detected', (event, data) => {
     themeStore.setStatus({ type: 'collapsed', bool: true })
     themeStore.setSize({ type: 'sideWidth', size: 90 })
   }
+
+  if (width > 800) {
+    userStore.setStatus({ type: 'isHide', value: false })
+  } else {
+    userStore.setStatus({ type: 'isHide', value: true })
+  }
 })
 
 const updateInfo = reactive({

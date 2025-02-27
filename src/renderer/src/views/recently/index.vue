@@ -3,7 +3,7 @@
     <!-- 左侧区域：Todo 列表和操作 -->
     <div class="w-100% item-transition">
       <!-- Todo 列表 -->
-      <div class="todo-list flex flex-col h-[calc(100%-44px)]">
+      <div class="todo-list flex flex-col h-full">
         <div v-if="todos.length === 0" class="flex-center flex-1">
           <svg-icon
             name="empty"
@@ -16,7 +16,7 @@
           <div
             v-for="group in groupedTodos"
             :key="group.dateKey"
-            class="mb-6 animate__animated animate__fadeInDown"
+            class="animate__animated animate__fadeInDown"
           >
             <div class="group-header flex items-center mb-2 px-2">
               <span class="text-gray-600 font-medium mr-2">{{ group.title }}</span>
@@ -32,6 +32,7 @@
               :todos="group.tasks"
               :check-box="false"
               :collapsed="collapsed"
+              :delete-show="false"
               @delete-todo="deleteTodo"
               @toggle-details="toggleDetails"
               @toggle-sub-items-selection="toggleSubItemsSelection"
@@ -43,7 +44,7 @@
 
     <!-- 右侧区域：Todo 详情 -->
     <div
-      class="todo-details border-l border-gray-200 animate__animated overflow-hidden item-transition bg-white shadow-xl"
+      class="todo-details border-l border-gray-200 animate__animated overflow-hidden item-transition bg-white shadow-xl theme-page"
       :class="[
         detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-6' : 'animate__fadeOutRight w-0',
         collapsed ? 'absolute top-0 w-190px h-400px' : ''
@@ -69,7 +70,7 @@
         <div class="flex-1 h-100%">
           <!-- 基本信息卡片 -->
           <div class="mb-3 bg-gray-50 rounded-lg">
-            <div class="space-y-6">
+            <div class="space-y-6 theme-page">
               <div class="text-gray-600 text-16px">{{ selectedTodo?.text }}</div>
               <div>
                 <label class="text-sm font-medium text-gray-500">详细描述</label>
@@ -84,6 +85,22 @@
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div class="flex items-center gap-1">
+                <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <i i-solar-fire-minimalistic-broken></i>
+                  紧急程度：</span
+                >
+                {{
+                  selectedTodo?.status === 1
+                    ? '紧急'
+                    : selectedTodo?.status === 2
+                      ? '有点急'
+                      : selectedTodo?.status === 3
+                        ? '一般急'
+                        : '不急'
+                }}
               </div>
 
               <div class="flex items-center gap-1">
@@ -106,44 +123,6 @@
                 >
                   {{ selectedTodo?.createdAt }}
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 子任务区域 -->
-          <div class="border-t pt-4 h-[calc(100%-220px)]">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="font-medium flex items-center gap-2">
-                <i i-solar-paperclip-bold-duotone class="w-4 h-4 text-blue-500" />
-                子任务 ({{ selectedTodo?.subTodos?.length || 0 }})
-              </h3>
-            </div>
-
-            <!-- 子项列表 -->
-            <div v-if="selectedTodo?.subTodos?.length" class="h-[calc(100%-100px)] overflow-y-auto">
-              <div
-                v-for="subTodo in selectedTodo.subTodos"
-                :key="subTodo.id"
-                class="group flex items-center p-2 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <n-checkbox
-                  v-model:checked="subTodo.completed"
-                  class="mr-3"
-                  :class="{ 'opacity-50': subTodo.completed }"
-                />
-                <span
-                  class="flex-1 text-gray-700 transition-all"
-                  :class="{
-                    'line-through text-gray-400': subTodo.completed,
-                    'opacity-75 hover:opacity-100': !subTodo.completed
-                  }"
-                >
-                  {{ subTodo.text }}
-                </span>
-                <i
-                  v-if="subTodo.subTodos?.length"
-                  class="i-solar-arrow-right-line-duotone ml-2 text-gray-300 group-hover:text-blue-500"
-                />
               </div>
             </div>
           </div>
@@ -172,6 +151,7 @@ export interface Todo {
   subTodos: Todo[] // 子项
   level: number
   description: string
+  status: number
 }
 
 const useTheme = useThemeStore()

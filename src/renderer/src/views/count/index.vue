@@ -46,6 +46,7 @@
         <!-- 图例 -->
         <div class="legend">
           <span>活跃度：</span>
+          <span class="legend-text">少</span>
           <div class="legend-items">
             <div class="day-cell activity-0"></div>
             <div class="day-cell activity-1"></div>
@@ -53,7 +54,6 @@
             <div class="day-cell activity-3"></div>
             <div class="day-cell activity-4"></div>
           </div>
-          <span class="legend-text">少</span>
           <span class="legend-text">多</span>
         </div>
       </div>

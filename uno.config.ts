@@ -8,7 +8,11 @@ export default defineConfig({
       exclude: ['node_modules', 'dist']
     }
   },
-  safelist: ['i-solar-sun-2-bold', 'i-solar-widget-5-bold-duotone'],
+  safelist: [
+    'i-solar-sun-2-bold',
+    'i-solar-widget-5-bold-duotone',
+    'i-solar-checklist-minimalistic-bold-duotone'
+  ],
   shortcuts: [['flex-center', 'flex items-center justify-center']],
   transformers: [transformerDirective()]
 })

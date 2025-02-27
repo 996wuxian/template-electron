@@ -34,6 +34,9 @@ export function getThemeOverrides() {
       textColorPrimary: '#fff',
       textColorInfo: '#333',
       textColorHoverPrimary: '#fff'
+    },
+    Select: {
+      color: useTheme.primaryColor
     }
   }))
 }
