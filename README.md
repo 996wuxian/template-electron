@@ -31,9 +31,7 @@ pnpm版本: 8.8.0
 
 ### 页面示例
 
-<p align="center"><img src="./images/img2.jpg" /></p>
-<p align="center" style="margin-top: 10px"><img src="./images/img3.jpg" /></p>
-<p align="center" style="margin-top: 10px"><img src="./images/img4.jpg" /></p>
+<p align="center"><img src="./images/img12.gif" /></p>
 
 ### 主题配置
 
