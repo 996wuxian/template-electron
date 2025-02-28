@@ -26,6 +26,9 @@ dependencies:
   electron-updater:
     specifier: ^6.1.7
     version: 6.3.9
+  fix-webm-duration:
+    specifier: ^1.0.6
+    version: 1.0.6
   nprogress:
     specifier: ^0.2.0
     version: 0.2.0
@@ -35,6 +38,9 @@ dependencies:
   qs:
     specifier: ^6.13.1
     version: 6.14.0
+  recordrtc:
+    specifier: ^5.6.2
+    version: 5.6.2
   tinycolor2:
     specifier: ^1.6.0
     version: 1.6.0
@@ -3747,6 +3753,10 @@ packages:
       path-exists: 4.0.0
     dev: true
 
+  /fix-webm-duration@1.0.6:
+    resolution: {integrity: sha512-zVAqi4gE+8ywxJuAyV/rlJVX6CMtvyapEbQx6jyoeX9TMjdqAlt/FdG5d7rXSSkDVzTvS0H7CtwzHcH/vh4FPA==}
+    dev: false
+
   /flat-cache@3.2.0:
     resolution: {integrity: sha512-CYcENa+FtcUKLmhhqyctpclsq7QF38pKjZHsGNiSQF5r4FtoKDWabFDl3hzaEQMvT1LHEysw5twgLvpYYb4vbw==}
     engines: {node: ^10.12.0 || >=12.0.0}
@@ -5895,6 +5905,10 @@ packages:
     resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
     engines: {node: '>= 14.18.0'}
     dev: true
+
+  /recordrtc@5.6.2:
+    resolution: {integrity: sha512-1QNKKNtl7+KcwD1lyOgP3ZlbiJ1d0HtXnypUy7yq49xEERxk31PHvE9RCciDrulPCY7WJ+oz0R9hpNxgsIurGQ==}
+    dev: false
 
   /reflect.getprototypeof@1.0.10:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==}

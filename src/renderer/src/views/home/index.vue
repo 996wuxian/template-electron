@@ -1,521 +1,603 @@
 <template>
-  <div class="page p-10px flex flex-1">
-    <!-- 左侧区域：Todo 列表和操作 -->
-    <div class="w-100% item-transition">
-      <!-- 输入框 -->
-      <n-input
-        v-model:value="value"
-        type="text"
-        placeholder="输入后按回车添加"
-        clearable
-        size="large"
-        class="text-14px animate__animated animate__fadeInDown"
-        @keyup.enter="addTodo"
-      />
-
-      <!-- Todo 列表 -->
-      <div class="todo-list mt-4 flex flex-col h-[calc(100%-100px)]">
-        <div v-if="todos.length === 0" class="flex-center flex-1">
-          <svg-icon
-            name="empty"
-            width="100%"
-            height="100%"
-            style="filter: hue-rotate(350deg); opacity: 0.6"
-          />
-        </div>
-        <div v-else class="h-[calc(100%-20px)] overflow-y-auto">
-          <TodoItem
-            v-for="(todo, index) in todayTodos"
-            :key="todo.id"
-            :todo="todo"
-            :index="index"
-            :todos="todos"
-            :collapsed="collapsed"
-            :check-box="true"
-            :delete-show="true"
-            @delete-todo="deleteTodo"
-            @toggle-details="toggleDetails"
-            @toggle-sub-items-selection="toggleSubItemsSelection"
-          />
-        </div>
-      </div>
-
-      <!-- 全选和批量删除 -->
-      <div v-if="todayTodos.length > 0" class="todo-actions mt-4 flex items-center mt-auto">
-        <n-checkbox
-          v-model:checked="selectAll"
-          class="min-w-60px"
-          @update:checked="toggleSelectAll"
-        >
-          全选
-        </n-checkbox>
-        <div v-if="!collapsed" class="flex ml-10px">
-          已完成 : {{ selected.length }} / 总数量 : {{ todayTodos.length }}
-        </div>
-        <div
-          v-show="!detailVisible && !useUser.isRightTop && !useUser.isHide"
-          class="flex ml-40px gap-20px min-w-200px overflow-hidden"
-        >
-          <div class="flex items-center gap-5px text-13px">
-            <span class="w-15px h-15px rounded-50% bg-red"></span>
-            紧急
-          </div>
-          <div class="flex items-center gap-5px text-13px">
-            <span class="w-15px h-15px rounded-50% bg-orange"></span>
-            有点急
-          </div>
-          <div class="flex items-center gap-5px text-13px">
-            <span class="w-15px h-15px rounded-50% bg-gray"></span>
-            一般急
-          </div>
-          <div class="flex items-center gap-5px text-13px">
-            <span class="w-15px h-15px rounded-50% bg-green-500"></span>
-            不急
+  <div class="flex flex-col h-full shadow-lg">
+    <!-- 修改这部分 -->
+    <div class="window-list p-10px">
+      <div class="text-14px mb-10px">采集到的窗口</div>
+      <div class="scroll-container">
+        <div class="flex gap-15px">
+          <div
+            v-for="window in windows"
+            :key="window.id"
+            class="window-item shrink-0"
+            :class="{ active: selectedWindow?.id === window.id }"
+            @click="selectWindow(window)"
+          >
+            <img
+              :src="window.thumbnail"
+              :alt="window.name"
+              class="w-200px h-120px object-cover rounded-8px"
+            />
+            <div class="window-name mt-8px text-14px truncate max-w-200px">{{ window?.name }}</div>
           </div>
         </div>
-        <i
-          i-solar-trash-bin-minimalistic-2-linear
-          class="w-20px h-20px hover:text-red-500 cursor-pointer ml-auto"
-          @click.stop="deleteSelected"
-        ></i>
       </div>
     </div>
 
-    <!-- 右侧区域：Todo 详情 -->
-    <div
-      class="todo-details border-l border-gray-200 animate__animated overflow-hidden item-transition bg-white shadow-xl theme-page"
-      :class="[
-        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-6' : 'animate__fadeOutRight w-0',
-        collapsed ? 'absolute top-0 w-190px h-400px right-0' : ''
-      ]"
-    >
-      <div v-show="detailVisible" class="h-full flex flex-col">
-        <!-- 头部区域 -->
-        <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
-          <div class="flex-1 flex items-center">
-            <h2 class="text-20px font-semibold text-gray-600 truncate">
-              {{ selectedTodo?.text }}
-            </h2>
+    <!-- 预览和控制区域 -->
+    <div v-if="selectedWindow" class="preview-area flex-1 relative">
+      <div v-if="isRecording" class="recording-status">
+        <div class="flex items-center gap-2">
+          <div class="recording-dot" :class="{ paused: isPaused }"></div>
+          <span>{{ isPaused ? '已暂停' : '正在录制中' }}</span>
+          <span>已录制: {{ recordingTime }}</span>
+        </div>
+      </div>
 
-            <i
-              i-solar-double-alt-arrow-right-line-duotone
-              class="w-20px h-20px cursor-pointer hover:text-red-500 ml-auto"
-              @click="hideDetails"
+      <div class="preview-window bg-gray-100 rounded-8px p-15px relative">
+        <video ref="videoRef" class="w-full max-h-[calc(100vh-380px)] object-contain"></video>
+        <!-- 修改选区层 -->
+        <div
+          v-if="isSelectingArea || (selectedArea.width > 0 && isRecording)"
+          class="select-area-overlay absolute inset-0"
+          @mousedown="startSelection"
+          @mousemove="updateSelection"
+          @mouseup="endSelection"
+        >
+          <div
+            v-if="selectionBox.isDrawing || selectedArea.width > 0"
+            class="selection-box absolute"
+            :style="{
+              left: `${selectionBox.isDrawing ? selectionBox.x : selectedArea.x}px`,
+              top: `${selectionBox.isDrawing ? selectionBox.y : selectedArea.y}px`,
+              width: `${selectionBox.isDrawing ? selectionBox.width : selectedArea.width}px`,
+              height: `${selectionBox.isDrawing ? selectionBox.height : selectedArea.height}px`
+            }"
+          ></div>
+        </div>
+      </div>
+
+      <div class="control-panel mt-15px flex justify-center gap-15px items-center">
+        <n-tooltip v-if="!isRecording && !isSelectingArea" trigger="hover">
+          <template #trigger>
+            <img
+              class="w-30px h-30px cursor-pointer"
+              src="@renderer/assets/img/start.png"
+              @click="toggleRecording"
             />
-          </div>
-        </div>
+          </template>
+          开始录制
+        </n-tooltip>
 
-        <!-- 主体内容 -->
-        <div class="flex-1 h-100%">
-          <!-- 基本信息卡片 -->
-          <div class="mb-3 bg-gray-50 rounded-lg">
-            <div class="space-y-4 theme-page">
-              <div class="text-gray-600 text-14px">{{ selectedTodo?.text }}</div>
-              <div>
-                <label class="text-sm font-medium text-gray-500">详细描述</label>
+        <n-tooltip v-else-if="isRecording && !isSelectingArea" trigger="hover">
+          <template #trigger>
+            <svg-icon
+              name="stop"
+              class="cursor-pointer"
+              :width="30"
+              :height="30"
+              @click="toggleRecording"
+            />
+          </template>
+          结束录制
+        </n-tooltip>
 
-                <div class="mt-1 text-gray-400 flex items-center gap-1">
-                  <n-input
-                    v-if="inputVisible && selectedTodo"
-                    v-model:value="selectedTodo.description"
-                    placeholder="输入描述"
-                    size="medium"
-                    @blur="descChange"
-                  />
-                  <div v-else class="flex items-center gap-1 text-13px">
-                    <p v-if="selectedTodo?.description" @click="inputVisible = true">
-                      {{ selectedTodo?.description }}
-                    </p>
-                    <div v-else class="flex items-center gap-1 text-13px">
-                      {{ '无附加描述' }}
-                      <i i-solar-pen-2-broken @click="editDescription"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <n-tooltip v-if="isRecording && !isPaused" trigger="hover">
+          <template #trigger>
+            <svg-icon
+              name="zhanting"
+              class="cursor-pointer"
+              :width="25"
+              :height="25"
+              @click="togglePause"
+            />
+          </template>
+          暂停录制
+        </n-tooltip>
 
-              <div class="flex items-center gap-1">
-                <span class="text-sm font-medium text-gray-500 flex items-center gap-1 flex-1">
-                  <i i-solar-fire-minimalistic-broken></i>
-                  紧急程度：</span
-                >
-                <n-select
-                  v-if="selectedTodo"
-                  v-model:value="selectedTodo.status"
-                  size="small"
-                  class="w-100px"
-                  :options="options"
-                  @update:value="saveTodo"
-                />
-              </div>
+        <n-tooltip v-else-if="isRecording && isPaused" trigger="hover">
+          <template #trigger>
+            <svg-icon
+              name="jixu"
+              class="cursor-pointer"
+              :width="30"
+              :height="30"
+              @click="togglePause"
+            />
+          </template>
+          继续录制
+        </n-tooltip>
 
-              <div class="flex items-center gap-1">
-                <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
-                  <i i-solar-tea-cup-broken></i>
-                  状态：</span
-                >
-                <n-tag :type="selectedTodo?.completed ? 'success' : 'warning'" size="small">
-                  {{ selectedTodo?.completed ? '已完成' : '进行中' }}
-                </n-tag>
-              </div>
+        <n-tooltip v-if="!isSelectingArea && !isRecording" trigger="hover">
+          <template #trigger>
+            <svg-icon
+              name="kuang"
+              class="cursor-pointer"
+              :width="30"
+              :height="30"
+              @click="toggleAreaSelection"
+            />
+          </template>
+          框选录制
+        </n-tooltip>
 
-              <div>
-                <label class="text-sm font-medium text-gray-500 flex items-center gap-1">
-                  <i i-solar-history-2-outline></i>
-                  创建时间</label
-                >
-                <div
-                  class="mt-1 text-sm text-gray-400 max-w-140px overflow-hidden text-ellipsis text-nowrap"
-                >
-                  {{ selectedTodo?.createdAt }}
-                </div>
-              </div>
-            </div>
-          </div>
+        <n-tooltip v-else-if="isSelectingArea && !isRecording" trigger="hover">
+          <template #trigger>
+            <svg-icon
+              name="no-kuang"
+              class="cursor-pointer"
+              :width="30"
+              :height="30"
+              @click="toggleAreaSelection"
+            />
+          </template>
+          取消框选
+        </n-tooltip>
 
-          <!-- 子任务区域 -->
-          <div class="border-t pt-4 h-[calc(100%-220px)]">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="font-medium flex items-center gap-2">
-                <i i-solar-paperclip-bold-duotone class="w-4 h-4 text-blue-500" />
-                子任务 ({{ selectedTodo?.subTodos?.length || 0 }})
-              </h3>
-              <span v-if="!collapsed" class="text-xs text-gray-400">最大支持4级嵌套</span>
-            </div>
-
-            <!-- 添加子项 -->
-            <div v-if="selectedTodo && selectedTodo?.level < 4" class="mb-4">
-              <n-input
-                v-model:value="newSubTodoText"
-                placeholder="输入子任务内容"
-                size="medium"
-                round
-                @keyup.enter="addSubTodo"
-              >
-                <template #suffix>
-                  <i class="i-solar-add-circle-line-duotone text-gray-400" />
-                </template>
-              </n-input>
-            </div>
-
-            <!-- 子项列表 -->
-            <div v-if="selectedTodo?.subTodos?.length" class="h-[calc(100%-100px)] overflow-y-auto">
-              <div
-                v-for="subTodo in selectedTodo.subTodos"
-                :key="subTodo.id"
-                class="group flex items-center p-2 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <n-checkbox
-                  v-model:checked="subTodo.completed"
-                  class="mr-3"
-                  :class="{ 'opacity-50': subTodo.completed }"
-                />
-                <span
-                  class="flex-1 text-gray-500 transition-all"
-                  :class="{
-                    'line-through text-gray-400': subTodo.completed,
-                    'opacity-75 hover:opacity-100': !subTodo.completed
-                  }"
-                >
-                  {{ subTodo.text }}
-                </span>
-                <i
-                  v-if="subTodo.subTodos?.length"
-                  class="i-solar-arrow-right-line-duotone ml-2 text-gray-300 group-hover:text-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        <n-tooltip v-if="!isSelectingArea && !isRecording" trigger="hover">
+          <template #trigger>
+            <svg-icon
+              name="shuaxin"
+              class="cursor-pointer"
+              :width="30"
+              :height="30"
+              @click="refreshWindows"
+            />
+          </template>
+          刷新窗口列表
+        </n-tooltip>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import useThemeStore from '@renderer/stores/modules/theme'
-import useUserStore from '@renderer/stores/modules/user'
-import TodoItem from '@renderer/components/common/TodoItem.vue'
-import { $msg } from '@renderer/config/interaction.config'
-import dayjs from 'dayjs'
+import { ref } from 'vue'
 
-// 定义 Todo 类型，包括子项
-export interface Todo {
-  id: number
-  text: string
-  completed: boolean
-  isRemove: boolean
-  createdAt: string
-  subTodos: Todo[] // 子项
-  level: number
-  description: string
-  status: number
+interface Window {
+  id: string
+  name: string
+  thumbnail: string
 }
 
-const useTheme = useThemeStore()
-const useUser = useUserStore()
+const windows = ref<Window[]>([])
+const selectedWindow = ref<Window | null>(null)
+const isRecording = ref(false)
+const videoRef = ref<HTMLVideoElement | null>(null)
+const mediaRecorder = ref<MediaRecorder | null>(null)
+const recordingTime = ref('00:00')
+let recordingInterval: NodeJS.Timer | null = null
+// 添加已选择区域的状态
+const selectedArea = ref({
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0
+})
+// 获取窗口列表
+const refreshWindows = async () => {
+  try {
+    const sources = await window.electron.ipcRenderer.invoke('get-sources')
+    windows.value = sources.filter((source) => source.thumbnail.length > 100)
+    selectWindow(windows.value[0])
+  } catch (error) {
+    console.error('获取窗口列表失败:', error)
+  }
+}
 
-const value = ref('')
-const todos = ref<Todo[]>([])
-const selectedTodo = ref<Todo | null>(null)
-const selectIndex = ref(0)
-const newSubTodoText = ref('')
-const selectAll = ref(false)
-const collapsed = computed(() => useTheme.$state.collapsed)
-const detailVisible = ref(false)
-const detailAnimate = ref(false)
-const inputVisible = ref(false)
+// 添加暂停状态
+const isPaused = ref(false)
+// 添加暂停功能
+const togglePause = () => {
+  if (!mediaRecorder.value) return
 
-const selected = computed(() => todayTodos.value.filter((todo) => todo.completed))
-const historyData = ref<Todo[]>([])
+  isPaused.value = !isPaused.value
+  if (isPaused.value) {
+    mediaRecorder.value.pauseRecording()
+    // 暂停计时器
+    if (recordingInterval) {
+      clearInterval(recordingInterval)
+      recordingInterval = null
+    }
+  } else {
+    mediaRecorder.value.resumeRecording()
+    // 恢复计时器
+    const startTime =
+      Date.now() -
+      parseInt(recordingTime.value.split(':')[0]) * 60000 -
+      parseInt(recordingTime.value.split(':')[1]) * 1000
+    recordingInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000)
+      const minutes = Math.floor(elapsed / 60)
+        .toString()
+        .padStart(2, '0')
+      const seconds = (elapsed % 60).toString().padStart(2, '0')
+      recordingTime.value = `${minutes}:${seconds}`
+    }, 1000)
+  }
+}
 
-// 获取今天创建的所有 todos
-const todayTodos = computed(() => {
-  return todos.value.filter((todo) => isTodoCreatedToday(todo.createdAt))
+// 选择窗口
+// 修改 selectWindow 函数，添加裁剪参数
+const selectWindow = async (window: Window) => {
+  selectedWindow.value = window
+  try {
+    // 获取原始窗口流
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        mandatory: {
+          chromeMediaSource: 'desktop',
+          chromeMediaSourceId: window.id
+        }
+      }
+    })
+
+    if (videoRef.value) {
+      videoRef.value.srcObject = stream
+      videoRef.value.play()
+    }
+  } catch (error) {
+    console.error('Error accessing media devices:', error)
+  }
+}
+
+// 引入 RecordRTC
+import RecordRTC from 'recordrtc'
+
+// 修改 toggleRecording 函数
+const toggleRecording = async () => {
+  if (!videoRef.value?.srcObject) return
+
+  if (!isRecording.value) {
+    try {
+      const videoElement = videoRef.value
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d', {
+        alpha: false,
+        desynchronized: true,
+        willReadFrequently: false
+      })
+      if (!ctx || !videoElement) return
+
+      // 修改视频区域计算方式
+      const videoRect = videoElement.getBoundingClientRect()
+      const videoAspectRatio = videoElement.videoWidth / videoElement.videoHeight
+      const containerAspectRatio = videoRect.width / videoRect.height
+
+      let renderWidth = videoRect.width
+      let renderHeight = videoRect.height
+      let renderX = 0
+      let renderY = 0
+
+      if (containerAspectRatio > videoAspectRatio) {
+        renderWidth = videoRect.height * videoAspectRatio
+        renderX = (videoRect.width - renderWidth) / 2
+      } else {
+        renderHeight = videoRect.width / videoAspectRatio
+        renderY = (videoRect.height - renderHeight) / 2
+      }
+
+      // 设置 canvas 尺寸
+      if (selectedArea.value.width && selectedArea.value.height) {
+        // 如果有选区，使用选区大小
+        const scaleX = videoElement.videoWidth / renderWidth
+        const scaleY = videoElement.videoHeight / renderHeight
+        const adjustedWidth = selectedArea.value.width * scaleX
+        const adjustedHeight = selectedArea.value.height * scaleY
+        canvas.width = adjustedWidth
+        canvas.height = adjustedHeight
+      } else {
+        // 如果没有选区，使用原始视频尺寸
+        canvas.width = videoElement.videoWidth
+        canvas.height = videoElement.videoHeight
+      }
+
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+
+      const drawFrame = () => {
+        if (!ctx || !videoElement) return
+        try {
+          if (selectedArea.value.width && selectedArea.value.height) {
+            // 有选区时的绘制逻辑
+            const scaleX = videoElement.videoWidth / renderWidth
+            const scaleY = videoElement.videoHeight / renderHeight
+            const adjustedX = (selectedArea.value.x - renderX - 10) * scaleX
+            const adjustedY = (selectedArea.value.y - renderY - 12) * scaleY
+            const adjustedWidth = selectedArea.value.width * scaleX
+            const adjustedHeight = selectedArea.value.height * scaleY
+
+            ctx.drawImage(
+              videoElement,
+              adjustedX,
+              adjustedY,
+              adjustedWidth,
+              adjustedHeight,
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            )
+          } else {
+            // 无选区时直接绘制整个视频
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
+          }
+          if (isRecording.value) {
+            requestAnimationFrame(drawFrame)
+          }
+        } catch (err) {
+          console.error('绘制帧时出错:', err)
+        }
+      }
+
+      const stream = canvas.captureStream(60)
+      mediaRecorder.value = new RecordRTC(stream, {
+        type: 'video',
+        mimeType: 'video/webm;codecs=vp9', // 使用 VP9 编码器
+        frameRate: 60,
+        quality: 100,
+        width: canvas.width,
+        height: canvas.height,
+        videoBitsPerSecond: 50000000, // 提高到 50Mbps
+        bitsPerSecond: 50000000,
+        videoRecorderType: 'MediaRecorder',
+        disableLogs: true,
+        timeSlice: 1000
+      })
+
+      // 开始录制
+      mediaRecorder.value.startRecording()
+      isRecording.value = true
+      drawFrame()
+
+      // 启动计时器
+      const startTime = Date.now()
+      recordingInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000)
+        const minutes = Math.floor(elapsed / 60)
+          .toString()
+          .padStart(2, '0')
+        const seconds = (elapsed % 60).toString().padStart(2, '0')
+        recordingTime.value = `${minutes}:${seconds}`
+      }, 1000)
+    } catch (error) {
+      console.error('录制失败:', error)
+    }
+  } else {
+    // 停止录制
+    if (mediaRecorder.value) {
+      mediaRecorder.value.stopRecording(() => {
+        const blob = mediaRecorder.value.getBlob()
+        if (blob.size === 0) {
+          console.error('录制的视频大小为0')
+          return
+        }
+
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.style.display = 'none'
+        a.href = url
+        a.download = `recording-${Date.now()}.webm`
+        document.body.appendChild(a)
+        a.click()
+
+        setTimeout(() => {
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
+        }, 100)
+
+        // 清空选区
+        selectedArea.value = {
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0
+        }
+      })
+    }
+    isRecording.value = false
+    if (recordingInterval) {
+      clearInterval(recordingInterval)
+      recordingInterval = null
+    }
+    recordingTime.value = '00:00'
+  }
+}
+// 初始化加载窗口列表
+refreshWindows()
+
+// 添加新的状态
+const isSelectingArea = ref(false)
+const selectionBox = ref({
+  startX: 0,
+  startY: 0,
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+  isDrawing: false
 })
 
-const options = [
-  {
-    label: '紧急',
-    value: 1
-  },
-  {
-    label: '有点急',
-    value: 2
-  },
-  {
-    label: '一般急',
-    value: 3
-  },
-  {
-    label: '不急',
-    value: 4
+// 切换区域选择模式
+const toggleAreaSelection = () => {
+  isSelectingArea.value = !isSelectingArea.value
+  if (!isSelectingArea.value) {
+    // 清除选区
+    selectedArea.value = {
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0
+    }
   }
-]
+  selectionBox.value.isDrawing = false
+}
 
-// 添加 Todo 项
-const addTodo = async () => {
-  if (!useUser.filePath) {
-    $msg({
-      type: 'warning',
-      msg: '请前往设置记录存放地址'
-    })
+// 开始选择
+const startSelection = (e: MouseEvent) => {
+  const target = e.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  const videoElement = videoRef.value
+
+  if (!videoElement) return
+
+  const videoRect = videoElement.getBoundingClientRect()
+  const videoAspectRatio = videoElement.videoWidth / videoElement.videoHeight
+  const containerAspectRatio = videoRect.width / videoRect.height
+
+  let renderX = 0
+  let renderY = 0
+
+  if (containerAspectRatio > videoAspectRatio) {
+    const renderWidth = videoRect.height * videoAspectRatio
+    renderX = (videoRect.width - renderWidth) / 2
+  } else {
+    const renderHeight = videoRect.width / videoAspectRatio
+    renderY = (videoRect.height - renderHeight) / 2
+  }
+
+  const x = Math.max(renderX, Math.min(e.clientX - rect.left, videoRect.width - renderX))
+  const y = Math.max(renderY, Math.min(e.clientY - rect.top, videoRect.height - renderY))
+
+  selectionBox.value = {
+    startX: x,
+    startY: y,
+    x,
+    y,
+    width: 0,
+    height: 0,
+    isDrawing: true
+  }
+}
+
+// 更新选择框
+const updateSelection = (e: MouseEvent) => {
+  if (!selectionBox.value.isDrawing) return
+
+  const target = e.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  const videoElement = videoRef.value
+
+  if (!videoElement) return
+
+  // 获取视频实际显示尺寸和位置
+  const videoRect = videoElement.getBoundingClientRect()
+
+  // 计算视频在容器中的实际显示区域
+  const videoAspectRatio = videoElement.videoWidth / videoElement.videoHeight
+  const containerAspectRatio = videoRect.width / videoRect.height
+
+  let renderWidth = videoRect.width
+  let renderHeight = videoRect.height
+  let renderX = 0
+  let renderY = 0
+
+  // 根据 object-contain 的规则计算实际显示区域
+  if (containerAspectRatio > videoAspectRatio) {
+    renderWidth = renderHeight * videoAspectRatio
+    renderX = (videoRect.width - renderWidth) / 2
+  } else {
+    renderHeight = renderWidth / videoAspectRatio
+    renderY = (videoRect.height - renderHeight) / 2
+  }
+
+  // 计算鼠标位置相对于实际视频显示区域的坐标
+  const currentX = Math.max(renderX, Math.min(renderX + renderWidth, e.clientX - rect.left))
+  const currentY = Math.max(renderY, Math.min(renderY + renderHeight, e.clientY - rect.top))
+
+  const width = currentX - selectionBox.value.startX
+  const height = currentY - selectionBox.value.startY
+
+  // 更新选框位置和大小
+  selectionBox.value.x = width < 0 ? currentX : selectionBox.value.startX
+  selectionBox.value.y = height < 0 ? currentY : selectionBox.value.startY
+  selectionBox.value.width = Math.abs(width)
+  selectionBox.value.height = Math.abs(height)
+}
+
+// 结束选择
+const endSelection = () => {
+  if (selectionBox.value.width < 10 || selectionBox.value.height < 10) {
+    selectionBox.value.isDrawing = false
     return
   }
 
-  if (value.value.trim()) {
-    try {
-      const newTodo = {
-        id: Date.now(),
-        text: value.value,
-        completed: false,
-        isRemove: false,
-        createdAt: new Date().toLocaleString(), // 格式化当前时间
-        subTodos: [], // 初始化子项为空数组
-        level: 1,
-        description: '',
-        status: 4
-      }
-      todos.value.push(newTodo)
-      historyData.value.push(newTodo)
-      value.value = ''
-
-      // 写入内容
-      await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-      await window.api.writeFile(useUser.historyFullPath, JSON.stringify(historyData.value))
-    } catch (error) {
-      console.error('保存失败:', error)
-    }
+  // 保存选择的区域
+  selectedArea.value = {
+    x: selectionBox.value.x,
+    y: selectionBox.value.y,
+    width: selectionBox.value.width,
+    height: selectionBox.value.height
   }
+
+  selectionBox.value.isDrawing = false
+  isSelectingArea.value = false
+  // 开始录制
+  toggleRecording()
 }
-
-// 删除 Todo 项
-const deleteTodo = (data: any, index: number) => {
-  data[index].isRemove = true
-  setTimeout(() => {
-    data.splice(index, 1)
-    window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-  }, 500)
-  hided()
-}
-
-const hided = () => {
-  detailVisible.value = false
-  selectedTodo.value = null
-  detailAnimate.value = false
-}
-
-// 切换详情显示和隐藏
-const toggleDetails = (todo: Todo, index: number) => {
-  selectIndex.value = index
-  if (selectedTodo.value && selectedTodo.value.id === todo.id) {
-    hided()
-  } else {
-    selectedTodo.value = todo
-    detailVisible.value = true
-    detailAnimate.value = true
-  }
-}
-
-// 隐藏详情页
-const hideDetails = () => {
-  hided()
-}
-
-// 添加子项
-const addSubTodo = async () => {
-  if (newSubTodoText.value.trim() && selectedTodo.value) {
-    const newSubTodo = {
-      id: Date.now(),
-      completed: false,
-      isRemove: false,
-      createdAt: new Date().toLocaleString(), // 格式化当前时间
-      subTodos: [], // 初始化子项为空数组
-      text: newSubTodoText.value,
-      level: selectedTodo.value.level + 1,
-      description: '',
-      status: 4
-    }
-    historyData.value.push(newSubTodo)
-    selectedTodo.value.subTodos.push(newSubTodo)
-    await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-    await window.api.writeFile(useUser.historyFullPath, JSON.stringify(historyData.value))
-    newSubTodoText.value = ''
-  }
-}
-
-// 切换全选状态
-const toggleSelectAll = () => {
-  todos.value.forEach((todo) => {
-    todo.completed = selectAll.value
-    todo.subTodos.forEach((subTodo) => {
-      subTodo.completed = selectAll.value
-    })
-  })
-
-  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-}
-
-// 删除选中的 Todo 项
-const deleteSelected = () => {
-  todos.value.forEach((element) => {
-    if (!element.completed) return
-    element.isRemove = true
-    element.subTodos.forEach((subTodo) => {
-      if (subTodo.completed) {
-        subTodo.isRemove = true
-      }
-    })
-  })
-
-  setTimeout(async () => {
-    todos.value = todos.value.filter((todo) => !todo.completed)
-    selectAll.value = false // 取消全选
-    // 写入内容
-    await window.api.writeFile(useUser.fileFullPath, JSON.stringify([]))
-  }, 500)
-
-  hided()
-}
-
-// 子项勾选时，切换所有子项的状态
-const toggleSubItemsSelection = (todo: Todo) => {
-  const isSelected = todo.completed
-  todo.subTodos.forEach((subTodo) => {
-    subTodo.completed = isSelected
-    // 子项的子项（递归）
-    subTodo.subTodos?.forEach((subSubTodo) => {
-      subSubTodo.completed = isSelected
-    })
-  })
-
-  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-  if (todos.value.length > 0) {
-    const allSelected = todos.value.every((todo) => todo.completed)
-    selectAll.value = allSelected
-  }
-}
-
-const editDescription = () => {
-  inputVisible.value = !inputVisible.value
-}
-
-const saveTodo = () => {
-  console.log(todayTodos.value, 'todayTodos.value')
-  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-}
-
-const descChange = () => {
-  inputVisible.value = false
-  saveTodo()
-}
-
-// 判断 todo 是否是今天创建的
-const isTodoCreatedToday = (createdAt: string) => {
-  return dayjs(createdAt).isSame(dayjs(), 'day')
-}
-
-onMounted(() => {
-  const data = Array.isArray(window.api.readFile(useUser.fileFullPath))
-    ? window.api.readFile(useUser.fileFullPath)
-    : []
-
-  historyData.value = Array.isArray(window.api.readFile(useUser.historyFullPath))
-    ? window.api.readFile(useUser.historyFullPath)
-    : []
-  if (data) {
-    todos.value = data
-    // 检查是否所有项目都被选中
-    if (todos.value.length > 0) {
-      const allSelected = todos.value.every((todo) => todo.completed)
-      selectAll.value = allSelected
-    }
-  }
-})
 </script>
 
-<style lang="scss">
-.item-transition {
-  transition: all 0.3s;
+<style scoped>
+/* 修改和添加以下样式 */
+.window-list {
+  @apply w-full;
 }
 
-.todo-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  border-bottom: 1px solid #e0e0e0;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.scroll-container {
+  @apply w-full overflow-x-auto;
+  padding-bottom: 10px; /* 为滚动条预留空间 */
 }
 
-.todo-item:hover {
-  transition: all 0.3s;
+.window-item {
+  @apply cursor-pointer transition-all duration-300 p-10px rounded-8px border-2;
+  min-width: 220px; /* 确保每个项目有最小宽度 */
+
+  &.active {
+    @apply border-blue;
+  }
 }
 
-.todo-actions {
-  display: flex;
-  align-items: center;
-  padding: 10px;
+/* 修改滚动条样式 */
+.scroll-container::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
 }
 
-.todo-details {
-  border: 1px solid #e0e0e0;
-  border-radius: 5px;
-  background-color: #f9f9f9;
+.scroll-container::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
 }
 
-.line-through {
-  text-decoration: line-through;
+.scroll-container::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
 }
 
-.max-length {
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* 其他样式保持不变 */
+.select-area-overlay {
+  cursor: crosshair;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.selection-box {
+  border: 2px solid #2080f0;
+  background: rgba(32, 128, 240, 0.2);
+  pointer-events: none;
+  z-index: 11;
+}
+
+.preview-window {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.todo-subitems {
-  padding-left: 20px;
+.recording-status {
+  @apply fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-full z-50 flex items-center;
+}
+
+.recording-dot {
+  @apply w-3 h-3 rounded-full bg-white animate-pulse mr-2;
 }
 </style>

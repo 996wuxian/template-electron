@@ -1,4 +1,4 @@
-import { contextBridge } from 'electron'
+import { contextBridge, desktopCapturer } from 'electron'
 import { existsSync, appendFile, writeFileSync, readFileSync } from 'fs'
 import path from 'path'
 import os from 'os'

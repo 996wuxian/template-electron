@@ -9,8 +9,8 @@ let mainWindow: BrowserWindow | null = null
 function createWindow(): void {
   const iconPath = join(__dirname, '../../resources/icon.png')
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1100,
+    height: 770,
     show: false,
     autoHideMenuBar: true,
     icon: iconPath,

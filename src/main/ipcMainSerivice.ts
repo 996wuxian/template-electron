@@ -1,5 +1,12 @@
 import { is } from '@electron-toolkit/utils'
-import { BrowserWindow, ipcMain, IpcMainInvokeEvent, screen, dialog } from 'electron'
+import {
+  BrowserWindow,
+  ipcMain,
+  IpcMainInvokeEvent,
+  screen,
+  dialog,
+  desktopCapturer
+} from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
 
@@ -231,6 +238,18 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   // 关闭窗口
   ipcMain.handle('close-window', () => {
     mainWindow?.close()
+  })
+
+  ipcMain.handle('get-sources', async () => {
+    const sources = await desktopCapturer.getSources({
+      types: ['window'],
+      thumbnailSize: { width: 300, height: 200 }
+    })
+    return sources.map((source) => ({
+      id: source.id,
+      name: source.name,
+      thumbnail: source.thumbnail.toDataURL()
+    }))
   })
 
   // 窗口缩放动画

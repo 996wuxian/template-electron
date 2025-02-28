@@ -48,46 +48,6 @@ export const asyncRoutes = [
       }
     ]
   },
-  {
-    path: '/recently-page',
-    name: 'RecentlyPage',
-    component: Layout,
-    meta: {
-      title: '最近待办',
-      icon: 'i-solar-widget-5-bold-duotone',
-      hide: false
-    },
-    children: [
-      {
-        path: '/recently',
-        name: 'Recently',
-        component: () => import('@renderer/views/recently/index.vue'),
-        meta: {
-          title: '最近待办'
-        }
-      }
-    ]
-  },
-  {
-    path: '/count-page',
-    name: 'CountPage',
-    component: Layout,
-    meta: {
-      title: '统计',
-      icon: 'i-solar-checklist-minimalistic-bold-duotone',
-      hide: false
-    },
-    children: [
-      {
-        path: '/count',
-        name: 'Count',
-        component: () => import('@renderer/views/count/index.vue'),
-        meta: {
-          title: '统计'
-        }
-      }
-    ]
-  },
 
   {
     path: '/floating',

@@ -52,18 +52,6 @@
               </template>
               悬浮窗
             </n-tooltip>
-            <n-tooltip trigger="hover">
-              <template #trigger>
-                <i i-solar-upload-square-broken @click="handleWindowResizeAndAnimate"></i>
-              </template>
-              收缩至顶部
-            </n-tooltip>
-            <n-tooltip trigger="hover">
-              <template #trigger>
-                <i i-solar-maximize-square-3-broken @click="handlePinToDesktop"></i>
-              </template>
-              固定至右上角
-            </n-tooltip>
 
             <template v-if="!size">
               <n-tooltip trigger="hover">
@@ -152,34 +140,6 @@ const handleMouseLeave = async () => {
   useUser.setTop({ type: 'winTop', value: '1' })
 }
 
-// 贴边隐藏
-const handleWindowResizeAndAnimate = async () => {
-  handlePinToDesktop()
-
-  // 获取当前窗口所在的显示器信息
-  const currentDisplay = await window.electron.ipcRenderer.invoke('get-current-display')
-  if (!currentDisplay) return
-  const { width: screenWidth } = currentDisplay.workAreaSize
-  // 设置窗口目标位置和大小
-  const targetWidth = 300
-  const targetHeight = 400
-  const targetX = currentDisplay.bounds.x + screenWidth - targetWidth - 100
-  const targetY = currentDisplay.bounds.y - 390
-
-  window.electron.ipcRenderer.invoke('set-window-draggable', false)
-  toggleDragState(false)
-
-  setTimeout(() => {
-    animateWindow(targetX, targetY, targetWidth, targetHeight, 15)
-    useUser.setTop({ type: 'isTop', value: '1' })
-    useUser.setTop({ type: 'winTop', value: '1' })
-
-    window.document.addEventListener('mouseenter', handleMouseEnter)
-
-    window.document.addEventListener('mouseleave', handleMouseLeave)
-  }, 1000)
-}
-
 const toggleDragState = (isDraggable: boolean) => {
   if (header.value) {
     ;(header.value.style as any).webkitAppRegion = isDraggable ? 'drag' : 'no-drag'
@@ -204,29 +164,6 @@ const animateWindow = async (
   })
 }
 
-// 处理窗口缩小到右上角
-const handlePinToDesktop = async () => {
-  useTheme.setStatus({ type: 'collapsed', bool: true })
-  useTheme.setSize({ type: 'sideWidth', size: 90 })
-  useUser.setStatus({ type: 'isRightTop', value: true })
-  isShow.value = false
-
-  // 获取当前窗口所在的显示器信息
-  const currentDisplay = await window.electron.ipcRenderer.invoke('get-current-display')
-  if (!currentDisplay) return
-
-  const { width: screenWidth } = currentDisplay.workAreaSize
-
-  // 设置窗口目标位置和大小
-  const targetWidth = 300
-  const targetHeight = 400
-  const targetX = currentDisplay.bounds.x + screenWidth - targetWidth - 100
-  const targetY = currentDisplay.bounds.y + 50
-
-  // 调用公共动画方法
-  await animateWindow(targetX, targetY, targetWidth, targetHeight, 15)
-}
-
 // 处理窗口恢复到居中
 const handleDeskCenter = async () => {
   useTheme.setStatus({ type: 'collapsed', bool: false })
@@ -243,10 +180,10 @@ const handleDeskCenter = async () => {
   const { x: screenX, y: screenY } = currentDisplay.bounds
 
   // 设置窗口目标位置和大小
-  const targetWidth = 900
-  const targetHeight = 670
-  const targetX = screenX + (screenWidth - 900) / 2
-  const targetY = screenY + (screenHeight - 670) / 2
+  const targetWidth = 1100
+  const targetHeight = 770
+  const targetX = screenX + (screenWidth - 1100) / 2
+  const targetY = screenY + (screenHeight - 770) / 2
 
   // 调用公共动画方法
   await animateWindow(targetX, targetY, targetWidth, targetHeight, 10)
