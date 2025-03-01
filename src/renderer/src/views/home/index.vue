@@ -33,6 +33,7 @@
             :collapsed="collapsed"
             :check-box="true"
             :delete-show="true"
+            :status-show="true"
             @delete-todo="deleteTodo"
             @toggle-details="toggleDetails"
             @toggle-sub-items-selection="toggleSubItemsSelection"

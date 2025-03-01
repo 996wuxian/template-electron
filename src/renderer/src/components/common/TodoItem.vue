@@ -18,10 +18,13 @@
         {{ todo.text }}
         <span class="text-12px text-gray">{{ todo.description }}</span>
       </div>
-      <div v-if="todo.status === 1" class="w-15px h-15px rounded-50% bg-red mr-10px"></div>
-      <div v-if="todo.status === 2" class="w-15px h-15px rounded-50% bg-orange mr-10px"></div>
-      <div v-if="todo.status === 3" class="w-15px h-15px rounded-50% bg-gray mr-10px"></div>
-      <div v-if="todo.status === 4" class="w-15px h-15px rounded-50% bg-green-500 mr-10px"></div>
+      <div v-if="statusShow">
+        <div v-if="todo.status === 1" class="w-15px h-15px rounded-50% bg-red mr-10px"></div>
+        <div v-if="todo.status === 2" class="w-15px h-15px rounded-50% bg-orange mr-10px"></div>
+        <div v-if="todo.status === 3" class="w-15px h-15px rounded-50% bg-gray mr-10px"></div>
+        <div v-if="todo.status === 4" class="w-15px h-15px rounded-50% bg-green-500 mr-10px"></div>
+      </div>
+
       <i
         v-if="deleteShow"
         i-solar-trash-bin-minimalistic-2-linear
@@ -40,6 +43,7 @@
         :collapsed="collapsed"
         :check-box="checkBox"
         :delete-show="deleteShow"
+        :status-show="statusShow"
         @delete-todo="deleteTodo"
         @toggle-details="toggleDetails"
         @toggle-sub-items-selection="toggleSubItemsSelection"
@@ -68,6 +72,7 @@ interface Props {
   collapsed: boolean
   checkBox: boolean
   deleteShow?: boolean
+  statusShow?: boolean
 }
 
 defineProps<Props>()

@@ -18,8 +18,8 @@
             :key="group.dateKey"
             class="animate__animated animate__fadeInDown"
           >
-            <div class="group-header flex items-center mb-2 px-2">
-              <span class="text-gray-600 font-medium mr-2">{{ group.title }}</span>
+            <div class="group-header flex items-center my-2 px-2 font-700">
+              <span class="text-gray-600 mr-2">{{ group.title }}</span>
               <span class="text-gray-400 text-sm">({{ group.tasks.length }}项)</span>
               <div class="flex-1 border-b border-dashed border-gray-200 ml-2"></div>
             </div>
@@ -33,6 +33,7 @@
               :check-box="false"
               :collapsed="collapsed"
               :delete-show="false"
+              :status-show="false"
               @delete-todo="deleteTodo"
               @toggle-details="toggleDetails"
               @toggle-sub-items-selection="toggleSubItemsSelection"
