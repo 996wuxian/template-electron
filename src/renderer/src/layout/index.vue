@@ -1,7 +1,11 @@
 <template>
   <div class="rd-10px">
     <div :style="{ height: headerHeight + 'px' }">
-      <Header></Header>
+      <Header>
+        <template #left>
+          <img class="w-25px h-25px" src="@renderer/assets/img/icon.png" />
+        </template>
+      </Header>
     </div>
     <div class="flex" :style="{ height: `calc(100vh - ${headerHeight}px)` }">
       <Aside :style="{ width: isHideMenu ? 0 : sideWidth + 'px' }"></Aside>
