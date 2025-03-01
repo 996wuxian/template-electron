@@ -32,7 +32,7 @@ export function setupPermissions(router: Router) {
     window?.NProgress?.start()
 
     // const token = Session.get('token')
-    const token = 'todo'
+    const token = 'transcribe'
     if (token) {
       if (to.path === '/login') {
         next({ path: '/' })
