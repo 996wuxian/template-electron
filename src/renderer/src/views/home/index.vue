@@ -167,7 +167,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import RecordRTC from 'recordrtc'
+import RecordRTC, { getSeekableBlob } from 'recordrtc'
 
 interface Window {
   id: string
@@ -425,7 +425,29 @@ const startAreaRecording = async () => {
     }
 
     const stream = canvas.captureStream(60)
-    mediaRecorder.value = new RecordRTC(stream, getRecordRTCConfig(canvas.width, canvas.height))
+    if (canvas.width <= 0 || canvas.height <= 0) {
+      console.error('Invalid canvas dimensions:', canvas.width, canvas.height)
+      return
+    }
+    // 如果开启了音频录制，获取并合并音频流
+    if (isRecordingAudio.value) {
+      const audioStream = await getSystemAudioStream()
+      if (audioStream) {
+        const audioTrack = audioStream.getAudioTracks()[0]
+        const combinedStream = new MediaStream([...stream.getVideoTracks(), audioTrack])
+
+        mediaRecorder.value = new RecordRTC(combinedStream, {
+          ...getRecordRTCConfig(canvas.width, canvas.height),
+          recorderType: RecordRTC.MediaStreamRecorder,
+          mimeType: 'video/webm;codecs=vp9,opus'
+        })
+      } else {
+        mediaRecorder.value = new RecordRTC(stream, getRecordRTCConfig(canvas.width, canvas.height))
+      }
+    } else {
+      mediaRecorder.value = new RecordRTC(stream, getRecordRTCConfig(canvas.width, canvas.height))
+    }
+
     // 开始录制
     mediaRecorder.value.startRecording()
     isRecording.value = true
@@ -451,33 +473,38 @@ const toggleRecording = async () => {
     // 停止录制逻辑保持不变
     if (mediaRecorder.value) {
       mediaRecorder.value.stopRecording(() => {
-        const blob = mediaRecorder.value.getBlob()
+        console.log(mediaRecorder.value, 'mediaRecorder.value')
+        let blob = mediaRecorder.value.getBlob()
         console.log('🚀 ~ mediaRecorder.value.stopRecording ~ blob:', blob)
-        if (blob.size === 0) {
-          console.error('录制的视频大小为0')
-          return
-        }
+        getSeekableBlob(blob, function (seekableBlob) {
+          console.log('🚀 ~ seekableBlob:', seekableBlob)
+          blob = seekableBlob
+          if (blob.size === 0) {
+            console.error('录制的视频大小为0')
+            return
+          }
 
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.style.display = 'none'
-        a.href = url
-        a.download = `recording-${Date.now()}.webm`
-        document.body.appendChild(a)
-        a.click()
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.style.display = 'none'
+          a.href = url
+          a.download = `recording-${Date.now()}.webm`
+          document.body.appendChild(a)
+          a.click()
 
-        setTimeout(() => {
-          document.body.removeChild(a)
-          URL.revokeObjectURL(url)
-        }, 100)
+          setTimeout(() => {
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+          }, 100)
 
-        // 清空选区
-        selectedArea.value = {
-          x: 0,
-          y: 0,
-          width: 0,
-          height: 0
-        }
+          // 清空选区
+          selectedArea.value = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+          }
+        })
       })
     }
     isRecording.value = false
