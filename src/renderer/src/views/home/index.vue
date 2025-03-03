@@ -289,17 +289,44 @@ const getRecordRTCConfig = (width: number, height: number) => ({
   timeSlice: 1000
 })
 
+// 获取系统音频流
+const getSystemAudioStream = async () => {
+  if (!isRecordingAudio.value) return null
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      audio: true,
+      video: false
+    })
+    return stream
+  } catch (error) {
+    console.error('获取系统音频失败:', error)
+    return null
+  }
+}
+
 // 直接录制方法
 const startDirectRecording = async () => {
   if (!videoRef.value?.srcObject) return
   const videoElement = videoRef.value
 
   try {
-    // 直接使用视频流进行录制
-    mediaRecorder.value = new RecordRTC(
-      videoElement.srcObject,
-      getRecordRTCConfig(videoElement.videoWidth, videoElement.videoHeight)
-    )
+    let streamToRecord = videoElement.srcObject as MediaStream
+
+    // 如果开启了音频录制，获取并合并音频流
+    if (isRecordingAudio.value) {
+      const audioStream = await getSystemAudioStream()
+      if (audioStream) {
+        const audioTrack = audioStream.getAudioTracks()[0]
+        streamToRecord = new MediaStream([...streamToRecord.getVideoTracks(), audioTrack])
+      }
+    }
+
+    mediaRecorder.value = new RecordRTC(streamToRecord, {
+      ...getRecordRTCConfig(videoElement.videoWidth, videoElement.videoHeight),
+      // 添加音频相关配置
+      recorderType: RecordRTC.MediaStreamRecorder,
+      mimeType: 'video/webm;codecs=vp9,opus'
+    })
 
     mediaRecorder.value.startRecording()
     isRecording.value = true
@@ -464,8 +491,8 @@ const toggleRecording = async () => {
 
 const changeRecordingAudio = async () => {
   isRecordingAudio.value = !isRecordingAudio.value
-  const source = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-  console.log('🚀 ~ changeRecordingAudio ~ source:', source)
+  // const strem = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+  // console.log('🚀 ~ changeRecordingAudio ~ source:', source)
 }
 
 // 添加新的状态

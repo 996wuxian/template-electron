@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, session, desktopCapturer } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { setupIpcMainHandlers } from './ipcMainSerivice'
@@ -70,6 +70,20 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'))
 
   createWindow()
+
+  session.defaultSession.setDisplayMediaRequestHandler(
+    (request, callback) => {
+      desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
+        // Grant access to the first screen found.
+        callback({ video: sources[0], audio: 'loopback' })
+      })
+      // If true, use the system picker if available.
+      // Note: this is currently experimental. If the system picker
+      // is available, it will be used and the media request handler
+      // will not be invoked.
+    },
+    { useSystemPicker: true }
+  )
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
