@@ -21,3 +21,4 @@ interface Window {
 
 declare module 'mockjs'
 declare module 'qs'
+declare module 'recordrtc'

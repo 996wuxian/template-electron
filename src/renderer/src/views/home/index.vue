@@ -59,89 +59,104 @@
       <div class="control-panel mt-15px flex justify-center gap-15px items-center">
         <n-tooltip v-if="!isRecording && !isSelectingArea" trigger="hover">
           <template #trigger>
-            <img
-              class="w-30px h-30px cursor-pointer"
-              src="@renderer/assets/img/start.png"
+            <button
+              class="flex items-center justify-center focus:outline-none bg-transparent"
               @click="toggleRecording"
-            />
+            >
+              <img class="w-30px h-30px cursor-pointer" src="@renderer/assets/img/start.png" />
+            </button>
           </template>
           开始录制
         </n-tooltip>
 
         <n-tooltip v-else-if="isRecording && !isSelectingArea" trigger="hover">
           <template #trigger>
-            <svg-icon
-              name="stop"
-              class="cursor-pointer"
-              :width="30"
-              :height="30"
+            <button
+              class="flex items-center justify-center focus:outline-none bg-transparent"
               @click="toggleRecording"
-            />
+            >
+              <svg-icon name="stop" class="cursor-pointer" :width="30" :height="30" />
+            </button>
           </template>
           结束录制
         </n-tooltip>
 
         <n-tooltip v-if="isRecording && !isPaused" trigger="hover">
           <template #trigger>
-            <svg-icon
-              name="zhanting"
-              class="cursor-pointer"
-              :width="25"
-              :height="25"
+            <button
+              class="flex items-center justify-center focus:outline-none bg-transparent"
               @click="togglePause"
-            />
+            >
+              <svg-icon name="zhanting" class="cursor-pointer" :width="25" :height="25" />
+            </button>
           </template>
           暂停录制
         </n-tooltip>
 
         <n-tooltip v-else-if="isRecording && isPaused" trigger="hover">
           <template #trigger>
-            <svg-icon
-              name="jixu"
-              class="cursor-pointer"
-              :width="30"
-              :height="30"
+            <button
+              class="flex items-center justify-center focus:outline-none bg-transparent"
               @click="togglePause"
-            />
+            >
+              <svg-icon name="jixu" class="cursor-pointer" :width="30" :height="30" />
+            </button>
           </template>
           继续录制
         </n-tooltip>
 
         <n-tooltip v-if="!isSelectingArea && !isRecording" trigger="hover">
           <template #trigger>
-            <svg-icon
-              name="kuang"
-              class="cursor-pointer"
-              :width="30"
-              :height="30"
+            <button
+              class="flex items-center justify-center focus:outline-none bg-transparent"
               @click="toggleAreaSelection"
-            />
+            >
+              <svg-icon name="kuang" class="cursor-pointer" :width="30" :height="30" />
+            </button>
           </template>
           框选录制
         </n-tooltip>
 
         <n-tooltip v-else-if="isSelectingArea && !isRecording" trigger="hover">
           <template #trigger>
-            <svg-icon
-              name="no-kuang"
-              class="cursor-pointer"
-              :width="30"
-              :height="30"
+            <button
+              class="flex items-center justify-center focus:outline-none bg-transparent"
               @click="toggleAreaSelection"
-            />
+            >
+              <svg-icon name="no-kuang" class="cursor-pointer" :width="30" :height="30" />
+            </button>
           </template>
           取消框选
         </n-tooltip>
 
+        <div v-if="!isRecording && !isSelectingArea">
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <button
+                class="flex items-center justify-center focus:outline-none bg-transparent"
+                @click="changeRecordingAudio"
+              >
+                <svg-icon
+                  :name="isRecordingAudio ? 'sound' : 'mute'"
+                  class="cursor-pointer"
+                  :width="30"
+                  :height="30"
+                  role="img"
+                />
+              </button>
+            </template>
+            {{ isRecordingAudio ? '录制时包含声音' : '录制时不包含声音' }}
+          </n-tooltip>
+        </div>
+
         <n-tooltip v-if="!isSelectingArea && !isRecording" trigger="hover">
           <template #trigger>
-            <svg-icon
-              name="shuaxin"
-              class="cursor-pointer"
-              :width="30"
-              :height="30"
+            <button
+              class="flex items-center justify-center focus:outline-none bg-transparent"
               @click="refreshWindows"
-            />
+            >
+              <svg-icon name="shuaxin" class="cursor-pointer" :width="30" :height="30" />
+            </button>
           </template>
           刷新窗口列表
         </n-tooltip>
@@ -152,6 +167,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import RecordRTC from 'recordrtc'
 
 interface Window {
   id: string
@@ -166,6 +182,9 @@ const videoRef = ref<HTMLVideoElement | null>(null)
 const mediaRecorder = ref<MediaRecorder | null>(null)
 const recordingTime = ref('00:00')
 let recordingInterval: NodeJS.Timer | null = null
+const isRecordingAudio = ref(false)
+// 添加暂停状态
+const isPaused = ref(false)
 // 添加已选择区域的状态
 const selectedArea = ref({
   x: 0,
@@ -173,19 +192,21 @@ const selectedArea = ref({
   width: 0,
   height: 0
 })
+
 // 获取窗口列表
 const refreshWindows = async () => {
   try {
     const sources = await window.electron.ipcRenderer.invoke('get-sources')
-    windows.value = sources.filter((source) => source.thumbnail.length > 100)
+    windows.value = sources.filter((source: any) => source.thumbnail.length > 100)
     selectWindow(windows.value[0])
   } catch (error) {
     console.error('获取窗口列表失败:', error)
   }
 }
 
-// 添加暂停状态
-const isPaused = ref(false)
+// 初始化加载窗口列表
+refreshWindows()
+
 // 添加暂停功能
 const togglePause = () => {
   if (!mediaRecorder.value) return
@@ -217,7 +238,6 @@ const togglePause = () => {
 }
 
 // 选择窗口
-// 修改 selectWindow 函数，添加裁剪参数
 const selectWindow = async (window: Window) => {
   selectedWindow.value = window
   try {
@@ -241,133 +261,171 @@ const selectWindow = async (window: Window) => {
   }
 }
 
-// 引入 RecordRTC
-import RecordRTC from 'recordrtc'
+// 添加计时器启动函数
+const startRecordingTimer = () => {
+  const startTime = Date.now()
+  recordingInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000)
+    const minutes = Math.floor(elapsed / 60)
+      .toString()
+      .padStart(2, '0')
+    const seconds = (elapsed % 60).toString().padStart(2, '0')
+    recordingTime.value = `${minutes}:${seconds}`
+  }, 1000)
+}
 
-// 修改 toggleRecording 函数
+// 提取 RecordRTC 配置
+const getRecordRTCConfig = (width: number, height: number) => ({
+  type: 'video',
+  mimeType: 'video/webm;codecs=vp9',
+  frameRate: 60,
+  quality: 100,
+  width,
+  height,
+  videoBitsPerSecond: 50000000,
+  bitsPerSecond: 50000000,
+  videoRecorderType: 'MediaRecorder',
+  disableLogs: true,
+  timeSlice: 1000
+})
+
+// 直接录制方法
+const startDirectRecording = async () => {
+  if (!videoRef.value?.srcObject) return
+  const videoElement = videoRef.value
+
+  try {
+    // 直接使用视频流进行录制
+    mediaRecorder.value = new RecordRTC(
+      videoElement.srcObject,
+      getRecordRTCConfig(videoElement.videoWidth, videoElement.videoHeight)
+    )
+
+    mediaRecorder.value.startRecording()
+    isRecording.value = true
+    startRecordingTimer()
+  } catch (error) {
+    console.error('录制失败:', error)
+  }
+}
+
+// 框选录制方法
+const startAreaRecording = async () => {
+  if (!videoRef.value?.srcObject) return
+
+  try {
+    // 原有的 canvas 录制逻辑
+    const videoElement = videoRef.value
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d', {
+      alpha: false,
+      desynchronized: true,
+      willReadFrequently: false
+    })
+    if (!ctx || !videoElement) return
+
+    // 计算视频实际显示区域
+    const videoRect = videoElement.getBoundingClientRect()
+    const videoAspectRatio = videoElement.videoWidth / videoElement.videoHeight
+    const containerAspectRatio = videoRect.width / videoRect.height
+
+    // 根据比例计算实际渲染尺寸和位置
+    let renderWidth = videoRect.width
+    let renderHeight = videoRect.height
+    let renderX = 0
+    let renderY = 0
+
+    // 保持宽高比例计算
+    if (containerAspectRatio > videoAspectRatio) {
+      renderWidth = videoRect.height * videoAspectRatio
+      renderX = (videoRect.width - renderWidth) / 2
+    } else {
+      renderHeight = videoRect.width / videoAspectRatio
+      renderY = (videoRect.height - renderHeight) / 2
+    }
+
+    // 根据是否有选区来设置画布尺寸
+    if (selectedArea.value.width && selectedArea.value.height) {
+      // 选区模式：计算实际选区大小
+      const scaleX = videoElement.videoWidth / renderWidth
+      const scaleY = videoElement.videoHeight / renderHeight
+      const adjustedWidth = selectedArea.value.width * scaleX
+      const adjustedHeight = selectedArea.value.height * scaleY
+      canvas.width = adjustedWidth
+      canvas.height = adjustedHeight
+    } else {
+      // 如果没有选区，使用原始视频尺寸
+      canvas.width = videoElement.videoWidth
+      canvas.height = videoElement.videoHeight
+    }
+
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+
+    const drawFrame = () => {
+      if (!ctx || !videoElement) return
+      try {
+        if (selectedArea.value.width && selectedArea.value.height) {
+          // 有选区时的绘制逻辑
+          const scaleX = videoElement.videoWidth / renderWidth
+          const scaleY = videoElement.videoHeight / renderHeight
+          const adjustedX = (selectedArea.value.x - renderX - 10) * scaleX
+          const adjustedY = (selectedArea.value.y - renderY - 12) * scaleY
+          const adjustedWidth = selectedArea.value.width * scaleX
+          const adjustedHeight = selectedArea.value.height * scaleY
+
+          ctx.drawImage(
+            videoElement,
+            adjustedX,
+            adjustedY,
+            adjustedWidth,
+            adjustedHeight,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          )
+        } else {
+          // 无选区时直接绘制整个视频
+          ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
+        }
+        if (isRecording.value) {
+          requestAnimationFrame(drawFrame)
+        }
+      } catch (err) {
+        console.error('绘制帧时出错:', err)
+      }
+    }
+
+    const stream = canvas.captureStream(60)
+    mediaRecorder.value = new RecordRTC(stream, getRecordRTCConfig(canvas.width, canvas.height))
+    // 开始录制
+    mediaRecorder.value.startRecording()
+    isRecording.value = true
+    drawFrame()
+    startRecordingTimer()
+  } catch (error) {
+    console.error('录制失败:', error)
+  }
+}
+
+// 修改 toggleRecording 方法
 const toggleRecording = async () => {
   if (!videoRef.value?.srcObject) return
 
   if (!isRecording.value) {
-    try {
-      const videoElement = videoRef.value
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d', {
-        alpha: false,
-        desynchronized: true,
-        willReadFrequently: false
-      })
-      if (!ctx || !videoElement) return
-
-      // 修改视频区域计算方式
-      const videoRect = videoElement.getBoundingClientRect()
-      const videoAspectRatio = videoElement.videoWidth / videoElement.videoHeight
-      const containerAspectRatio = videoRect.width / videoRect.height
-
-      let renderWidth = videoRect.width
-      let renderHeight = videoRect.height
-      let renderX = 0
-      let renderY = 0
-
-      if (containerAspectRatio > videoAspectRatio) {
-        renderWidth = videoRect.height * videoAspectRatio
-        renderX = (videoRect.width - renderWidth) / 2
-      } else {
-        renderHeight = videoRect.width / videoAspectRatio
-        renderY = (videoRect.height - renderHeight) / 2
-      }
-
-      // 设置 canvas 尺寸
-      if (selectedArea.value.width && selectedArea.value.height) {
-        // 如果有选区，使用选区大小
-        const scaleX = videoElement.videoWidth / renderWidth
-        const scaleY = videoElement.videoHeight / renderHeight
-        const adjustedWidth = selectedArea.value.width * scaleX
-        const adjustedHeight = selectedArea.value.height * scaleY
-        canvas.width = adjustedWidth
-        canvas.height = adjustedHeight
-      } else {
-        // 如果没有选区，使用原始视频尺寸
-        canvas.width = videoElement.videoWidth
-        canvas.height = videoElement.videoHeight
-      }
-
-      ctx.imageSmoothingEnabled = true
-      ctx.imageSmoothingQuality = 'high'
-
-      const drawFrame = () => {
-        if (!ctx || !videoElement) return
-        try {
-          if (selectedArea.value.width && selectedArea.value.height) {
-            // 有选区时的绘制逻辑
-            const scaleX = videoElement.videoWidth / renderWidth
-            const scaleY = videoElement.videoHeight / renderHeight
-            const adjustedX = (selectedArea.value.x - renderX - 10) * scaleX
-            const adjustedY = (selectedArea.value.y - renderY - 12) * scaleY
-            const adjustedWidth = selectedArea.value.width * scaleX
-            const adjustedHeight = selectedArea.value.height * scaleY
-
-            ctx.drawImage(
-              videoElement,
-              adjustedX,
-              adjustedY,
-              adjustedWidth,
-              adjustedHeight,
-              0,
-              0,
-              canvas.width,
-              canvas.height
-            )
-          } else {
-            // 无选区时直接绘制整个视频
-            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
-          }
-          if (isRecording.value) {
-            requestAnimationFrame(drawFrame)
-          }
-        } catch (err) {
-          console.error('绘制帧时出错:', err)
-        }
-      }
-
-      const stream = canvas.captureStream(60)
-      mediaRecorder.value = new RecordRTC(stream, {
-        type: 'video',
-        mimeType: 'video/webm;codecs=vp9', // 使用 VP9 编码器
-        frameRate: 60,
-        quality: 100,
-        width: canvas.width,
-        height: canvas.height,
-        videoBitsPerSecond: 50000000, // 提高到 50Mbps
-        bitsPerSecond: 50000000,
-        videoRecorderType: 'MediaRecorder',
-        disableLogs: true,
-        timeSlice: 1000
-      })
-
-      // 开始录制
-      mediaRecorder.value.startRecording()
-      isRecording.value = true
-      drawFrame()
-
-      // 启动计时器
-      const startTime = Date.now()
-      recordingInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000)
-        const minutes = Math.floor(elapsed / 60)
-          .toString()
-          .padStart(2, '0')
-        const seconds = (elapsed % 60).toString().padStart(2, '0')
-        recordingTime.value = `${minutes}:${seconds}`
-      }, 1000)
-    } catch (error) {
-      console.error('录制失败:', error)
+    // 根据是否有选区决定使用哪种录制方式
+    if (selectedArea.value.width && selectedArea.value.height) {
+      await startAreaRecording()
+    } else {
+      await startDirectRecording()
     }
   } else {
-    // 停止录制
+    // 停止录制逻辑保持不变
     if (mediaRecorder.value) {
       mediaRecorder.value.stopRecording(() => {
         const blob = mediaRecorder.value.getBlob()
+        console.log('🚀 ~ mediaRecorder.value.stopRecording ~ blob:', blob)
         if (blob.size === 0) {
           console.error('录制的视频大小为0')
           return
@@ -403,8 +461,12 @@ const toggleRecording = async () => {
     recordingTime.value = '00:00'
   }
 }
-// 初始化加载窗口列表
-refreshWindows()
+
+const changeRecordingAudio = async () => {
+  isRecordingAudio.value = !isRecordingAudio.value
+  const source = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+  console.log('🚀 ~ changeRecordingAudio ~ source:', source)
+}
 
 // 添加新的状态
 const isSelectingArea = ref(false)
