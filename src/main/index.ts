@@ -26,6 +26,13 @@ function createWindow(): void {
   // 设置自动更新
   setupUpdate(mainWindow)
 
+  // 启用硬件加速
+  app.commandLine.appendSwitch('enable-accelerated-mjpeg-decode')
+  app.commandLine.appendSwitch('enable-accelerated-video')
+  app.commandLine.appendSwitch('enable-gpu-rasterization')
+  app.commandLine.appendSwitch('enable-native-gpu-memory-buffers')
+  app.commandLine.appendSwitch('enable-zero-copy')
+
   mainWindow.on('minimize', () => {
     if (process.platform === 'win32') {
       mainWindow?.webContents.setBackgroundThrottling(true)

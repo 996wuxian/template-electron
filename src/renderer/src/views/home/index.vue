@@ -476,14 +476,7 @@ const toggleRecording = async () => {
         console.log(mediaRecorder.value, 'mediaRecorder.value')
         let blob = mediaRecorder.value.getBlob()
         console.log('🚀 ~ mediaRecorder.value.stopRecording ~ blob:', blob)
-        getSeekableBlob(blob, function (seekableBlob) {
-          console.log('🚀 ~ seekableBlob:', seekableBlob)
-          blob = seekableBlob
-          if (blob.size === 0) {
-            console.error('录制的视频大小为0')
-            return
-          }
-
+        if (selectedArea.value.width > 0 && selectedArea.value.height > 0) {
           const url = URL.createObjectURL(blob)
           const a = document.createElement('a')
           a.style.display = 'none'
@@ -504,7 +497,37 @@ const toggleRecording = async () => {
             width: 0,
             height: 0
           }
-        })
+        } else {
+          getSeekableBlob(blob, function (seekableBlob) {
+            console.log('🚀 ~ seekableBlob:', seekableBlob)
+            blob = seekableBlob
+            if (blob.size === 0) {
+              console.error('录制的视频大小为0')
+              return
+            }
+
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.style.display = 'none'
+            a.href = url
+            a.download = `recording-${Date.now()}.webm`
+            document.body.appendChild(a)
+            a.click()
+
+            setTimeout(() => {
+              document.body.removeChild(a)
+              URL.revokeObjectURL(url)
+            }, 100)
+
+            // 清空选区
+            selectedArea.value = {
+              x: 0,
+              y: 0,
+              width: 0,
+              height: 0
+            }
+          })
+        }
       })
     }
     isRecording.value = false
