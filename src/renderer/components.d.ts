@@ -23,8 +23,6 @@ declare module 'vue' {
     NTooltip: typeof import('naive-ui')['NTooltip']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    Setting: typeof import('./src/components/common/Setting.vue')['default']
     SvgIcon: typeof import('./src/components/common/svg-icon.vue')['default']
-    TodoItem: typeof import('./src/components/common/TodoItem.vue')['default']
   }
 }

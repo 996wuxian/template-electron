@@ -1,15 +1,15 @@
 <p align="center"><img src="./resources/icon.png" /></p>
 
-<h1 align="center">todo-electron</h1>
+<h1 align="center">transcribe-electron</h1>
 
-It's a todo surrogate app.
+It's a transcribe surrogate app.
 <br>
-这是一个todo代办应用。
+这是一个transcribe录屏应用。
 
 > [!NOTE]
-> If you think `TodoElectron` is helpful to you, or you like my project, please give my project a ⭐️ on GitHub. Your support is the driving force for me to continue to improve! Thank you for your support! If there are any areas that are not good enough, please raise an issue and I will improve it!
+> If you think `TranscribeElectron` is helpful to you, or you like my project, please give my project a ⭐️ on GitHub. Your support is the driving force for me to continue to improve! Thank you for your support! If there are any areas that are not good enough, please raise an issue and I will improve it!
 > <br>
-> 如果你认为TodoElectron对你有帮助，或者你喜欢我的项目，请给我的项目一个⭐️ 在GitHub上。您的支持是我不断改进的动力！感谢您的支持！如果有什么地方不够好，请提出issue，我会改进的！
+> 如果你认为TranscribeElectron对你有帮助，或者你喜欢我的项目，请给我的项目一个⭐️ 在GitHub上。您的支持是我不断改进的动力！感谢您的支持！如果有什么地方不够好，请提出issue，我会改进的！
 
 ## Introduction
 
@@ -27,32 +27,27 @@ pnpm版本: 8.8.0
 
 ### 检测更新
 
-<p align="center"><img src="./images/img11.gif" /></p>
+如todo分支示例，可以检测到更新，并自动下载更新。
 
 ### 页面示例
 
-<p align="center"><img src="./images/img12.gif" /></p>
+<p align="center"><img src="./images/img1.jpg" /></p>
 
-### 主题配置
+### 直接录制
 
-<p align="center" style="margin-top: 10px"><img src="./images/img5.jpg" /></p>
+<p align="center"><img src="./images/img2.jpg" /></p>
 
-### 悬浮窗
+### 框选录制
 
-<p align="center" style="margin-top: 10px"><img src="./images/img8.gif" /></p>
+<p align="center"><img src="./images/img3.jpg" /></p>
 
-### 固定到右上角与锁定
+### 暂停/继续
 
-<p align="center" style="margin-top: 10px"><img src="./images/img6.gif" /></p>
+<p align="center"><img src="./images/img5.jpg" /></p>
 
-### 贴边隐藏/显示
+### 文件保存
 
-<p align="center" style="margin-top: 10px"><img src="./images/img7.gif" /></p>
-
-### 本地存储数据
-
-<p align="center" style="margin-top: 10px"><img src="./images/img9.jpg" /></p>
-<p align="center" style="margin-top: 10px"><img src="./images/img10.jpg" /></p>
+<p align="center"><img src="./images/img4.jpg" /></p>
 
 ## Project Setup
 

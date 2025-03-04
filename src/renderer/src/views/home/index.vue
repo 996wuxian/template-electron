@@ -473,9 +473,7 @@ const toggleRecording = async () => {
     // 停止录制逻辑保持不变
     if (mediaRecorder.value) {
       mediaRecorder.value.stopRecording(() => {
-        console.log(mediaRecorder.value, 'mediaRecorder.value')
         let blob = mediaRecorder.value.getBlob()
-        console.log('🚀 ~ mediaRecorder.value.stopRecording ~ blob:', blob)
         if (selectedArea.value.width > 0 && selectedArea.value.height > 0) {
           const url = URL.createObjectURL(blob)
           const a = document.createElement('a')
@@ -499,7 +497,6 @@ const toggleRecording = async () => {
           }
         } else {
           getSeekableBlob(blob, function (seekableBlob) {
-            console.log('🚀 ~ seekableBlob:', seekableBlob)
             blob = seekableBlob
             if (blob.size === 0) {
               console.error('录制的视频大小为0')
@@ -541,8 +538,6 @@ const toggleRecording = async () => {
 
 const changeRecordingAudio = async () => {
   isRecordingAudio.value = !isRecordingAudio.value
-  // const strem = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-  // console.log('🚀 ~ changeRecordingAudio ~ source:', source)
 }
 
 // 添加新的状态

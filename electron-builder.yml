@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: todo
+productName: transcribe
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: todo
+  executableName: transcribe
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

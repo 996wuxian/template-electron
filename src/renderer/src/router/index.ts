@@ -33,7 +33,7 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/home',
     meta: {
-      title: '今日计划',
+      title: 'home',
       icon: 'i-solar-sun-2-bold',
       hide: false
     },
@@ -43,19 +43,10 @@ export const asyncRoutes = [
         name: 'Home',
         component: () => import('@renderer/views/home/index.vue'),
         meta: {
-          title: '今日计划'
+          title: 'home'
         }
       }
     ]
-  },
-
-  {
-    path: '/floating',
-    name: 'Floating',
-    component: () => import('@renderer/views/floating/index.vue'),
-    meta: {
-      hide: true
-    }
   },
 
   {
