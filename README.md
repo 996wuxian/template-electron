@@ -2,9 +2,9 @@
 
 <h1 align="center">transcribe-electron</h1>
 
-It's a transcribe surrogate app.
+It's a transcribe app.
 <br>
-这是一个transcribe录屏应用。
+这是一个录屏应用。
 
 > [!NOTE]
 > If you think `TranscribeElectron` is helpful to you, or you like my project, please give my project a ⭐️ on GitHub. Your support is the driving force for me to continue to improve! Thank you for your support! If there are any areas that are not good enough, please raise an issue and I will improve it!
