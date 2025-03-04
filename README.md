@@ -13,7 +13,7 @@ It's a transcribe app.
 
 ## Introduction
 
-使用了electron + vue3 + vite + recordrtc实现的一个录屏应用。
+使用了electron + vue3 + vite + recordrtc实现的一个录屏应用, 主要实现了窗口采集、直接录屏、框选录屏、录取声音、暂停/继续、文件保存、窗口刷新等功能，唯一不足的点是，框选录屏的视频没有进度条和总时长，希望后续能优化。
 
 ## Recommended IDE Setup
 
