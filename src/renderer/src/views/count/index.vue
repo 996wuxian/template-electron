@@ -8,8 +8,14 @@
         #="{ year, month, date }"
         size="small"
       >
-        <div class="w-full h-full text-14px text-center color-#71C9CE">
-          {{ getTodoCount(year, month, date) || '-' }}
+        <div class="w-full text-14px flex-center font-700 color-#71C9CE">
+          <div
+            v-if="Number(getTodoCount(year, month, date)) > 0"
+            class="w-30px h-30px rd-50% bg-#88B9F9 color-#fff text-center line-height-30px"
+          >
+            {{ getTodoCount(year, month, date) }}
+          </div>
+          <div v-else class="font-400">-</div>
         </div>
       </n-calendar>
     </n-card>
