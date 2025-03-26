@@ -84,17 +84,17 @@
 
     <!-- 右侧区域：Todo 详情 -->
     <div
-      class="todo-details border-l border-gray-200 animate__animated overflow-hidden item-transition bg-white shadow-xl theme-page"
+      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page"
       :class="[
-        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-6' : 'animate__fadeOutRight w-0',
-        collapsed ? 'absolute top-0 w-190px h-400px right-0' : ''
+        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-4' : 'animate__fadeOutRight w-0',
+        collapsed ? 'absolute top-0 w-240px h-400px right-0' : ''
       ]"
     >
       <div v-show="detailVisible" class="h-full flex flex-col">
         <!-- 头部区域 -->
         <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
           <div class="flex-1 flex items-center">
-            <h2 class="text-20px font-semibold text-gray-600 truncate">
+            <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
               {{ selectedTodo?.text }}
             </h2>
 
@@ -107,7 +107,7 @@
         </div>
 
         <!-- 主体内容 -->
-        <div class="flex-1 h-100%">
+        <div class="flex-1 h-[calc(100%-200px)]">
           <!-- 基本信息卡片 -->
           <div class="mb-3 bg-gray-50 rounded-lg">
             <div class="space-y-4 theme-page">
@@ -144,7 +144,7 @@
                   v-if="selectedTodo"
                   v-model:value="selectedTodo.status"
                   size="small"
-                  class="w-100px"
+                  class="w-90px"
                   :options="options"
                   @update:value="saveTodo"
                 />
@@ -175,7 +175,7 @@
           </div>
 
           <!-- 子任务区域 -->
-          <div class="border-t pt-4 h-[calc(100%-220px)]">
+          <div class="border-t pt-4 h-[calc(100%-250px)]">
             <div class="flex items-center justify-between mb-4">
               <h3 class="font-medium flex items-center gap-2">
                 <i i-solar-paperclip-bold-duotone class="w-4 h-4 text-blue-500" />

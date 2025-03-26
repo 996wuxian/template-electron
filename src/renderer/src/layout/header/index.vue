@@ -41,7 +41,16 @@
               <template #trigger>
                 <i i-solar-pin-broken @click="handleFixedDesktop('fix-window')"></i>
               </template>
-              锁定
+              锁定并置顶
+            </n-tooltip>
+          </template>
+
+          <template v-if="!isShow && !isFixed">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <i i-solar-pin-circle-broken @click="handleFixedDesktop('no-fix-window')"></i>
+              </template>
+              锁定不置顶
             </n-tooltip>
           </template>
 

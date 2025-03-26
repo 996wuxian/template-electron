@@ -11,14 +11,17 @@
         @click.stop="toggleSubItemsSelection(todo)"
       />
       <div
-        :class="{ 'line-through': todo.completed, 'max-w-110px': collapsed }"
-        class="flex-1 max-length flex flex-col"
+        :class="{
+          'line-through': todo.completed,
+          'truncate max-w-100px': collapsed,
+          'max-w-200px': isHideMenu
+        }"
         @click="toggleDetails(todo, index)"
       >
         {{ todo.text }}
-        <span class="text-12px text-gray">{{ todo.description }}</span>
+        <div class="text-12px text-gray">{{ todo.description }}</div>
       </div>
-      <div v-if="statusShow">
+      <div v-if="statusShow" class="ml-auto">
         <div v-if="todo.status === 1" class="w-15px h-15px rounded-50% bg-red mr-10px"></div>
         <div v-if="todo.status === 2" class="w-15px h-15px rounded-50% bg-orange mr-10px"></div>
         <div v-if="todo.status === 3" class="w-15px h-15px rounded-50% bg-gray mr-10px"></div>
@@ -28,7 +31,7 @@
       <i
         v-if="deleteShow"
         i-solar-trash-bin-minimalistic-2-linear
-        class="w-20px h-20px hover:text-red-500 ml-auto"
+        class="w-20px h-20px hover:text-red-500"
         @click.stop="deleteTodo(todos, index)"
       ></i>
     </div>
@@ -53,6 +56,11 @@
 </template>
 
 <script setup lang="ts">
+import useUserStore from '@renderer/stores/modules/user'
+const useUser = useUserStore()
+
+const isHideMenu = computed(() => useUser.$state.isHideMenu)
+
 interface Todo {
   id: number
   text: string

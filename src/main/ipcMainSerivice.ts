@@ -1,7 +1,8 @@
 import { is } from '@electron-toolkit/utils'
-import { BrowserWindow, ipcMain, IpcMainInvokeEvent, screen, dialog } from 'electron'
+import { BrowserWindow, ipcMain, IpcMainInvokeEvent, screen, dialog, app } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
+import axios from 'axios'
 
 let floatingWindow: BrowserWindow | null = null // 全局悬浮窗引用
 let originalBounds: Electron.Rectangle | null = null
@@ -108,6 +109,66 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
       win.setOpacity(0.8) // 透明度为 0.8（范围：0 完全透明，1 完全不透明）
     }
   })
+
+  // 固定窗口
+  ipcMain.handle('no-fix-window', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (win) {
+      disableWindowResizingAndDragging(win, false)
+
+      // 禁止最大化
+      win.setMaximizable(false)
+
+      // 禁止全屏
+      win.setFullScreenable(false)
+
+      // 设置窗口置顶
+      // win.setAlwaysOnTop(true)
+
+      // 设置窗口半透明
+      win.setOpacity(0.8) // 透明度为 0.8（范围：0 完全透明，1 完全不透明）
+    }
+  })
+
+  ipcMain.handle('check-update', async () => {
+    try {
+      // 获取 GitHub 最新发布版本信息
+      const response = await axios.get(
+        'https://api.github.com/repos/996wuxian/template-electron/releases/latest'
+      )
+
+      const latestVersion = response.data.tag_name.replace('v', '')
+      const currentVersion = app.getVersion()
+
+      // 比较版本号
+      const hasUpdate = compareVersions(latestVersion, currentVersion) > 0
+
+      return {
+        hasUpdate,
+        latestVersion,
+        downloadUrl: hasUpdate ? response.data.html_url : null
+      }
+    } catch (error) {
+      console.error('检查更新失败:', error)
+      throw error
+    }
+  })
+
+  // 版本号比较函数
+  function compareVersions(v1: string, v2: string) {
+    const v1Parts = v1.split('.').map(Number)
+    const v2Parts = v2.split('.').map(Number)
+
+    for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
+      const v1Part = v1Parts[i] || 0
+      const v2Part = v2Parts[i] || 0
+
+      if (v1Part > v2Part) return 1
+      if (v1Part < v2Part) return -1
+    }
+
+    return 0
+  }
 
   // 禁止调整窗口大小和禁止拖拽窗口
   const disableWindowResizingAndDragging = (win, bool) => {

@@ -23,9 +23,6 @@ function createWindow(): void {
     transparent: true
   })
 
-  // 设置自动更新
-  setupUpdate(mainWindow)
-
   mainWindow.on('minimize', () => {
     if (process.platform === 'win32') {
       mainWindow?.webContents.setBackgroundThrottling(true)
@@ -48,6 +45,10 @@ function createWindow(): void {
   // 获取应用版本号
   ipcMain.handle('get-version', () => {
     return app.getVersion()
+  })
+
+  ipcMain.handle('get-app-update', () => {
+    setupUpdate(mainWindow)
   })
 
   // 设置 IPC 处理器

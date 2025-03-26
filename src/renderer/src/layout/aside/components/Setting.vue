@@ -48,8 +48,24 @@
             <div class="flex items-center">
               <span>v{{ version }}</span>
             </div>
-
+            <div class="flex items-center">
+              <n-button class="ml-10px" size="tiny" :loading="isChecking" @click="checkUpdate">
+                检查更新
+              </n-button>
+            </div>
             <n-button class="ml-auto" size="small" @click="clearCache">清除缓存</n-button>
+          </div>
+          <div v-if="hasNewVersion" class="flex items-center text-green-500">
+            <span>发现新版本：v{{ latestVersion }}</span>
+            <n-button
+              class="ml-10px"
+              size="tiny"
+              type="primary"
+              :loading="isUpdating"
+              @click="startUpdate"
+            >
+              {{ updateButtonText }}
+            </n-button>
           </div>
         </div>
       </n-card>
@@ -58,6 +74,7 @@
 </template>
 
 <script setup lang="ts">
+import { $msg } from '@renderer/config/interaction.config'
 import useUserStore from '@renderer/stores/modules/user'
 const useUser = useUserStore()
 
@@ -134,6 +151,42 @@ const selectDirectory = async (type: string) => {
 
 const updateRadio = () => {
   useUser.setValue({ type: 'fileType', value: radioValue.value })
+}
+
+const isChecking = ref(false)
+const hasNewVersion = ref(false)
+const latestVersion = ref('')
+const downloadUrl = ref('')
+const isUpdating = ref(false)
+const updateButtonText = ref('立即更新')
+
+const checkUpdate = async () => {
+  try {
+    isChecking.value = true
+    const result = await window.electron.ipcRenderer.invoke('check-update')
+    if (result.hasUpdate) {
+      hasNewVersion.value = true
+      latestVersion.value = result.latestVersion
+      downloadUrl.value = result.downloadUrl
+    } else {
+      $msg({
+        type: 'success',
+        msg: '当前已是最新版本'
+      })
+    }
+  } catch (error) {
+    $msg({
+      type: 'error',
+      msg: '检查更新失败'
+    })
+    console.error('检查更新失败:', error)
+  } finally {
+    isChecking.value = false
+  }
+}
+
+const startUpdate = async () => {
+  window.electron.ipcRenderer.invoke('get-app-update')
 }
 
 watch(
