@@ -443,8 +443,9 @@ function createFloatingWindow(mainWindow: BrowserWindow | null): BrowserWindow |
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     floatingWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/#/floating`)
   } else {
-    floatingWindow.loadFile(join(__dirname, '../renderer/src/views/floating/index.vue'), {
-      hash: 'floating'
+    // 修改这里的加载路径
+    floatingWindow.loadFile(join(__dirname, '../renderer/index.html'), {
+      hash: '/floating' // 修改这里，去掉 src/views/floating/index.vue
     })
   }
 
