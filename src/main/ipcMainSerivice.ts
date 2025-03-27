@@ -368,6 +368,7 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   ipcMain.handle('show-main-window', () => {
     if (mainWindow) {
       mainWindow.show()
+      mainWindow.webContents.send('main-window-show')
     }
   })
 

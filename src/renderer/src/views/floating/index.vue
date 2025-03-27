@@ -14,8 +14,14 @@
             style="filter: hue-rotate(350deg); opacity: 0.8"
           />
         </div>
-        <div v-else>
-          <div v-for="item in todoList" :key="item?.id">
+        <div v-else class="w-full flex flex-col gap-5px">
+          <div
+            v-for="item in todoList"
+            :key="item?.id"
+            class="w-100px truncate hover:text-blue-500 transition-colors cursor-pointer animate__animated"
+            :class="item.isLeave ? 'animate__fadeOutLeft' : 'animate__fadeInRight'"
+            @click="completeTodo(item)"
+          >
             {{ item?.text }}
           </div>
         </div>
@@ -49,6 +55,7 @@ interface Todo {
   level: number
   description: string
   status: number
+  isLeave?: boolean
 }
 
 const useUser = useUserStore()
@@ -56,7 +63,8 @@ const useUser = useUserStore()
 const todos = ref<Todo[]>([])
 
 const todoList = computed(() => {
-  return todos.value.filter((todo: Todo) => todo.status === 1).splice(0, 3)
+  // 只获取未完成的紧急任务
+  return todos.value.filter((todo: Todo) => todo.status === 1 && !todo.completed).splice(0, 3)
 })
 
 onMounted(() => {
@@ -101,6 +109,29 @@ const handleIconClick = (icon: string) => {
   if (icon === 'i-solar-undo-right-round-broken') {
     handleMouseDown()
   }
+}
+
+const completeTodo = async (todo: Todo) => {
+  // 添加临时的 isLeave 标记用于动画
+  todo.isLeave = true
+
+  // 等待动画完成
+  setTimeout(async () => {
+    // 在原数据中找到并更新这个 todo
+    const targetTodo = todos.value.find((item) => item.id === todo.id)
+    if (targetTodo) {
+      targetTodo.completed = true
+      delete targetTodo.isLeave // 移除临时标记
+    }
+
+    // 写入更新后的数据
+    await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
+
+    // 重新获取数据以更新显示
+    todos.value = Array.isArray(window.api.readFile(useUser.fileFullPath))
+      ? window.api.readFile(useUser.fileFullPath)
+      : []
+  }, 500)
 }
 </script>
 

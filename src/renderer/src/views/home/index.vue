@@ -252,7 +252,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import useThemeStore from '@renderer/stores/modules/theme'
 import useUserStore from '@renderer/stores/modules/user'
 import TodoItem from '@renderer/components/common/TodoItem.vue'
@@ -461,7 +461,20 @@ const editDescription = () => {
 }
 
 const saveTodo = () => {
-  console.log(todayTodos.value, 'todayTodos.value')
+  // 如果是修改了紧急程度，同步更新子任务的状态
+  if (selectedTodo.value) {
+    const updateSubTodosStatus = (subTodos: Todo[]) => {
+      subTodos.forEach((subTodo) => {
+        subTodo.status = selectedTodo.value!.status
+        if (subTodo.subTodos?.length) {
+          updateSubTodosStatus(subTodo.subTodos)
+        }
+      })
+    }
+
+    updateSubTodosStatus(selectedTodo.value.subTodos)
+  }
+
   window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
 }
 
@@ -488,7 +501,8 @@ const isTodoCreatedToday = (createdAt: string) => {
   return dayjs(createdAt).isSame(dayjs(), 'day')
 }
 
-onMounted(() => {
+// 添加获取数据的方法
+const fetchData = () => {
   const data = Array.isArray(window.api.readFile(useUser.fileFullPath))
     ? window.api.readFile(useUser.fileFullPath)
     : []
@@ -496,6 +510,7 @@ onMounted(() => {
   historyData.value = Array.isArray(window.api.readFile(useUser.historyFullPath))
     ? window.api.readFile(useUser.historyFullPath)
     : []
+
   if (data) {
     todos.value = data
     // 检查是否所有项目都被选中
@@ -504,6 +519,22 @@ onMounted(() => {
       selectAll.value = allSelected
     }
   }
+}
+
+// 监听主窗口显示事件
+const handleShowMainWindow = () => {
+  fetchData()
+}
+
+onMounted(() => {
+  fetchData()
+  // 添加事件监听
+  window.electron.ipcRenderer.on('main-window-show', handleShowMainWindow)
+})
+
+onBeforeUnmount(() => {
+  // 移除事件监听
+  window.electron.ipcRenderer.removeListener('main-window-show', handleShowMainWindow)
 })
 </script>
 
