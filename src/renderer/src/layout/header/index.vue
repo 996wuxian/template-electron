@@ -41,16 +41,16 @@
               <template #trigger>
                 <i i-solar-pin-broken @click="handleFixedDesktop('fix-window')"></i>
               </template>
-              锁定并置顶
+              锁定并置顶且限制
             </n-tooltip>
           </template>
 
           <template v-if="!isShow && !isFixed">
             <n-tooltip trigger="hover">
               <template #trigger>
-                <i i-solar-pin-circle-broken @click="handleFixedDesktop('no-fix-window')"></i>
+                <i i-solar-pin-circle-broken @click="handleFixedNoDesktop('no-fix-window')"></i>
               </template>
-              锁定不置顶
+              锁定不置顶不限制
             </n-tooltip>
           </template>
 
@@ -302,6 +302,11 @@ const handleFixedDesktop = async (type: string) => {
   } else {
     document.removeEventListener('click', interceptClicks, true)
   }
+}
+
+const handleFixedNoDesktop = async (type: string) => {
+  isFixed.value = !isFixed.value
+  await window.electron.ipcRenderer.invoke(type)
 }
 
 const size = ref(false)

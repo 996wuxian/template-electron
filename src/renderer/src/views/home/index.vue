@@ -84,34 +84,52 @@
 
     <!-- 右侧区域：Todo 详情 -->
     <div
-      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page"
+      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 w-240px h-full"
       :class="[
         detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-4' : 'animate__fadeOutRight w-0',
-        collapsed ? 'absolute top-0 w-240px h-400px right-0' : ''
+        collapsed ? 'h-400px' : ''
       ]"
     >
       <div v-show="detailVisible" class="h-full flex flex-col">
+        <div class="p-3px bg-#CFCECD absolute top-42px right-10px flex-center rd-50%">
+          <i
+            i-solar-double-alt-arrow-right-line-duotone
+            class="w-20px h-20px cursor-pointer hover:text-red-500"
+            @click="hideDetails"
+          />
+        </div>
+
         <!-- 头部区域 -->
         <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
-          <div class="flex-1 flex items-center">
-            <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
-              {{ selectedTodo?.text }}
-            </h2>
-
-            <i
-              i-solar-double-alt-arrow-right-line-duotone
-              class="w-20px h-20px cursor-pointer hover:text-red-500 ml-auto"
-              @click="hideDetails"
-            />
-          </div>
+          <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
+            {{ selectedTodo?.text }}
+          </h2>
         </div>
 
         <!-- 主体内容 -->
-        <div class="flex-1 h-[calc(100%-200px)]">
+        <div class="flex-1 h-[calc(100%-200px)] overflow-y-auto">
           <!-- 基本信息卡片 -->
           <div class="mb-3 bg-gray-50 rounded-lg">
             <div class="space-y-4 theme-page">
-              <div class="text-gray-600 text-14px">{{ selectedTodo?.text }}</div>
+              <!-- 修改这部分 -->
+              <div class="text-gray-600 text-14px">
+                <n-input
+                  v-if="textInputVisible && selectedTodo"
+                  v-model:value="selectedTodo.text"
+                  placeholder="输入内容"
+                  size="medium"
+                  type="textarea"
+                  :autosize="{
+                    minRows: 3,
+                    maxRows: 5
+                  }"
+                  @blur="textChange"
+                />
+                <div v-else class="cursor-pointer w-full break-words" @click="editText">
+                  {{ selectedTodo?.text }}
+                </div>
+              </div>
+
               <div>
                 <label class="text-sm font-medium text-gray-500">详细描述</label>
 
@@ -445,6 +463,19 @@ const editDescription = () => {
 const saveTodo = () => {
   console.log(todayTodos.value, 'todayTodos.value')
   window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+}
+
+const textInputVisible = ref(false)
+
+// 添加编辑文本的方法
+const editText = () => {
+  textInputVisible.value = true
+}
+
+// 添加文本修改完成的方法
+const textChange = () => {
+  textInputVisible.value = false
+  saveTodo()
 }
 
 const descChange = () => {

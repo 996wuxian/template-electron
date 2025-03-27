@@ -18,8 +18,8 @@
         }"
         @click="toggleDetails(todo, index)"
       >
-        {{ todo.text }}
-        <div class="text-12px text-gray">{{ todo.description }}</div>
+        <div class="truncate max-w-600px">{{ todo.text }}</div>
+        <div class="text-12px text-gray truncate">{{ todo.description }}</div>
       </div>
       <div v-if="statusShow" class="ml-auto">
         <div v-if="todo.status === 1" class="w-15px h-15px rounded-50% bg-red mr-10px"></div>
