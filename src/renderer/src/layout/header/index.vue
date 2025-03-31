@@ -138,7 +138,9 @@ import { ref } from 'vue'
 import Drawer from './components/Drawer.vue'
 import useThemeStore from '@renderer/stores/modules/theme'
 import useUserStore from '@renderer/stores/modules/user'
+import { useDialog } from 'naive-ui'
 
+const dialog = useDialog()
 const useTheme = useThemeStore()
 const useUser = useUserStore()
 const drawerVisible = ref(false)
@@ -333,8 +335,21 @@ const toggleTheme = (type: string) => {
 
 // 关闭
 const handleClose = () => {
-  localStorage.removeItem('theme')
-  window.electron.ipcRenderer.invoke('close-window')
+  const d = dialog.warning({
+    title: '关闭确认',
+    content: '是否要完全退出应用？',
+    positiveText: '退出应用',
+    negativeText: '最小化到托盘',
+    onPositiveClick: () => {
+      localStorage.removeItem('theme')
+      window.electron.ipcRenderer.invoke('close-window')
+      d.destroy() // 关闭弹窗
+    },
+    onNegativeClick: async () => {
+      await window.electron.ipcRenderer.invoke('hide-to-tray')
+      d.destroy() // 关闭弹窗
+    }
+  })
 }
 
 // 全局事件拦截

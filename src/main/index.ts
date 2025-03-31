@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { setupIpcMainHandlers } from './ipcMainSerivice'
@@ -81,4 +81,44 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+// 添加托盘相关处理
+
+let tray: Tray | null = null
+const iconPath = join(__dirname, '../../resources/icon.png')
+// 创建托盘
+function createTray() {
+  if (!tray) {
+    tray = new Tray(iconPath) // 替换为你的托盘图标路径
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: '显示主窗口',
+        click: () => {
+          mainWindow?.show()
+        }
+      },
+      {
+        label: '退出',
+        click: () => {
+          app.quit()
+        }
+      }
+    ])
+    tray.setToolTip('Todo')
+    tray.setContextMenu(contextMenu)
+
+    // 点击托盘图标显示主窗口
+    tray.on('click', () => {
+      mainWindow?.show()
+    })
+  }
+}
+
+// 添加隐藏到托盘的 IPC 处理
+ipcMain.handle('hide-to-tray', () => {
+  if (!tray) {
+    createTray()
+  }
+  mainWindow?.hide()
 })
