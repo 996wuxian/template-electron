@@ -86,11 +86,18 @@ app.on('window-all-closed', () => {
 // 添加托盘相关处理
 
 let tray: Tray | null = null
-const iconPath = join(__dirname, '../../resources/icon.png')
+const getIconPath = () => {
+  if (is.dev) {
+    return join(__dirname, '../../resources/icon.png')
+  } else {
+    return join(process.resourcesPath, 'icon.png')
+  }
+}
 // 创建托盘
 function createTray() {
   if (!tray) {
-    tray = new Tray(iconPath) // 替换为你的托盘图标路径
+    const trayIconPath = getIconPath()
+    tray = new Tray(trayIconPath) // 替换为你的托盘图标路径
     const contextMenu = Menu.buildFromTemplate([
       {
         label: '显示主窗口',
