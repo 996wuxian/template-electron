@@ -33,7 +33,7 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/home',
     meta: {
-      title: '今日计划',
+      title: '远程控制',
       icon: 'i-solar-sun-2-bold',
       hide: false
     },
@@ -43,7 +43,7 @@ export const asyncRoutes = [
         name: 'Home',
         component: () => import('@renderer/views/home/index.vue'),
         meta: {
-          title: '今日计划'
+          title: '远程控制'
         }
       }
     ]

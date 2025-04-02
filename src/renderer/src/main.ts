@@ -8,6 +8,7 @@ import store from './stores'
 import { setupRouter } from './router'
 import { setupNProgress } from './plugins'
 import svgIcon from '@renderer/plugins/svg-icon'
+import useSocketStore from '@renderer/stores/modules/socket'
 
 const app = createApp(App)
 
@@ -18,6 +19,10 @@ async function setupApp() {
   setupNProgress()
   app.use(svgIcon)
   setupRouter(app)
+
+  const socketStore = useSocketStore()
+  socketStore.initSocket()
+
   app.mount('#app')
 }
 
