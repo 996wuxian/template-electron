@@ -1,9 +1,9 @@
 <template>
   <div
-    class="todo-item flex py-10px flex-col cursor-pointer animate__animated"
+    class="todo-item flex py-10px flex-col cursor-pointer animate__animated w-100%"
     :class="todo?.isRemove ? 'animate__fadeOutUp' : 'animate__fadeInDown'"
   >
-    <div class="flex items-center w-100%">
+    <div class="flex items-center w-100%" @click="toggleDetails(todo, index)">
       <n-checkbox
         v-show="checkBox"
         v-model:checked="todo!.completed"
@@ -16,7 +16,6 @@
           'truncate max-w-100px': collapsed,
           'max-w-200px': isHideMenu
         }"
-        @click="toggleDetails(todo, index)"
       >
         <div class="truncate max-w-600px">{{ todo.text }}</div>
         <div class="text-12px text-gray truncate">{{ todo.description }}</div>

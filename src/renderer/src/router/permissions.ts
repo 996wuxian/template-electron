@@ -25,8 +25,6 @@ export function setupPermissions(router: Router) {
       await sleep(1000)
     }
 
-    console.log(to, 'to')
-
     //设置页面title
     document.title = getPageTitle(to.meta.title)
     window?.NProgress?.start()

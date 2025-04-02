@@ -23,21 +23,32 @@
             style="filter: hue-rotate(350deg); opacity: 0.6"
           />
         </div>
-        <div v-else class="h-[calc(100%-20px)] overflow-y-auto">
-          <TodoItem
-            v-for="(todo, index) in todayTodos"
-            :key="todo.id"
-            :todo="todo"
-            :index="index"
-            :todos="todos"
-            :collapsed="collapsed"
-            :check-box="true"
-            :delete-show="true"
-            :status-show="true"
-            @delete-todo="deleteTodo"
-            @toggle-details="toggleDetails"
-            @toggle-sub-items-selection="toggleSubItemsSelection"
-          />
+        <div v-else class="h-[calc(100%-20px)] overflow-y-auto w-100%">
+          <VueDraggable
+            ref="el"
+            v-model="todayTodos"
+            :animation="150"
+            style="width: 100%; background-color: transparent"
+            class="flex flex-col gap-2 p-4 w-300px h-300px m-auto bg-gray-500/5 rounded"
+            @start="onStart"
+            @end="onEnd"
+          >
+            <TodoItem
+              v-for="(todo, index) in todayTodos"
+              :key="todo.id"
+              :todo="todo"
+              :index="index"
+              :todos="todos"
+              :collapsed="collapsed"
+              :check-box="true"
+              :delete-show="true"
+              :status-show="true"
+              style="width: 100%"
+              @delete-todo="deleteTodo"
+              @toggle-details="toggleDetails"
+              @toggle-sub-items-selection="toggleSubItemsSelection"
+            />
+          </VueDraggable>
         </div>
       </div>
 
@@ -258,6 +269,7 @@ import useUserStore from '@renderer/stores/modules/user'
 import TodoItem from '@renderer/components/common/TodoItem.vue'
 import { $msg } from '@renderer/config/interaction.config'
 import dayjs from 'dayjs'
+import { type DraggableEvent, type UseDraggableReturn, VueDraggable } from 'vue-draggable-plus'
 
 // 定义 Todo 类型，包括子项
 export interface Todo {
@@ -270,6 +282,7 @@ export interface Todo {
   level: number
   description: string
   status: number
+  sort: number
 }
 
 const useTheme = useThemeStore()
@@ -285,6 +298,7 @@ const collapsed = computed(() => useTheme.$state.collapsed)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)
+const el = ref<UseDraggableReturn>()
 
 const selected = computed(() => todayTodos.value.filter((todo) => todo.completed))
 const historyData = ref<Todo[]>([])
@@ -334,7 +348,8 @@ const addTodo = async () => {
         subTodos: [], // 初始化子项为空数组
         level: 1,
         description: '',
-        status: 4
+        status: 4,
+        sort: todos.value.length
       }
       todos.value.push(newTodo)
       historyData.value.push(newTodo)
@@ -394,7 +409,8 @@ const addSubTodo = async () => {
       text: newSubTodoText.value,
       level: selectedTodo.value.level + 1,
       description: '',
-      status: 4
+      status: 4,
+      sort: selectedTodo.value.subTodos.length
     }
     historyData.value.push(newSubTodo)
     selectedTodo.value.subTodos.push(newSubTodo)
@@ -512,12 +528,68 @@ const fetchData = () => {
     : []
 
   if (data) {
-    todos.value = data
+    // 确保所有项都有 sort 值
+    data.forEach((todo: Todo, index: number) => {
+      if (typeof todo.sort === 'undefined') {
+        todo.sort = index
+      }
+    })
+    // 根据 sort 值排序
+    todos.value = data.sort((a: Todo, b: Todo) => a.sort - b.sort)
     // 检查是否所有项目都被选中
     if (todos.value.length > 0) {
       const allSelected = todos.value.every((todo) => todo.completed)
       selectAll.value = allSelected
     }
+  }
+}
+
+const onStart = (e: DraggableEvent) => {
+  const draggedItem = todayTodos.value[e.oldIndex!]
+  if (draggedItem) {
+    draggedItem.isRemove = false
+  }
+}
+
+const onEnd = async (e: DraggableEvent) => {
+  if (e.newIndex === e.oldIndex) return
+
+  try {
+    // 获取拖拽的项目
+    const draggedTodo = todayTodos.value[e.oldIndex!]
+    const targetTodo = todayTodos.value[e.newIndex!]
+
+    // 交换 sort 值
+    const tempSort = draggedTodo.sort
+    draggedTodo.sort = targetTodo.sort
+    targetTodo.sort = tempSort
+
+    // 更新 todos 中对应项的顺序
+    const allTodos = todos.value.map((todo) => {
+      if (todo.id === draggedTodo.id) {
+        return { ...todo, sort: draggedTodo.sort }
+      }
+      if (todo.id === targetTodo.id) {
+        return { ...todo, sort: targetTodo.sort }
+      }
+      return todo
+    })
+
+    // 根据 sort 值重新排序
+    todos.value = allTodos.sort((a, b) => a.sort - b.sort)
+
+    // 保存更新后的数据
+    await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
+    $msg({
+      type: 'success',
+      msg: '任务顺序已更新'
+    })
+  } catch (error) {
+    console.error('更新失败:', error)
+    $msg({
+      type: 'error',
+      msg: '更新失败，请重试'
+    })
   }
 }
 
