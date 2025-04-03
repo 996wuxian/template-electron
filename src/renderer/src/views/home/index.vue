@@ -305,7 +305,14 @@ const historyData = ref<Todo[]>([])
 
 // 获取今天创建的所有 todos
 const todayTodos = computed(() => {
-  return todos.value.filter((todo) => isTodoCreatedToday(todo.createdAt))
+  return todos.value.filter((todo) => {
+    // 获取今天创建的任务
+    const isToday = isTodoCreatedToday(todo.createdAt)
+    // 获取昨天创建的任务（不管是否完成）
+    const isYesterday = dayjs(todo.createdAt).isSame(dayjs().subtract(1, 'day'), 'day')
+
+    return isToday || isYesterday
+  })
 })
 
 const options = [
@@ -455,17 +462,46 @@ const deleteSelected = () => {
 }
 
 // 子项勾选时，切换所有子项的状态
-const toggleSubItemsSelection = (todo: Todo) => {
+const toggleSubItemsSelection = async (todo: Todo) => {
   const isSelected = todo.completed
-  todo.subTodos.forEach((subTodo) => {
-    subTodo.completed = isSelected
-    // 子项的子项（递归）
-    subTodo.subTodos?.forEach((subSubTodo) => {
-      subSubTodo.completed = isSelected
+
+  // 递归更新所有子项状态的函数
+  const updateSubTodosStatus = (subTodos: Todo[]) => {
+    subTodos.forEach((subTodo) => {
+      subTodo.completed = isSelected
+      if (subTodo.subTodos?.length) {
+        updateSubTodosStatus(subTodo.subTodos)
+      }
     })
+  }
+
+  // 更新当前 todo 的所有子项状态
+  updateSubTodosStatus(todo.subTodos)
+
+  // 更新 historyData 中对应的 todo 及其子项状态
+  const updateHistoryTodoStatus = (todoId: number) => {
+    const historyTodo = historyData.value.find((item) => item.id === todoId)
+    if (historyTodo) {
+      historyTodo.completed = isSelected
+      // 如果有子项，也需要更新子项状态
+      if (historyTodo.subTodos?.length) {
+        updateSubTodosStatus(historyTodo.subTodos)
+      }
+    }
+  }
+
+  // 更新主任务状态
+  updateHistoryTodoStatus(todo.id)
+  // 更新所有子任务状态
+  todo.subTodos.forEach((subTodo) => {
+    updateHistoryTodoStatus(subTodo.id)
   })
 
-  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+  // 保存更新后的数据
+  await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+  await window.api.writeFile(useUser.historyFullPath, JSON.stringify(historyData.value))
+
+  // 更新全选状态
   if (todos.value.length > 0) {
     const allSelected = todos.value.every((todo) => todo.completed)
     selectAll.value = allSelected

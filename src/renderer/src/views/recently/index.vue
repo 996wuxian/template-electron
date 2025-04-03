@@ -12,32 +12,56 @@
             style="filter: hue-rotate(350deg); opacity: 0.6"
           />
         </div>
-        <div v-else class="h-[calc(100%-20px)] overflow-y-auto">
+        <div v-else class="h-[calc(100%-20px)] overflow-y-auto px-4">
           <div
             v-for="group in groupedTodos"
             :key="group.dateKey"
-            class="animate__animated animate__fadeInDown"
+            class="animate__animated animate__fadeInDown mb-4"
           >
-            <div class="group-header flex items-center my-2 px-2 font-700">
-              <span class="text-gray-600 mr-2">{{ group.title }}</span>
-              <span class="text-gray-400 text-sm">({{ group.tasks.length }}项)</span>
-              <div class="flex-1 border-b border-dashed border-gray-200 ml-2"></div>
-            </div>
+            <n-card :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+              <template #header>
+                <div class="group-header flex items-center px-2">
+                  <div class="flex items-center gap-2">
+                    <i i-solar-calendar-bold-duotone class="text-18px text-blue-500" />
+                    <span class="text-16px font-600 text-gray-700">{{ group.title }}</span>
+                    <n-tag size="small" :bordered="false" type="info" class="ml-2">
+                      {{ group.tasks.length }}项
+                    </n-tag>
+                  </div>
+                </div>
+              </template>
 
-            <TodoItem
-              v-for="(todo, index) in group.tasks"
-              :key="todo.id"
-              :todo="todo"
-              :index="index"
-              :todos="group.tasks"
-              :check-box="false"
-              :collapsed="collapsed"
-              :delete-show="false"
-              :status-show="false"
-              @delete-todo="deleteTodo"
-              @toggle-details="toggleDetails"
-              @toggle-sub-items-selection="toggleSubItemsSelection"
-            />
+              <div class="flex flex-col gap-2">
+                <TodoItem
+                  v-for="(todo, index) in group.tasks"
+                  :key="todo.id"
+                  :todo="todo"
+                  :index="index"
+                  :todos="group.tasks"
+                  :check-box="false"
+                  :collapsed="collapsed"
+                  :delete-show="false"
+                  :status-show="true"
+                  class="hover:bg-gray-50 rounded p-2"
+                  @delete-todo="deleteTodo"
+                  @toggle-details="toggleDetails"
+                  @toggle-sub-items-selection="toggleSubItemsSelection"
+                />
+              </div>
+
+              <template #footer>
+                <div class="flex items-center justify-between text-gray-400 text-12px">
+                  <div class="flex items-center gap-2">
+                    <span>完成：{{ getCompletedCount(group.tasks) }}</span>
+                    <span>进行中：{{ group.tasks.length - getCompletedCount(group.tasks) }}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <i i-solar-clock-circle-bold-duotone />
+                    <span>{{ getGroupTimeInfo(group.dateKey) }}</span>
+                  </div>
+                </div>
+              </template>
+            </n-card>
           </div>
         </div>
       </div>
@@ -45,26 +69,27 @@
 
     <!-- 右侧区域：Todo 详情 -->
     <div
-      class="todo-details border-l border-gray-200 animate__animated overflow-hidden item-transition bg-white shadow-xl theme-page"
+      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 w-240px h-full"
       :class="[
-        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-6' : 'animate__fadeOutRight w-0',
-        collapsed ? 'absolute top-0 w-240px h-400px right-0' : ''
+        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-4' : 'animate__fadeOutRight w-0',
+        collapsed ? 'h-400px' : ''
       ]"
     >
       <div v-show="detailVisible" class="h-full flex flex-col">
         <!-- 头部区域 -->
-        <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
-          <div class="flex-1 flex items-center">
-            <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
-              {{ selectedTodo?.text }}
-            </h2>
+        <div class="p-3px bg-#CFCECD absolute top-42px right-10px flex-center rd-50%">
+          <i
+            i-solar-double-alt-arrow-right-line-duotone
+            class="w-20px h-20px cursor-pointer hover:text-red-500"
+            @click="hideDetails"
+          />
+        </div>
 
-            <i
-              i-solar-double-alt-arrow-right-line-duotone
-              class="w-20px h-20px cursor-pointer hover:text-red-500 ml-auto"
-              @click="hideDetails"
-            />
-          </div>
+        <!-- 头部区域 -->
+        <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
+          <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
+            {{ selectedTodo?.text }}
+          </h2>
         </div>
 
         <!-- 主体内容 -->
@@ -72,7 +97,7 @@
           <!-- 基本信息卡片 -->
           <div class="mb-3 bg-gray-50 rounded-lg">
             <div class="space-y-6 theme-page">
-              <div class="text-gray-600 text-16px">{{ selectedTodo?.text }}</div>
+              <div class="text-gray-600 text-14px">{{ selectedTodo?.text }}</div>
               <div>
                 <label class="text-sm font-medium text-gray-500">详细描述</label>
 
@@ -277,6 +302,23 @@ onMounted(() => {
     todos.value = data
   }
 })
+
+// 添加新的工具方法
+const getCompletedCount = (tasks: Todo[]) => {
+  return tasks.filter((task) => task.completed).length
+}
+
+const getGroupTimeInfo = (dateKey: string) => {
+  if (dateKey === 'today') {
+    return '今天'
+  } else if (dateKey === 'yesterday') {
+    return '昨天'
+  } else {
+    const date = dayjs(dateKey)
+    const diffDays = dayjs().diff(date, 'day')
+    return `${diffDays}天前`
+  }
+}
 </script>
 
 <style lang="scss">
@@ -322,5 +364,33 @@ onMounted(() => {
 
 .todo-subitems {
   padding-left: 20px;
+}
+
+// 添加新的样式
+.n-card {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.todo-list {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+  }
 }
 </style>
