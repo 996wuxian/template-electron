@@ -278,6 +278,7 @@ export interface Todo {
   completed: boolean
   isRemove: boolean
   createdAt: string
+  completedAt: string
   subTodos: Todo[] // 子项
   level: number
   description: string
@@ -303,15 +304,14 @@ const el = ref<UseDraggableReturn>()
 const selected = computed(() => todayTodos.value.filter((todo) => todo.completed))
 const historyData = ref<Todo[]>([])
 
-// 获取今天创建的所有 todos
 const todayTodos = computed(() => {
   return todos.value.filter((todo) => {
-    // 获取今天创建的任务
     const isToday = isTodoCreatedToday(todo.createdAt)
-    // 获取昨天创建的任务（不管是否完成）
-    const isYesterday = dayjs(todo.createdAt).isSame(dayjs().subtract(1, 'day'), 'day')
-
-    return isToday || isYesterday
+    // 如果是今天的任务，全部显示
+    if (isToday) return true
+    // 如果是历史任务，只要是今天完成的或者未完成的都显示
+    const completedToday = todo.completed && dayjs(todo.completedAt).isSame(dayjs(), 'day')
+    return !todo.completed || completedToday
   })
 })
 
@@ -351,20 +351,31 @@ const addTodo = async () => {
         text: value.value,
         completed: false,
         isRemove: false,
-        createdAt: new Date().toLocaleString(), // 格式化当前时间
-        subTodos: [], // 初始化子项为空数组
+        createdAt: new Date().toLocaleString(),
+        subTodos: [],
         level: 1,
         description: '',
         status: 4,
-        sort: todos.value.length
+        sort: todos.value.length,
+        completedAt: ''
       }
+
+      // 读取当前的历史数据
+      const currentHistoryData = Array.isArray(window.api.readFile(useUser.historyFullPath))
+        ? window.api.readFile(useUser.historyFullPath)
+        : []
+
+      // 将新的待办添加到历史数据中
+      const updatedHistoryData = [...currentHistoryData, newTodo]
+
+      // 更新本地数据
       todos.value.push(newTodo)
-      historyData.value.push(newTodo)
+      historyData.value = updatedHistoryData
       value.value = ''
 
-      // 写入内容
+      // 写入文件
       await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-      await window.api.writeFile(useUser.historyFullPath, JSON.stringify(historyData.value))
+      await window.api.writeFile(useUser.historyFullPath, JSON.stringify(updatedHistoryData))
     } catch (error) {
       console.error('保存失败:', error)
     }
@@ -417,7 +428,8 @@ const addSubTodo = async () => {
       level: selectedTodo.value.level + 1,
       description: '',
       status: 4,
-      sort: selectedTodo.value.subTodos.length
+      sort: selectedTodo.value.subTodos.length,
+      completedAt: ''
     }
     historyData.value.push(newSubTodo)
     selectedTodo.value.subTodos.push(newSubTodo)
@@ -464,16 +476,21 @@ const deleteSelected = () => {
 // 子项勾选时，切换所有子项的状态
 const toggleSubItemsSelection = async (todo: Todo) => {
   const isSelected = todo.completed
+  const completedAt = isSelected ? new Date().toLocaleString() : ''
 
   // 递归更新所有子项状态的函数
   const updateSubTodosStatus = (subTodos: Todo[]) => {
     subTodos.forEach((subTodo) => {
       subTodo.completed = isSelected
+      subTodo.completedAt = completedAt
       if (subTodo.subTodos?.length) {
         updateSubTodosStatus(subTodo.subTodos)
       }
     })
   }
+
+  todo.completed = isSelected
+  todo.completedAt = completedAt
 
   // 更新当前 todo 的所有子项状态
   updateSubTodosStatus(todo.subTodos)
@@ -498,8 +515,24 @@ const toggleSubItemsSelection = async (todo: Todo) => {
   })
 
   // 保存更新后的数据
+  const currentHistoryData = Array.isArray(window.api.readFile(useUser.historyFullPath))
+    ? window.api.readFile(useUser.historyFullPath)
+    : []
+
+  // 更新历史数据中的对应项
+  const updatedHistoryData = currentHistoryData.map((item: Todo) => {
+    if (item.id === todo.id) {
+      return {
+        ...item,
+        completed: isSelected,
+        subTodos: todo.subTodos
+      }
+    }
+    return item
+  })
+
   await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-  await window.api.writeFile(useUser.historyFullPath, JSON.stringify(historyData.value))
+  await window.api.writeFile(useUser.historyFullPath, JSON.stringify(updatedHistoryData))
 
   // 更新全选状态
   if (todos.value.length > 0) {
@@ -555,28 +588,42 @@ const isTodoCreatedToday = (createdAt: string) => {
 
 // 添加获取数据的方法
 const fetchData = () => {
-  const data = Array.isArray(window.api.readFile(useUser.fileFullPath))
+  // 读取今日待办文件
+  const todayData = Array.isArray(window.api.readFile(useUser.fileFullPath))
     ? window.api.readFile(useUser.fileFullPath)
     : []
 
-  historyData.value = Array.isArray(window.api.readFile(useUser.historyFullPath))
+  // 读取历史待办文件
+  const historyData = Array.isArray(window.api.readFile(useUser.historyFullPath))
     ? window.api.readFile(useUser.historyFullPath)
     : []
 
-  if (data) {
+  // 获取历史未完成任务，但排除今天已经添加到 todayData 中的任务
+  const uncompletedHistoryTodos = historyData.filter((todo: Todo) => {
+    const isHistoryTodo = !isTodoCreatedToday(todo.createdAt)
+    const isUncompleted = !todo.completed
+    const notInTodayData = !todayData.some((t: Todo) => t.id === todo.id)
+    return isHistoryTodo && isUncompleted && notInTodayData
+  })
+
+  // 合并数据：今天的所有任务 + 未重复的历史未完成任务
+  const mergedData = [...todayData, ...uncompletedHistoryTodos]
+
+  if (mergedData.length > 0) {
     // 确保所有项都有 sort 值
-    data.forEach((todo: Todo, index: number) => {
+    mergedData.forEach((todo: Todo, index: number) => {
       if (typeof todo.sort === 'undefined') {
         todo.sort = index
       }
     })
     // 根据 sort 值排序
-    todos.value = data.sort((a: Todo, b: Todo) => a.sort - b.sort)
+    todos.value = mergedData.sort((a: Todo, b: Todo) => a.sort - b.sort)
     // 检查是否所有项目都被选中
-    if (todos.value.length > 0) {
-      const allSelected = todos.value.every((todo) => todo.completed)
-      selectAll.value = allSelected
-    }
+    const allSelected = todos.value.every((todo) => todo.completed)
+    selectAll.value = allSelected
+  } else {
+    todos.value = []
+    selectAll.value = false
   }
 }
 

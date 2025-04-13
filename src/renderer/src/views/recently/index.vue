@@ -150,6 +150,11 @@
                   {{ selectedTodo?.createdAt }}
                 </div>
               </div>
+              <div class="flex justify-end mt-4">
+                <n-button type="primary" size="small" @click="addToToday">
+                  添加到今日待办
+                </n-button>
+              </div>
             </div>
           </div>
         </div>
@@ -166,6 +171,7 @@ import TodoItem from '@renderer/components/common/TodoItem.vue'
 import dayjs from 'dayjs'
 import isToday from 'dayjs/plugin/isToday'
 import isYesterday from 'dayjs/plugin/isYesterday'
+import { $msg } from '@renderer/config/interaction.config'
 
 // 定义 Todo 类型，包括子项
 export interface Todo {
@@ -299,7 +305,12 @@ onMounted(() => {
   // 读取文件内容
   const data = window.api.readFile(useUser.historyFullPath)
   if (data) {
-    todos.value = data
+    todos.value = data.map((item: any) => {
+      return {
+        ...item,
+        isRemove: false
+      }
+    })
   }
 })
 
@@ -317,6 +328,45 @@ const getGroupTimeInfo = (dateKey: string) => {
     const date = dayjs(dateKey)
     const diffDays = dayjs().diff(date, 'day')
     return `${diffDays}天前`
+  }
+}
+
+// 添加到今日待办
+const addToToday = async () => {
+  if (!selectedTodo.value || !useUser.fileFullPath) return
+
+  try {
+    // 读取当前的待办列表
+    const currentTodos = Array.isArray(window.api.readFile(useUser.fileFullPath))
+      ? window.api.readFile(useUser.fileFullPath)
+      : []
+
+    // 创建新的待办项
+    const newTodo = {
+      ...selectedTodo.value,
+      id: Date.now(), // 生成新的 ID
+      createdAt: new Date().toLocaleString(), // 更新创建时间为当前时间
+      completed: false, // 重置完成状态
+      isRemove: false,
+      sort: currentTodos.length // 添加到末尾
+    }
+
+    // 添加到待办列表
+    currentTodos.push(newTodo)
+
+    // 保存到文件
+    await window.api.writeFile(useUser.fileFullPath, JSON.stringify(currentTodos))
+
+    $msg({
+      type: 'success',
+      msg: '已添加到今日待办'
+    })
+  } catch (error) {
+    console.error('添加失败:', error)
+    $msg({
+      type: 'error',
+      msg: '添加失败'
+    })
   }
 }
 </script>
