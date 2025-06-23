@@ -24,7 +24,45 @@
           />
         </div>
         <div v-else class="h-[calc(100%-20px)] overflow-y-auto w-100%">
-          <VueDraggable
+          <div class="h-[calc(100%-20px)] overflow-y-auto w-100%">
+            <!-- 按日期分组显示 -->
+            <div v-for="group in groupedTodayTodos" :key="group.dateKey" class="mb-4">
+              <!-- 分组标题 -->
+              <div v-if="group.dateKey !== 'today'" class="flex items-center gap-2 mb-2 px-2">
+                <i class="i-solar-clock-circle-bold-duotone text-orange-500"></i>
+                <span class="text-14px font-600 text-orange-600">{{ group.title }}</span>
+                <n-tag size="small" type="warning" :bordered="false">
+                  {{ group.tasks.length }}项未完成
+                </n-tag>
+              </div>
+
+              <!-- 任务列表 -->
+              <VueDraggable
+                v-model="group.tasks"
+                :animation="150"
+                class="flex flex-col gap-2 p-4 bg-gray-500/5 rounded"
+                :class="{ 'bg-gray-500/5 border': group.dateKey !== 'today' }"
+                @start="onStart"
+                @end="onEnd"
+              >
+                <TodoItem
+                  v-for="(todo, index) in group.tasks"
+                  :key="todo.id"
+                  :todo="todo"
+                  :index="index"
+                  :todos="todos"
+                  :collapsed="collapsed"
+                  :check-box="true"
+                  :delete-show="true"
+                  :status-show="true"
+                  @delete-todo="deleteTodo"
+                  @toggle-details="toggleDetails"
+                  @toggle-sub-items-selection="toggleSubItemsSelection"
+                />
+              </VueDraggable>
+            </div>
+          </div>
+          <!-- <VueDraggable
             ref="el"
             v-model="todayTodos"
             :animation="150"
@@ -48,7 +86,7 @@
               @toggle-details="toggleDetails"
               @toggle-sub-items-selection="toggleSubItemsSelection"
             />
-          </VueDraggable>
+          </VueDraggable> -->
         </div>
       </div>
 
@@ -681,6 +719,29 @@ const handleShowMainWindow = () => {
   fetchData()
 }
 
+// 添加按日期分组的计算属性
+const groupedTodayTodos = computed(() => {
+  const groups = new Map<string, { dateKey: string; title: string; tasks: Todo[] }>()
+
+  todayTodos.value.forEach((todo) => {
+    const isToday = isTodoCreatedToday(todo.createdAt)
+    const dateKey = isToday ? 'today' : 'yesterday'
+    const title = isToday ? '今日任务' : '昨日未完成'
+
+    if (!groups.has(dateKey)) {
+      groups.set(dateKey, { dateKey, title, tasks: [] })
+    }
+    groups.get(dateKey)?.tasks.push(todo)
+  })
+
+  // 确保今日任务在前，昨日未完成在后
+  const result = []
+  if (groups.has('today')) result.push(groups.get('today')!)
+  if (groups.has('yesterday')) result.push(groups.get('yesterday')!)
+
+  return result
+})
+
 onMounted(() => {
   fetchData()
   // 添加事件监听
@@ -715,6 +776,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   padding: 10px;
+  width: calc(100% - 25px);
 }
 
 .todo-details {
