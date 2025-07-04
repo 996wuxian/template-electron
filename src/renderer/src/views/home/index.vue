@@ -62,31 +62,6 @@
               </VueDraggable>
             </div>
           </div>
-          <!-- <VueDraggable
-            ref="el"
-            v-model="todayTodos"
-            :animation="150"
-            style="width: 100%; background-color: transparent"
-            class="flex flex-col gap-2 p-4 w-300px h-300px m-auto bg-gray-500/5 rounded"
-            @start="onStart"
-            @end="onEnd"
-          >
-            <TodoItem
-              v-for="(todo, index) in todayTodos"
-              :key="todo.id"
-              :todo="todo"
-              :index="index"
-              :todos="todos"
-              :collapsed="collapsed"
-              :check-box="true"
-              :delete-show="true"
-              :status-show="true"
-              style="width: 100%"
-              @delete-todo="deleteTodo"
-              @toggle-details="toggleDetails"
-              @toggle-sub-items-selection="toggleSubItemsSelection"
-            />
-          </VueDraggable> -->
         </div>
       </div>
 
@@ -133,165 +108,193 @@
 
     <!-- 右侧区域：Todo 详情 -->
     <div
-      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 w-240px h-full"
+      v-if="detailVisible && !collapsed"
+      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 h-full"
       :class="[
-        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-4' : 'animate__fadeOutRight w-0',
+        detailAnimate ? 'animate__fadeInRight w-[300px] ml-4 p-4' : 'animate__fadeOutRight w-0',
         collapsed ? 'h-400px' : ''
       ]"
     >
-      <div v-show="detailVisible" class="h-full flex flex-col">
-        <div class="p-3px bg-#CFCECD absolute top-42px right-10px flex-center rd-50%">
-          <i
-            i-solar-double-alt-arrow-right-line-duotone
-            class="w-20px h-20px cursor-pointer hover:text-red-500"
-            @click="hideDetails"
-          />
-        </div>
+      <div class="absolute top-42px right-10px flex-center">
+        <i
+          i-solar-round-alt-arrow-right-bold-duotone
+          class="text-30px c-#88B9F9 cursor-pointer hover:text-red-500 transition-all"
+          @click="hideDetails"
+        />
+      </div>
 
-        <!-- 头部区域 -->
-        <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
-          <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
-            {{ selectedTodo?.text }}
-          </h2>
-        </div>
+      <!-- 头部区域 -->
+      <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
+        <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
+          {{ selectedTodo?.text }}
+        </h2>
+      </div>
 
-        <!-- 主体内容 -->
-        <div class="flex-1 h-[calc(100%-200px)] overflow-y-auto">
-          <!-- 基本信息卡片 -->
-          <div class="mb-3 bg-gray-50 rounded-lg">
-            <div class="space-y-4 theme-page">
-              <!-- 修改这部分 -->
-              <div class="text-gray-600 text-14px">
-                <n-input
-                  v-if="textInputVisible && selectedTodo"
-                  v-model:value="selectedTodo.text"
-                  placeholder="输入内容"
-                  size="medium"
-                  type="textarea"
-                  :autosize="{
-                    minRows: 3,
-                    maxRows: 5
-                  }"
-                  @blur="textChange"
-                />
-                <div v-else class="cursor-pointer w-full break-words" @click="editText">
-                  {{ selectedTodo?.text }}
-                </div>
+      <!-- 主体内容 -->
+      <div class="flex-1 h-[calc(100%-200px)] overflow-y-auto">
+        <!-- 基本信息卡片 -->
+        <div class="mb-3 bg-gray-50 rounded-lg">
+          <div class="space-y-4 theme-page">
+            <!-- 修改这部分 -->
+            <div class="text-gray-600 text-14px">
+              <n-input
+                v-if="textInputVisible && selectedTodo"
+                v-model:value="selectedTodo.text"
+                placeholder="输入内容"
+                size="medium"
+                type="textarea"
+                :autosize="{
+                  minRows: 3,
+                  maxRows: 5
+                }"
+                @blur="textChange"
+              />
+              <div v-else class="cursor-pointer w-full break-words" @click="editText">
+                {{ selectedTodo?.text }}
               </div>
+            </div>
 
-              <div>
-                <label class="text-sm font-medium text-gray-500">详细描述</label>
+            <div>
+              <label class="text-sm font-medium text-gray-500">详细描述</label>
 
-                <div class="mt-1 text-gray-400 flex items-center gap-1">
-                  <n-input
-                    v-if="inputVisible && selectedTodo"
-                    v-model:value="selectedTodo.description"
-                    placeholder="输入描述"
-                    size="medium"
-                    @blur="descChange"
-                  />
+              <div class="mt-1 text-gray-400 flex items-center gap-1">
+                <n-input
+                  v-if="inputVisible && selectedTodo"
+                  v-model:value="selectedTodo.description"
+                  placeholder="输入描述"
+                  size="medium"
+                  @blur="descChange"
+                />
+                <div v-else class="flex items-center gap-1 text-13px">
+                  <p v-if="selectedTodo?.description" @click="inputVisible = true">
+                    {{ selectedTodo?.description }}
+                  </p>
                   <div v-else class="flex items-center gap-1 text-13px">
-                    <p v-if="selectedTodo?.description" @click="inputVisible = true">
-                      {{ selectedTodo?.description }}
-                    </p>
-                    <div v-else class="flex items-center gap-1 text-13px">
-                      {{ '无附加描述' }}
-                      <i i-solar-pen-2-broken @click="editDescription"></i>
-                    </div>
+                    {{ '无附加描述' }}
+                    <i i-solar-pen-2-broken @click="editDescription"></i>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div class="flex items-center gap-1">
-                <span class="text-sm font-medium text-gray-500 flex items-center gap-1 flex-1">
-                  <i i-solar-fire-minimalistic-broken></i>
-                  紧急程度：</span
-                >
-                <n-select
+            <div class="flex items-center gap-1">
+              <span class="text-sm font-medium text-gray-500 flex items-center gap-1 flex-1">
+                <i i-solar-fire-minimalistic-broken></i>
+                紧急程度：</span
+              >
+              <n-select
+                v-if="selectedTodo"
+                v-model:value="selectedTodo.status"
+                size="small"
+                class="w-90px"
+                :options="options"
+                @update:value="saveTodo"
+              />
+            </div>
+
+            <div class="flex items-center gap-1">
+              <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
+                <i i-solar-tea-cup-broken></i>
+                状态：</span
+              >
+              <n-tag :type="selectedTodo?.completed ? 'success' : 'warning'" size="small">
+                {{ selectedTodo?.completed ? '已完成' : '进行中' }}
+              </n-tag>
+            </div>
+
+            <div>
+              <label class="text-sm font-medium text-gray-500 flex items-center gap-1">
+                <i i-solar-history-2-outline></i>
+                创建时间</label
+              >
+              <div
+                class="mt-1 text-sm text-gray-400 max-w-140px overflow-hidden text-ellipsis text-nowrap"
+              >
+                {{ selectedTodo?.createdAt }}
+              </div>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <label class="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <i i-solar-bell-bing-bold-duotone></i>
+                  待办提醒
+                </label>
+                <n-switch
                   v-if="selectedTodo"
-                  v-model:value="selectedTodo.status"
+                  v-model:value="selectedTodo.reminderEnabled"
                   size="small"
-                  class="w-90px"
-                  :options="options"
-                  @update:value="saveTodo"
+                  @update:value="saveReminderSettings"
                 />
               </div>
-
-              <div class="flex items-center gap-1">
-                <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
-                  <i i-solar-tea-cup-broken></i>
-                  状态：</span
-                >
-                <n-tag :type="selectedTodo?.completed ? 'success' : 'warning'" size="small">
-                  {{ selectedTodo?.completed ? '已完成' : '进行中' }}
-                </n-tag>
-              </div>
-
-              <div>
-                <label class="text-sm font-medium text-gray-500 flex items-center gap-1">
-                  <i i-solar-history-2-outline></i>
-                  创建时间</label
-                >
-                <div
-                  class="mt-1 text-sm text-gray-400 max-w-140px overflow-hidden text-ellipsis text-nowrap"
-                >
-                  {{ selectedTodo?.createdAt }}
+              <div v-if="selectedTodo?.reminderEnabled" class="mt-2">
+                <n-time-picker
+                  v-if="selectedTodo"
+                  v-model:value="reminderTimeValue"
+                  default-formatted-value="00:12"
+                  format="HH:mm"
+                  placeholder="选择提醒时间"
+                  size="small"
+                  class="w-full"
+                  @update:value="updateReminderTime"
+                />
+                <div v-if="selectedTodo?.reminderTime" class="mt-1 text-xs text-gray-400">
+                  提醒时间: {{ formatReminderTime(selectedTodo.reminderTime) }}
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- 子任务区域 -->
-          <div class="border-t pt-4 h-[calc(100%-250px)]">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="font-medium flex items-center gap-2">
-                <i i-solar-paperclip-bold-duotone class="w-4 h-4 text-blue-500" />
-                子任务 ({{ selectedTodo?.subTodos?.length || 0 }})
-              </h3>
-              <span v-if="!collapsed" class="text-xs text-gray-400">最大支持4级嵌套</span>
-            </div>
+        <!-- 子任务区域 -->
+        <div class="border-t pt-4 h-[calc(100%-250px)]">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-medium flex items-center gap-2">
+              <i i-solar-paperclip-bold-duotone class="w-4 h-4 text-blue-500" />
+              子任务 ({{ selectedTodo?.subTodos?.length || 0 }})
+            </h3>
+            <span v-if="!collapsed" class="text-xs text-gray-400">最大支持4级嵌套</span>
+          </div>
 
-            <!-- 添加子项 -->
-            <div v-if="selectedTodo && selectedTodo?.level < 4" class="mb-4">
-              <n-input
-                v-model:value="newSubTodoText"
-                placeholder="输入子任务内容"
-                size="medium"
-                round
-                @keyup.enter="addSubTodo"
+          <!-- 添加子项 -->
+          <div v-if="selectedTodo && selectedTodo?.level < 4" class="mb-4">
+            <n-input
+              v-model:value="newSubTodoText"
+              placeholder="输入子任务内容"
+              size="medium"
+              round
+              @keyup.enter="addSubTodo"
+            >
+              <template #suffix>
+                <i class="i-solar-add-circle-line-duotone text-gray-400" />
+              </template>
+            </n-input>
+          </div>
+
+          <!-- 子项列表 -->
+          <div v-if="selectedTodo?.subTodos?.length" class="h-[calc(100%-100px)] overflow-y-auto">
+            <div
+              v-for="subTodo in selectedTodo.subTodos"
+              :key="subTodo.id"
+              class="group flex items-center p-2 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <n-checkbox
+                v-model:checked="subTodo.completed"
+                class="mr-3"
+                :class="{ 'opacity-50': subTodo.completed }"
+              />
+              <span
+                class="flex-1 text-gray-500 transition-all"
+                :class="{
+                  'line-through text-gray-400': subTodo.completed,
+                  'opacity-75 hover:opacity-100': !subTodo.completed
+                }"
               >
-                <template #suffix>
-                  <i class="i-solar-add-circle-line-duotone text-gray-400" />
-                </template>
-              </n-input>
-            </div>
-
-            <!-- 子项列表 -->
-            <div v-if="selectedTodo?.subTodos?.length" class="h-[calc(100%-100px)] overflow-y-auto">
-              <div
-                v-for="subTodo in selectedTodo.subTodos"
-                :key="subTodo.id"
-                class="group flex items-center p-2 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <n-checkbox
-                  v-model:checked="subTodo.completed"
-                  class="mr-3"
-                  :class="{ 'opacity-50': subTodo.completed }"
-                />
-                <span
-                  class="flex-1 text-gray-500 transition-all"
-                  :class="{
-                    'line-through text-gray-400': subTodo.completed,
-                    'opacity-75 hover:opacity-100': !subTodo.completed
-                  }"
-                >
-                  {{ subTodo.text }}
-                </span>
-                <i
-                  v-if="subTodo.subTodos?.length"
-                  class="i-solar-arrow-right-line-duotone ml-2 text-gray-300 group-hover:text-blue-500"
-                />
-              </div>
+                {{ subTodo.text }}
+              </span>
+              <i
+                v-if="subTodo.subTodos?.length"
+                class="i-solar-arrow-right-line-duotone ml-2 text-gray-300 group-hover:text-blue-500"
+              />
             </div>
           </div>
         </div>
@@ -307,7 +310,7 @@ import useUserStore from '@renderer/stores/modules/user'
 import TodoItem from '@renderer/components/common/TodoItem.vue'
 import { $msg } from '@renderer/config/interaction.config'
 import dayjs from 'dayjs'
-import { type DraggableEvent, type UseDraggableReturn, VueDraggable } from 'vue-draggable-plus'
+import { type DraggableEvent, VueDraggable } from 'vue-draggable-plus'
 
 // 定义 Todo 类型，包括子项
 export interface Todo {
@@ -322,6 +325,8 @@ export interface Todo {
   description: string
   status: number
   sort: number
+  reminderTime?: string
+  reminderEnabled?: boolean
 }
 
 const useTheme = useThemeStore()
@@ -337,7 +342,7 @@ const collapsed = computed(() => useTheme.$state.collapsed)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)
-const el = ref<UseDraggableReturn>()
+const reminderTimeValue = ref<number | null>(null)
 
 const selected = computed(() => todayTodos.value.filter((todo) => todo.completed))
 const historyData = ref<Todo[]>([])
@@ -372,16 +377,66 @@ const options = [
   }
 ]
 
+// 同步更新历史数据中的待办项
+const syncHistoryData = (updatedTodo: Todo) => {
+  const historyIndex = historyData.value.findIndex((item) => item.id === updatedTodo.id)
+  if (historyIndex !== -1) {
+    // 更新历史数据中的对应项
+    historyData.value[historyIndex] = { ...updatedTodo }
+  }
+}
+
+const saveReminderSettings = async () => {
+  if (selectedTodo.value) {
+    if (!selectedTodo.value.reminderEnabled) {
+      selectedTodo.value.reminderTime = undefined
+      reminderTimeValue.value = null
+      // 取消现有提醒
+      await window.electron.ipcRenderer.invoke('cancel-todo-reminder', selectedTodo.value.id)
+    }
+    syncHistoryData(selectedTodo.value)
+    await saveTodo()
+  }
+}
+
+const updateReminderTime = async (value: number | null) => {
+  if (selectedTodo.value && value !== null) {
+    // 将毫秒数转换为今天的具体时间
+    const today = new Date()
+    const timeDate = new Date(value)
+    const reminderDateTime = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      timeDate.getHours(),
+      timeDate.getMinutes(),
+      timeDate.getSeconds()
+    )
+
+    // 如果选择的时间已经过了今天，则设置为明天的这个时间
+    if (reminderDateTime.getTime() < Date.now()) {
+      reminderDateTime.setDate(reminderDateTime.getDate() + 1)
+    }
+
+    selectedTodo.value.reminderTime = reminderDateTime.toISOString()
+    syncHistoryData(selectedTodo.value)
+    await saveTodo()
+
+    // 设置提醒
+    await window.electron.ipcRenderer.invoke('set-todo-reminder', {
+      id: selectedTodo.value.id,
+      text: selectedTodo.value.text,
+      reminderTime: selectedTodo.value.reminderTime
+    })
+  }
+}
+
+const formatReminderTime = (timeStr: string) => {
+  return dayjs(timeStr).format('YYYY-MM-DD HH:mm')
+}
+
 // 添加 Todo 项
 const addTodo = async () => {
-  if (!useUser.filePath) {
-    $msg({
-      type: 'warning',
-      msg: '请前往设置记录存放地址'
-    })
-    return
-  }
-
   if (value.value.trim()) {
     try {
       const newTodo = {
@@ -395,25 +450,22 @@ const addTodo = async () => {
         description: '',
         status: 4,
         sort: todos.value.length,
-        completedAt: ''
+        completedAt: '',
+        reminderTime: undefined,
+        reminderEnabled: false
       }
 
-      // 读取当前的历史数据
-      const currentHistoryData = Array.isArray(window.api.readFile(useUser.historyFullPath))
-        ? window.api.readFile(useUser.historyFullPath)
-        : []
-
-      // 将新的待办添加到历史数据中
+      // 使用新的存储方式
+      const currentHistoryData = await window.store.get('historyData', [])
       const updatedHistoryData = [...currentHistoryData, newTodo]
 
-      // 更新本地数据
       todos.value.push(newTodo)
       historyData.value = updatedHistoryData
       value.value = ''
 
-      // 写入文件
-      await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-      await window.api.writeFile(useUser.historyFullPath, JSON.stringify(updatedHistoryData))
+      // 保存到新的存储系统 - 转换为普通对象
+      await window.store.set('todayTodos', JSON.parse(JSON.stringify(todayTodos.value)))
+      await window.store.set('historyData', JSON.parse(JSON.stringify(updatedHistoryData)))
     } catch (error) {
       console.error('保存失败:', error)
     }
@@ -423,17 +475,20 @@ const addTodo = async () => {
 // 删除 Todo 项
 const deleteTodo = (data: any, index: number) => {
   data[index].isRemove = true
-  setTimeout(() => {
+  setTimeout(async () => {
     data.splice(index, 1)
-    window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+    // 使用新的存储方式
+    await window.store.set('todayTodos', JSON.parse(JSON.stringify(todayTodos.value)))
   }, 500)
   hided()
 }
 
 const hided = () => {
-  detailVisible.value = false
-  selectedTodo.value = null
   detailAnimate.value = false
+  setTimeout(() => {
+    detailVisible.value = false
+    selectedTodo.value = null
+  }, 300) // 等待动画完成
 }
 
 // 切换详情显示和隐藏
@@ -445,6 +500,22 @@ const toggleDetails = (todo: Todo, index: number) => {
     selectedTodo.value = todo
     detailVisible.value = true
     detailAnimate.value = true
+
+    // 加载提醒时间到时间选择器
+    if (todo.reminderTime) {
+      const reminderDate = new Date(todo.reminderTime)
+      // 创建一个只包含时间的Date对象（今天的日期 + 提醒时间）
+      const timeOnly = new Date()
+      timeOnly.setHours(
+        reminderDate.getHours(),
+        reminderDate.getMinutes(),
+        reminderDate.getSeconds(),
+        0
+      )
+      reminderTimeValue.value = timeOnly.getTime()
+    } else {
+      reminderTimeValue.value = null
+    }
   }
 }
 
@@ -469,24 +540,40 @@ const addSubTodo = async () => {
       sort: selectedTodo.value.subTodos.length,
       completedAt: ''
     }
-    historyData.value.push(newSubTodo)
     selectedTodo.value.subTodos.push(newSubTodo)
-    await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-    await window.api.writeFile(useUser.historyFullPath, JSON.stringify(historyData.value))
+
+    // 同步更新父任务的历史记录
+    syncHistoryData(selectedTodo.value)
+
+    await window.store.set('todayTodos', JSON.parse(JSON.stringify(todayTodos.value)))
+    await window.store.set('historyData', JSON.parse(JSON.stringify(historyData.value)))
     newSubTodoText.value = ''
   }
 }
 
 // 切换全选状态
-const toggleSelectAll = () => {
+const toggleSelectAll = async () => {
   todos.value.forEach((todo) => {
     todo.completed = selectAll.value
+    todo.completedAt = selectAll.value ? new Date().toLocaleString() : ''
     todo.subTodos.forEach((subTodo) => {
       subTodo.completed = selectAll.value
     })
+
+    // 同步历史数据
+    syncHistoryData(todo)
+
+    todo.subTodos.forEach((subTodo) => {
+      subTodo.completed = selectAll.value
+      subTodo.completedAt = selectAll.value ? new Date().toLocaleString() : ''
+      // 同步子任务的历史数据
+      syncHistoryData(subTodo)
+    })
   })
 
-  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+  await window.store.set('todayTodos', JSON.parse(JSON.stringify(todayTodos.value)))
+
+  await window.store.set('historyData', JSON.parse(JSON.stringify(historyData.value)))
 }
 
 // 删除选中的 Todo 项
@@ -503,9 +590,10 @@ const deleteSelected = () => {
 
   setTimeout(async () => {
     todos.value = todos.value.filter((todo) => !todo.completed)
-    selectAll.value = false // 取消全选
-    // 写入内容
-    await window.api.writeFile(useUser.fileFullPath, JSON.stringify([]))
+    selectAll.value = false
+
+    // 使用新的存储方式 - 转换为普通对象
+    await window.store.set('todayTodos', JSON.parse(JSON.stringify(todos.value)))
   }, 500)
 
   hided()
@@ -529,6 +617,7 @@ const toggleSubItemsSelection = async (todo: Todo) => {
 
   todo.completed = isSelected
   todo.completedAt = completedAt
+  syncHistoryData(todo)
 
   // 更新当前 todo 的所有子项状态
   updateSubTodosStatus(todo.subTodos)
@@ -538,7 +627,7 @@ const toggleSubItemsSelection = async (todo: Todo) => {
     const historyTodo = historyData.value.find((item) => item.id === todoId)
     if (historyTodo) {
       historyTodo.completed = isSelected
-      // 如果有子项，也需要更新子项状态
+      historyTodo.completedAt = completedAt
       if (historyTodo.subTodos?.length) {
         updateSubTodosStatus(historyTodo.subTodos)
       }
@@ -552,25 +641,10 @@ const toggleSubItemsSelection = async (todo: Todo) => {
     updateHistoryTodoStatus(subTodo.id)
   })
 
-  // 保存更新后的数据
-  const currentHistoryData = Array.isArray(window.api.readFile(useUser.historyFullPath))
-    ? window.api.readFile(useUser.historyFullPath)
-    : []
+  // 使用新的存储方式保存数据
+  await window.store.set('todayTodos', JSON.parse(JSON.stringify(todayTodos.value)))
 
-  // 更新历史数据中的对应项
-  const updatedHistoryData = currentHistoryData.map((item: Todo) => {
-    if (item.id === todo.id) {
-      return {
-        ...item,
-        completed: isSelected,
-        subTodos: todo.subTodos
-      }
-    }
-    return item
-  })
-
-  await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
-  await window.api.writeFile(useUser.historyFullPath, JSON.stringify(updatedHistoryData))
+  await window.store.set('historyData', JSON.parse(JSON.stringify(historyData.value)))
 
   // 更新全选状态
   if (todos.value.length > 0) {
@@ -583,7 +657,7 @@ const editDescription = () => {
   inputVisible.value = !inputVisible.value
 }
 
-const saveTodo = () => {
+const saveTodo = async () => {
   // 如果是修改了紧急程度，同步更新子任务的状态
   if (selectedTodo.value) {
     const updateSubTodosStatus = (subTodos: Todo[]) => {
@@ -596,9 +670,12 @@ const saveTodo = () => {
     }
 
     updateSubTodosStatus(selectedTodo.value.subTodos)
+    // 同步主任务的历史数据
+    syncHistoryData(selectedTodo.value)
   }
 
-  window.api.writeFile(useUser.fileFullPath, JSON.stringify(todayTodos.value))
+  await window.store.set('todayTodos', JSON.parse(JSON.stringify(todayTodos.value)))
+  await window.store.set('historyData', JSON.parse(JSON.stringify(historyData.value)))
 }
 
 const textInputVisible = ref(false)
@@ -609,14 +686,23 @@ const editText = () => {
 }
 
 // 添加文本修改完成的方法
-const textChange = () => {
+const textChange = async () => {
   textInputVisible.value = false
-  saveTodo()
+
+  // 同步历史数据
+  if (selectedTodo.value) {
+    syncHistoryData(selectedTodo.value)
+  }
+  await saveTodo()
 }
 
-const descChange = () => {
+const descChange = async () => {
   inputVisible.value = false
-  saveTodo()
+  // 同步历史数据
+  if (selectedTodo.value) {
+    syncHistoryData(selectedTodo.value)
+  }
+  await saveTodo()
 }
 
 // 判断 todo 是否是今天创建的
@@ -625,43 +711,18 @@ const isTodoCreatedToday = (createdAt: string) => {
 }
 
 // 添加获取数据的方法
-const fetchData = () => {
-  // 读取今日待办文件
-  const todayData = Array.isArray(window.api.readFile(useUser.fileFullPath))
-    ? window.api.readFile(useUser.fileFullPath)
-    : []
+const fetchData = async () => {
+  try {
+    // 从新的存储系统读取数据
+    const todayData = await window.store.get('todayTodos', [])
+    const historyDataFromStore = await window.store.get('historyData', [])
 
-  // 读取历史待办文件
-  const historyData = Array.isArray(window.api.readFile(useUser.historyFullPath))
-    ? window.api.readFile(useUser.historyFullPath)
-    : []
-
-  // 获取历史未完成任务，但排除今天已经添加到 todayData 中的任务
-  const uncompletedHistoryTodos = historyData.filter((todo: Todo) => {
-    const isHistoryTodo = !isTodoCreatedToday(todo.createdAt)
-    const isUncompleted = !todo.completed
-    const notInTodayData = !todayData.some((t: Todo) => t.id === todo.id)
-    return isHistoryTodo && isUncompleted && notInTodayData
-  })
-
-  // 合并数据：今天的所有任务 + 未重复的历史未完成任务
-  const mergedData = [...todayData, ...uncompletedHistoryTodos]
-
-  if (mergedData.length > 0) {
-    // 确保所有项都有 sort 值
-    mergedData.forEach((todo: Todo, index: number) => {
-      if (typeof todo.sort === 'undefined') {
-        todo.sort = index
-      }
-    })
-    // 根据 sort 值排序
-    todos.value = mergedData.sort((a: Todo, b: Todo) => a.sort - b.sort)
-    // 检查是否所有项目都被选中
-    const allSelected = todos.value.every((todo) => todo.completed)
-    selectAll.value = allSelected
-  } else {
+    todos.value = todayData
+    historyData.value = historyDataFromStore
+  } catch (error) {
+    console.error('读取数据失败:', error)
     todos.value = []
-    selectAll.value = false
+    historyData.value = []
   }
 }
 
@@ -751,6 +812,12 @@ onMounted(() => {
 onBeforeUnmount(() => {
   // 移除事件监听
   window.electron.ipcRenderer.removeListener('main-window-show', handleShowMainWindow)
+  // 清理详情页面状态，防止切换页面时动画闪烁
+  detailVisible.value = false
+  detailAnimate.value = false
+  selectedTodo.value = null
+  textInputVisible.value = false
+  inputVisible.value = false
 })
 </script>
 

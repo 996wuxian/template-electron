@@ -1,8 +1,16 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { existsSync, appendFile, writeFileSync, readFileSync } from 'fs'
 import path from 'path'
 import os from 'os'
 import { electronAPI } from '@electron-toolkit/preload'
+
+const store = {
+  set: (key: string, value: any) => ipcRenderer.invoke('store-set', key, value),
+  get: (key: string, defaultValue: any = null) =>
+    ipcRenderer.invoke('store-get', key, defaultValue),
+  remove: (key: string) => ipcRenderer.invoke('store-remove', key),
+  clear: () => ipcRenderer.invoke('store-clear')
+}
 
 // Custom APIs for renderer
 const api = {
@@ -52,6 +60,14 @@ const api = {
     } catch (err) {
       console.error('Error readFile file:', err)
     }
+  },
+  completeTodo: (todoId: number) => ipcRenderer.invoke('complete-todo', todoId),
+  snoozeTodo: (todoId: number, minutes: number) =>
+    ipcRenderer.invoke('snooze-todo-reminder', todoId, minutes),
+  openMainWindowWithTodo: (todoId: number) =>
+    ipcRenderer.invoke('open-main-window-with-todo', todoId),
+  onTodoReminderData: (callback: (data: any) => void) => {
+    ipcRenderer.on('todo-reminder-data', (event, data) => callback(data))
   }
 }
 
@@ -62,6 +78,7 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
+    contextBridge.exposeInMainWorld('store', store)
   } catch (error) {
     console.error(error)
   }
@@ -70,4 +87,5 @@ if (process.contextIsolated) {
   window.electron = electronAPI
   // @ts-ignore (define in dts)
   window.api = api
+  window.store = store
 }

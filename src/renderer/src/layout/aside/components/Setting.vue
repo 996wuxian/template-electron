@@ -21,26 +21,26 @@
               </n-space>
             </n-radio-group>
           </div>
-          <div class="flex justify-between">
-            记录存放位置：
+          <div class="flex justify-between items-center">
+            导出今日计划：
             <div class="flex items-center">
-              {{ filePath?.filePaths[0] }}
-              <i
-                i-solar-pen-2-broken
-                class="mx-10px cursor-pointer"
-                @click="selectDirectory('new')"
-              ></i>
+              <n-button size="small" @click="exportTodayPlan">
+                <template #icon>
+                  <i i-solar-download-minimalistic-bold class="w-16px h-16px"></i>
+                </template>
+                导出
+              </n-button>
             </div>
           </div>
-          <div class="flex justify-between">
-            历史记录存放位置：
+          <div class="flex justify-between items-center">
+            导出历史待办：
             <div class="flex items-center">
-              {{ historyPath?.filePaths[0] }}
-              <i
-                i-solar-pen-2-broken
-                class="mx-10px cursor-pointer"
-                @click="selectDirectory('history')"
-              ></i>
+              <n-button size="small" @click="exportHistoryTodos">
+                <template #icon>
+                  <i i-solar-archive-down-minimlistic-bold class="w-16px h-16px"></i>
+                </template>
+                导出
+              </n-button>
             </div>
           </div>
           <div class="flex items-center">
@@ -90,64 +90,17 @@ const songs = ref([
   {
     value: 'txt',
     label: 'txt'
+  },
+  {
+    value: 'excel',
+    label: 'excel'
   }
-  // {
-  //   value: 'excel',
-  //   label: 'excel'
-  // }
 ])
 
 const radioValue = ref(useUser.fileType || 'txt')
-const filePath = ref<{
-  filePaths: string[]
-}>({
-  filePaths: [useUser.filePath!] || []
-})
-const historyPath = ref<{
-  filePaths: string[]
-}>({
-  filePaths: [useUser.historyPath!] || []
-})
+
 // 获取当前版本号
 const version = ref('')
-
-const getFileExit = (type: string, path: string) => {
-  window.api.fileExit(path, `${type}.${useUser.fileType}`)
-}
-
-const selectDirectory = async (type: string) => {
-  // 调用 Electron 暴露的 API 选择文件夹
-  const selectedPath = await window.electron.ipcRenderer.invoke('selectDirectory')
-  if (selectedPath) {
-    if (type === 'new') {
-      filePath.value = selectedPath // 更新显示的路径
-      useUser.setValue({ type: 'filePath', value: selectedPath.filePaths[0] })
-      useUser.setValue({
-        type: 'fileFullPath',
-        value: `${selectedPath.filePaths[0]}\\todo.${useUser.fileType}`
-      })
-      getFileExit('todo', useUser.filePath!)
-
-      if (!historyPath.value.filePaths[0]) {
-        historyPath.value = selectedPath
-        useUser.setValue({ type: 'historyPath', value: selectedPath.filePaths[0] })
-        useUser.setValue({
-          type: 'historyFullPath',
-          value: `${selectedPath.filePaths[0]}\\todoHistory.${useUser.fileType}`
-        })
-        getFileExit('todoHistory', useUser.historyPath!)
-      }
-    } else {
-      historyPath.value = selectedPath
-      useUser.setValue({ type: 'historyPath', value: selectedPath.filePaths[0] })
-      useUser.setValue({
-        type: 'historyFullPath',
-        value: `${selectedPath.filePaths[0]}\\todoHistory.${useUser.fileType}`
-      })
-      getFileExit('todoHistory', useUser.historyPath!)
-    }
-  }
-}
 
 const updateRadio = () => {
   useUser.setValue({ type: 'fileType', value: radioValue.value })
@@ -204,6 +157,90 @@ const closeModal = () => {
 
 const clearCache = () => {
   window.localStorage.clear()
+}
+
+// 导出今日计划
+const exportTodayPlan = async () => {
+  try {
+    // 获取今日计划数据
+    const todayData = await window.store.get('todayTodos')
+    if (!todayData || todayData.length === 0) {
+      $msg({
+        type: 'warning',
+        msg: '暂无今日计划数据'
+      })
+      return
+    }
+
+    // 调用导出功能
+    const result = await window.electron.ipcRenderer.invoke('export-data', {
+      data: todayData,
+      type: 'today',
+      format: radioValue.value
+    })
+
+    if (result.success) {
+      $msg({
+        type: 'success',
+        msg: `今日计划导出成功！文件保存至: ${result.filePath}`
+      })
+    } else {
+      if (result.error !== '用户取消导出') {
+        $msg({
+          type: 'error',
+          msg: `导出失败: ${result.error}`
+        })
+      }
+    }
+  } catch (error) {
+    console.error('导出今日计划失败:', error)
+    $msg({
+      type: 'error',
+      msg: '导出失败，请重试'
+    })
+  }
+}
+
+// 导出历史待办
+const exportHistoryTodos = async () => {
+  try {
+    // 获取历史数据
+    const historyData = await window.store.get('historyData')
+    if (!historyData || historyData.length === 0) {
+      $msg({
+        type: 'warning',
+        msg: '暂无历史待办数据'
+      })
+      return
+    }
+
+    // 调用导出功能
+    const result = await window.electron.ipcRenderer.invoke('export-data', {
+      data: historyData,
+      type: 'history',
+      format: radioValue.value
+    })
+
+    if (result.success) {
+      $msg({
+        type: 'success',
+        msg: `历史待办导出成功！文件保存至: ${result.filePath}`
+      })
+    } else {
+      if (result.error !== '用户取消导出') {
+        $msg({
+          type: 'error',
+          msg: `导出失败: ${result.error}`
+        })
+      }
+    }
+  } catch (error) {
+    console.error('导出历史待办失败:', error)
+    $msg({
+      type: 'error',
+      msg: '导出失败，请重试'
+    })
+  }
 }
 
 onMounted(async () => {

@@ -1,6 +1,6 @@
 {
   "name": "todo",
-  "version": "1.0.9",
+  "version": "1.1.2",
   "description": "An Electron application with Vue and TypeScript",
   "main": "./out/main/index.js",
   "author": "example.com",
@@ -26,6 +26,7 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
+    "@types/xlsx": "^0.0.36",
     "animate.css": "^4.1.1",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
@@ -35,7 +36,8 @@
     "qs": "^6.13.1",
     "tinycolor2": "^1.6.0",
     "vue-draggable-plus": "^0.6.0",
-    "vue-router": "^4.5.0"
+    "vue-router": "^4.5.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^1.0.2",

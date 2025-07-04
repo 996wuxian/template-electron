@@ -20,7 +20,14 @@
         <div class="truncate max-w-600px">{{ todo.text }}</div>
         <div class="text-12px text-gray truncate">{{ todo.description }}</div>
       </div>
+
       <div v-if="statusShow" class="ml-auto">
+        <i
+          v-if="todo.reminderEnabled"
+          i-solar-bell-broken
+          class="w-20px h-20px hover:text-red-500 mr-10px"
+          @click.stop="deleteTodo(todos, index)"
+        ></i>
         <div v-if="todo.status === 1" class="w-15px h-15px rounded-50% bg-red mr-10px"></div>
         <div v-if="todo.status === 2" class="w-15px h-15px rounded-50% bg-orange mr-10px"></div>
         <div v-if="todo.status === 3" class="w-15px h-15px rounded-50% bg-gray mr-10px"></div>
@@ -70,6 +77,8 @@ interface Todo {
   level: number
   description: string
   status: number
+  reminderTime?: string
+  reminderEnabled?: boolean
 }
 
 interface Props {

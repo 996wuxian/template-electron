@@ -14,5 +14,10 @@ export default defineConfig({
     'i-solar-checklist-minimalistic-bold-duotone'
   ],
   shortcuts: [['flex-center', 'flex items-center justify-center']],
+  rules: [
+    ['drag', { '-webkit-app-region': 'drag' }],
+    ['no-drag', { '-webkit-app-region': 'no-drag' }],
+    ['no-select', { 'user-select': 'none' }]
+  ],
   transformers: [transformerDirective()]
 })

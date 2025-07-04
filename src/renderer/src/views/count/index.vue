@@ -205,9 +205,9 @@ const isDateDisabled = (timestamp: number) => {
   return timestamp > Date.now()
 }
 
-onMounted(() => {
+onMounted(async () => {
   // 读取文件内容
-  const data = window.api.readFile(useUser.historyFullPath)
+  const data = await window.store.get('historyData')
   if (data) {
     todos.value = data
   }

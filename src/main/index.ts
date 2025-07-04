@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { setupIpcMainHandlers } from './ipcMainSerivice'
 import { setupUpdate } from './update'
+import { electronStore } from './utils/storage'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -69,6 +70,23 @@ app.whenReady().then(() => {
   })
 
   ipcMain.on('ping', () => console.log('pong'))
+
+  // 添加存储相关的IPC处理
+  ipcMain.handle('store-set', (_, key: string, value: any) => {
+    electronStore.set(key, value)
+  })
+
+  ipcMain.handle('store-get', (_, key: string, defaultValue: any = null) => {
+    return electronStore.get(key, defaultValue)
+  })
+
+  ipcMain.handle('store-remove', (_, key: string) => {
+    electronStore.remove(key)
+  })
+
+  ipcMain.handle('store-clear', () => {
+    electronStore.clear()
+  })
 
   createWindow()
 

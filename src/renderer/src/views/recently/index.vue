@@ -13,12 +13,17 @@
           />
         </div>
         <div v-else class="h-[calc(100%-20px)] overflow-y-auto px-4">
-          <div
-            v-for="group in groupedTodos"
-            :key="group.dateKey"
-            class="animate__animated animate__fadeInDown mb-4"
+          <n-collapse
+            v-model:expanded-names="expandedNames"
+            accordion
+            class="animate__animated animate__fadeInDown"
           >
-            <n-card :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+            <n-collapse-item
+              v-for="group in groupedTodos"
+              :key="group.dateKey"
+              :name="group.dateKey"
+              class="mb-4"
+            >
               <template #header>
                 <div class="group-header flex items-center px-2">
                   <div class="flex items-center gap-2">
@@ -31,7 +36,7 @@
                 </div>
               </template>
 
-              <div class="flex flex-col gap-2">
+              <div class="flex flex-col gap-2 p-4 bg-gray-50 rounded">
                 <TodoItem
                   v-for="(todo, index) in group.tasks"
                   :key="todo.id"
@@ -42,14 +47,14 @@
                   :collapsed="collapsed"
                   :delete-show="false"
                   :status-show="true"
-                  class="hover:bg-gray-50 rounded p-2"
+                  class="hover:bg-white rounded p-2 transition-colors"
                   @delete-todo="deleteTodo"
                   @toggle-details="toggleDetails"
                   @toggle-sub-items-selection="toggleSubItemsSelection"
                 />
               </div>
 
-              <template #footer>
+              <template #header-extra>
                 <div class="flex items-center justify-between text-gray-400 text-12px">
                   <div class="flex items-center gap-2">
                     <span>完成：{{ getCompletedCount(group.tasks) }}</span>
@@ -61,100 +66,106 @@
                   </div>
                 </div>
               </template>
-            </n-card>
-          </div>
+            </n-collapse-item>
+          </n-collapse>
+        </div>
+
+        <div v-if="todos.length > 0" class="flex justify-center p-4 border-t border-gray-200">
+          <n-button type="error" size="medium" @click="deleteAllTodos" :loading="deleteLoading">
+            <template #icon>
+              <i class="i-solar-trash-bin-minimalistic-2-linear"></i>
+            </template>
+            全部删除历史记录
+          </n-button>
         </div>
       </div>
     </div>
 
     <!-- 右侧区域：Todo 详情 -->
     <div
-      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 w-240px h-full"
+      v-if="detailVisible"
+      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 h-full"
       :class="[
         detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-4' : 'animate__fadeOutRight w-0',
         collapsed ? 'h-400px' : ''
       ]"
     >
-      <div v-show="detailVisible" class="h-full flex flex-col">
-        <!-- 头部区域 -->
-        <div class="p-3px bg-#CFCECD absolute top-42px right-10px flex-center rd-50%">
-          <i
-            i-solar-double-alt-arrow-right-line-duotone
-            class="w-20px h-20px cursor-pointer hover:text-red-500"
-            @click="hideDetails"
-          />
-        </div>
+      <!-- 头部区域 -->
+      <div class="p-3px bg-#CFCECD absolute top-42px right-10px flex-center rd-50%">
+        <i
+          i-solar-double-alt-arrow-right-line-duotone
+          class="w-20px h-20px cursor-pointer hover:text-red-500"
+          @click="hideDetails"
+        />
+      </div>
 
-        <!-- 头部区域 -->
-        <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
-          <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
-            {{ selectedTodo?.text }}
-          </h2>
-        </div>
+      <!-- 头部区域 -->
+      <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
+        <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
+          {{ selectedTodo?.text }}
+        </h2>
+      </div>
 
-        <!-- 主体内容 -->
-        <div class="flex-1 h-100%">
-          <!-- 基本信息卡片 -->
-          <div class="mb-3 bg-gray-50 rounded-lg">
-            <div class="space-y-6 theme-page">
-              <div class="text-gray-600 text-14px">{{ selectedTodo?.text }}</div>
-              <div>
-                <label class="text-sm font-medium text-gray-500">详细描述</label>
+      <!-- 主体内容 -->
+      <div class="flex-1 h-100%">
+        <!-- 基本信息卡片 -->
+        <div class="mb-3 bg-gray-50 rounded-lg">
+          <div class="space-y-6 theme-page">
+            <div class="text-gray-600 text-14px">{{ selectedTodo?.text }}</div>
+            <div>
+              <label class="text-sm font-medium text-gray-500">详细描述</label>
 
-                <div class="mt-1 text-gray-400 flex items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <p v-if="selectedTodo?.description" @click="inputVisible = true">
-                      {{ selectedTodo?.description }}
-                    </p>
-                    <div v-else class="flex items-center gap-1">
-                      {{ '无附加描述' }}
-                    </div>
+              <div class="mt-1 text-gray-400 flex items-center gap-1">
+                <div class="flex items-center gap-1">
+                  <p v-if="selectedTodo?.description" @click="inputVisible = true">
+                    {{ selectedTodo?.description }}
+                  </p>
+                  <div v-else class="flex items-center gap-1">
+                    {{ '无附加描述' }}
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div class="flex items-center gap-1">
-                <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
-                  <i i-solar-fire-minimalistic-broken></i>
-                  紧急程度：</span
-                >
-                {{
-                  selectedTodo?.status === 1
-                    ? '紧急'
-                    : selectedTodo?.status === 2
-                      ? '有点急'
-                      : selectedTodo?.status === 3
-                        ? '一般急'
-                        : '不急'
-                }}
-              </div>
+            <div class="flex items-center gap-1">
+              <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
+                <i i-solar-fire-minimalistic-broken></i>
+                紧急程度：</span
+              >
+              {{
+                selectedTodo?.status === 1
+                  ? '紧急'
+                  : selectedTodo?.status === 2
+                    ? '有点急'
+                    : selectedTodo?.status === 3
+                      ? '一般急'
+                      : '不急'
+              }}
+            </div>
 
-              <div class="flex items-center gap-1">
-                <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
-                  <i i-solar-tea-cup-broken></i>
-                  状态：</span
-                >
-                <n-tag :type="selectedTodo?.completed ? 'success' : 'warning'" size="small">
-                  {{ selectedTodo?.completed ? '已完成' : '进行中' }}
-                </n-tag>
-              </div>
+            <div class="flex items-center gap-1">
+              <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
+                <i i-solar-tea-cup-broken></i>
+                状态：</span
+              >
+              <n-tag :type="selectedTodo?.completed ? 'success' : 'warning'" size="small">
+                {{ selectedTodo?.completed ? '已完成' : '进行中' }}
+              </n-tag>
+            </div>
 
-              <div>
-                <label class="text-sm font-medium text-gray-500 flex items-center gap-1">
-                  <i i-solar-history-2-outline></i>
-                  创建时间</label
-                >
-                <div
-                  class="mt-1 text-sm text-gray-400 max-w-140px overflow-hidden text-ellipsis text-nowrap"
-                >
-                  {{ selectedTodo?.createdAt }}
-                </div>
+            <div>
+              <label class="text-sm font-medium text-gray-500 flex items-center gap-1">
+                <i i-solar-history-2-outline></i>
+                创建时间</label
+              >
+              <div
+                class="mt-1 text-sm text-gray-400 max-w-140px overflow-hidden text-ellipsis text-nowrap"
+              >
+                {{ selectedTodo?.createdAt }}
               </div>
-              <div class="flex justify-end mt-4">
-                <n-button type="primary" size="small" @click="addToToday">
-                  添加到今日待办
-                </n-button>
-              </div>
+            </div>
+            <div class="flex justify-end mt-4">
+              <n-button type="primary" size="small" @click="addToToday"> 添加到今日待办 </n-button>
             </div>
           </div>
         </div>
@@ -172,6 +183,8 @@ import dayjs from 'dayjs'
 import isToday from 'dayjs/plugin/isToday'
 import isYesterday from 'dayjs/plugin/isYesterday'
 import { $msg } from '@renderer/config/interaction.config'
+import { useDialog } from 'naive-ui'
+const dialog = useDialog()
 
 // 定义 Todo 类型，包括子项
 export interface Todo {
@@ -196,10 +209,12 @@ const collapsed = computed(() => useTheme.$state.collapsed)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)
-
+const deleteLoading = ref(false)
 // 配置 dayjs 插件
 dayjs.extend(isToday)
 dayjs.extend(isYesterday)
+
+const expandedNames = ref<string[]>([])
 
 // 新增日期分组计算属性
 const groupedTodos = computed(() => {
@@ -243,6 +258,23 @@ const groupedTodos = computed(() => {
     (a, b) => dayjs(b.dateKey).unix() - dayjs(a.dateKey).unix()
   )
 })
+
+watch(
+  groupedTodos,
+  (newGroups) => {
+    if (newGroups.length > 0) {
+      // 查找今天的分组
+      const todayGroup = newGroups.find((group) => group.dateKey === 'today')
+      if (todayGroup) {
+        expandedNames.value = ['today']
+      } else {
+        // 如果没有今天的数据，展开第一个分组
+        expandedNames.value = [newGroups[0].dateKey]
+      }
+    }
+  },
+  { immediate: true }
+)
 
 // 获取分组标题
 const getGroupTitle = (dateKey: string, dateObj: dayjs.Dayjs) => {
@@ -301,9 +333,61 @@ const toggleSubItemsSelection = (todo: Todo) => {
   })
 }
 
-onMounted(() => {
+const deleteAllTodos = async () => {
+  // 二次确认
+  const confirmed = await new Promise((resolve) => {
+    dialog.warning({
+      title: '确认删除',
+      content: '确定要删除所有历史记录吗？此操作不可恢复！',
+      positiveText: '确定删除',
+      negativeText: '取消',
+      onPositiveClick: () => {
+        resolve(true)
+      },
+      onNegativeClick: () => {
+        resolve(false)
+      },
+      onClose: () => {
+        resolve(false)
+      }
+    })
+  })
+
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    deleteLoading.value = true
+
+    // 清空历史数据
+    await window.store.set('historyData', [])
+
+    // 清空当前显示的数据
+    todos.value = []
+
+    // 隐藏详情页
+    hided()
+
+    $msg({
+      type: 'success',
+      msg: '已清空所有历史记录'
+    })
+  } catch (error) {
+    console.error('删除失败:', error)
+    $msg({
+      type: 'error',
+      msg: '删除失败'
+    })
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
+onMounted(async () => {
   // 读取文件内容
-  const data = window.api.readFile(useUser.historyFullPath)
+  const data = await window.store.get('historyData')
+  console.log('🚀 ~ onMounted ~ data:', data)
   if (data) {
     todos.value = data.map((item: any) => {
       return {
@@ -312,6 +396,14 @@ onMounted(() => {
       }
     })
   }
+})
+
+onBeforeUnmount(() => {
+  // 清理详情页面状态，防止切换页面时动画闪烁
+  detailVisible.value = false
+  detailAnimate.value = false
+  selectedTodo.value = null
+  inputVisible.value = false
 })
 
 // 添加新的工具方法

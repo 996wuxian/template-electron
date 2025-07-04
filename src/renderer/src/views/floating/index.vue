@@ -1,5 +1,5 @@
 <template>
-  <div class="floating-window theme-page" :class="{ 'is-menu-open': isMenuOpen }">
+  <div class="floating-window theme-page drag" :class="{ 'is-menu-open': isMenuOpen }">
     <div v-if="!isMenuOpen" class="click-area" @click="handleMouseDown">
       <img src="@renderer/assets/img/float.gif" class="float_home" alt="" />
     </div>
@@ -63,15 +63,19 @@ const useUser = useUserStore()
 const todos = ref<Todo[]>([])
 
 const todoList = computed(() => {
+  // 确保 todos.value 是数组，并且只获取未完成的紧急任务
+  if (!Array.isArray(todos.value)) {
+    return []
+  }
   // 只获取未完成的紧急任务
   return todos.value.filter((todo: Todo) => todo.status === 1 && !todo.completed).splice(0, 3)
 })
 
-onMounted(() => {
+onMounted(async () => {
   const type = JSON.parse(localStorage.getItem('theme') as string) || { themeType: 'light' }
   window.document.documentElement.setAttribute('data-theme', type.themeType)
 
-  const data = Array.isArray(window.api.readFile(useUser.fileFullPath))
+  const data = (await window.store.get('todayTodos', []))
     ? window.api.readFile(useUser.fileFullPath)
     : []
 
@@ -80,6 +84,7 @@ onMounted(() => {
 
 const handleMouseDown = () => {
   isMenuOpen.value = !isMenuOpen.value
+  console.log('🚀 ~ handleMouseDown ~ isMenuOpen.value:', isMenuOpen.value)
 }
 
 // 控制菜单是否打开
@@ -146,7 +151,6 @@ const completeTodo = async (todo: Todo) => {
   border-radius: 50%;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 5px;
-  -webkit-app-region: drag; /* 使整个header可拖拽 */
   position: fixed; /* 添加固定定位 */
   right: 10px; /* 固定在右侧 */
   bottom: 10px; /* 固定在底部 */

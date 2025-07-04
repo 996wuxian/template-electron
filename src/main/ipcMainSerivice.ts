@@ -3,7 +3,14 @@ import { BrowserWindow, ipcMain, IpcMainInvokeEvent, screen, dialog, app } from 
 import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
 import axios from 'axios'
-
+import * as fs from 'fs'
+import * as XLSX from 'xlsx'
+import {
+  setMainWindow,
+  setTodoReminder,
+  cancelTodoReminder,
+  snoozeTodoReminder
+} from './utils/notification'
 let floatingWindow: BrowserWindow | null = null // 全局悬浮窗引用
 let originalBounds: Electron.Rectangle | null = null
 let oldSize: Electron.Rectangle | null = null
@@ -17,6 +24,7 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   ipcMain.handle('hide-main-window', () => {
     if (mainWindow) {
       mainWindow.hide()
+      setMainWindow(mainWindow)
     }
   })
 
@@ -222,6 +230,184 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
     isMinimizing = true
     changeMinimizeAnimation()
   })
+
+  ipcMain.handle('set-todo-reminder', async (event, todoData) => {
+    try {
+      setTodoReminder(todoData)
+      return { success: true }
+    } catch (error) {
+      console.error('设置提醒失败:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  ipcMain.handle('cancel-todo-reminder', async (event, todoId) => {
+    try {
+      cancelTodoReminder(todoId)
+      return { success: true }
+    } catch (error) {
+      console.error('取消提醒失败:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  ipcMain.handle('snooze-todo-reminder', async (event, todoId, minutes) => {
+    try {
+      snoozeTodoReminder(todoId, minutes)
+      return { success: true }
+    } catch (error) {
+      console.error('延迟提醒失败:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  // 完成待办
+  ipcMain.handle('complete-todo', async (event, todoId) => {
+    try {
+      // 这里需要更新待办状态为已完成
+      // 可以通过向主窗口发送消息来更新状态
+      if (mainWindow) {
+        mainWindow.webContents.send('complete-todo-from-reminder', todoId)
+      }
+      return { success: true }
+    } catch (error) {
+      console.error('完成待办失败:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  // 打开主窗口并定位到特定待办
+  ipcMain.handle('open-main-window-with-todo', async (event, todoId) => {
+    try {
+      if (mainWindow) {
+        mainWindow.show()
+        mainWindow.focus()
+        // 发送消息到渲染进程，让其定位到特定待办
+        mainWindow.webContents.send('focus-todo', todoId)
+      }
+      return { success: true }
+    } catch (error) {
+      console.error('打开主窗口失败:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  // 导出数据功能
+  ipcMain.handle('export-data', async (event, { data, type, format }) => {
+    try {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (!win) return { success: false, error: '窗口不存在' }
+
+      // 显示保存对话框
+      const result = await dialog.showSaveDialog(win, {
+        title: `导出${type === 'today' ? '今日计划' : '历史待办'}`,
+        defaultPath: `${type === 'today' ? '今日计划' : '历史待办'}_${new Date().toISOString().split('T')[0]}.${format}`,
+        filters: [
+          format === 'excel'
+            ? { name: 'Excel文件', extensions: ['xlsx'] }
+            : { name: '文本文件', extensions: ['txt'] }
+        ]
+      })
+
+      if (result.canceled || !result.filePath) {
+        return { success: false, error: '用户取消导出' }
+      }
+
+      // 根据格式导出数据
+      if (format === 'excel') {
+        await exportToExcel(data, result.filePath, type)
+      } else {
+        await exportToTxt(data, result.filePath, type)
+      }
+
+      return { success: true, filePath: result.filePath }
+    } catch (error) {
+      console.error('导出失败:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  async function exportToExcel(data: any[], filePath: string, type: string) {
+    const workbook = XLSX.utils.book_new()
+
+    // 转换数据格式
+    const excelData = data.map((item, index) => ({
+      序号: index + 1,
+      任务内容: item.text || '',
+      描述: item.description || '',
+      状态: getStatusText(item.status),
+      完成状态: item.completed ? '已完成' : '未完成',
+      创建时间: item.createdAt || '',
+      完成时间: item.completedAt || '',
+      优先级: item.level || 1,
+      子任务数量: item.subTodos ? item.subTodos.length : 0
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData)
+
+    // 设置列宽
+    const colWidths = [
+      { wch: 8 }, // 序号
+      { wch: 30 }, // 任务内容
+      { wch: 40 }, // 描述
+      { wch: 12 }, // 状态
+      { wch: 12 }, // 完成状态
+      { wch: 20 }, // 创建时间
+      { wch: 20 }, // 完成时间
+      { wch: 10 }, // 优先级
+      { wch: 12 } // 子任务数量
+    ]
+    worksheet['!cols'] = colWidths
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, type === 'today' ? '今日计划' : '历史待办')
+    XLSX.writeFile(workbook, filePath)
+  }
+
+  // 导出为TXT格式
+  async function exportToTxt(data: any[], filePath: string, type: string) {
+    let content = `${type === 'today' ? '今日计划' : '历史待办'}导出\n`
+    content += `导出时间: ${new Date().toLocaleString()}\n`
+    content += `总计: ${data.length} 项任务\n`
+    content += '='.repeat(50) + '\n\n'
+
+    data.forEach((item, index) => {
+      content += `${index + 1}. ${item.text || ''}\n`
+      if (item.description) {
+        content += `   描述: ${item.description}\n`
+      }
+      content += `   状态: ${getStatusText(item.status)} | ${item.completed ? '已完成' : '未完成'}\n`
+      content += `   创建时间: ${item.createdAt || ''}\n`
+      if (item.completedAt) {
+        content += `   完成时间: ${item.completedAt}\n`
+      }
+      content += `   优先级: ${item.level || 1}\n`
+
+      if (item.subTodos && item.subTodos.length > 0) {
+        content += `   子任务 (${item.subTodos.length}项):\n`
+        item.subTodos.forEach((subTodo, subIndex) => {
+          content += `     ${subIndex + 1}) ${subTodo.text || ''} [${subTodo.completed ? '已完成' : '未完成'}]\n`
+        })
+      }
+      content += '\n' + '-'.repeat(30) + '\n\n'
+    })
+
+    fs.writeFileSync(filePath, content, 'utf8')
+  }
+
+  function getStatusText(status: number): string {
+    switch (status) {
+      case 1:
+        return '待处理'
+      case 2:
+        return '进行中'
+      case 3:
+        return '已完成'
+      case 4:
+        return '已取消'
+      default:
+        return '未知状态'
+    }
+  }
 
   const changeMinimizeAnimation = async () => {
     const currentWindow = mainWindow!

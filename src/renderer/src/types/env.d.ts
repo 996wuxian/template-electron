@@ -17,6 +17,7 @@ interface Window {
     }
   }
   api: any
+  store: any
 }
 
 declare module 'mockjs'
