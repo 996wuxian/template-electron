@@ -26,9 +26,10 @@
             >
               <template #header>
                 <div class="group-header flex items-center px-2">
-                  <div class="flex items-center gap-2">
-                    <i i-solar-calendar-bold-duotone class="text-18px text-blue-500" />
-                    <span class="text-16px font-600 text-gray-700">{{ group.title }}</span>
+                  <div class="flex items-center">
+                    <span class="text-16px font-600 text-gray-700 max-w-100px line-clamp-1">{{
+                      group.title
+                    }}</span>
                     <n-tag size="small" :bordered="false" type="info" class="ml-2">
                       {{ group.tasks.length }}项
                     </n-tag>
@@ -55,7 +56,10 @@
               </div>
 
               <template #header-extra>
-                <div class="flex items-center justify-between text-gray-400 text-12px">
+                <div
+                  v-if="!useUser.$state.isRightTop"
+                  class="flex items-center justify-between text-gray-400 text-12px"
+                >
                   <div class="flex items-center gap-2">
                     <span>完成：{{ getCompletedCount(group.tasks) }}</span>
                     <span>进行中：{{ group.tasks.length - getCompletedCount(group.tasks) }}</span>
@@ -70,8 +74,8 @@
           </n-collapse>
         </div>
 
-        <div v-if="todos.length > 0" class="flex justify-center p-4 border-t border-gray-200">
-          <n-button type="error" size="medium" @click="deleteAllTodos" :loading="deleteLoading">
+        <div v-if="todos.length > 0" class="flex p-4 border-t border-gray-200">
+          <n-button type="error" size="medium" :loading="deleteLoading" @click="deleteAllTodos">
             <template #icon>
               <i class="i-solar-trash-bin-minimalistic-2-linear"></i>
             </template>

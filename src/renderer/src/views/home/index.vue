@@ -30,7 +30,7 @@
               <!-- 分组标题 -->
               <div v-if="group.dateKey !== 'today'" class="flex items-center gap-2 mb-2 px-2">
                 <i class="i-solar-clock-circle-bold-duotone text-orange-500"></i>
-                <span class="text-14px font-600 text-orange-600">{{ group.title }}</span>
+                <span class="text-12px font-600 text-orange-600">{{ group.title }}</span>
                 <n-tag size="small" type="warning" :bordered="false">
                   {{ group.tasks.length }}项未完成
                 </n-tag>
@@ -74,6 +74,7 @@
         >
           全选
         </n-checkbox>
+        <i i-solar-restart-broken class="cursor-pointer text-16px" @click="fetchData"></i>
         <div v-if="!collapsed" class="flex ml-10px">
           已完成 : {{ selected.length }} / 总数量 : {{ todayTodos.length }}
         </div>
@@ -713,6 +714,10 @@ const isTodoCreatedToday = (createdAt: string) => {
 // 添加获取数据的方法
 const fetchData = async () => {
   try {
+    $msg({
+      type: 'success',
+      msg: '刷新成功'
+    })
     // 从新的存储系统读取数据
     const todayData = await window.store.get('todayTodos', [])
     const historyDataFromStore = await window.store.get('historyData', [])

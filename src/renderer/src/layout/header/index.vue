@@ -220,6 +220,7 @@ const handlePinToDesktop = async () => {
   useTheme.setStatus({ type: 'collapsed', bool: true })
   useTheme.setSize({ type: 'sideWidth', size: 90 })
   useUser.setStatus({ type: 'isRightTop', value: true })
+  useUser.setStatus({ type: 'isHideMenu', value: true })
   isShow.value = false
 
   // 获取当前窗口所在的显示器信息
@@ -243,6 +244,7 @@ const handleDeskCenter = async () => {
   useTheme.setStatus({ type: 'collapsed', bool: false })
   useTheme.setSize({ type: 'sideWidth', size: 200 })
   useUser.setStatus({ type: 'isRightTop', value: false })
+  useUser.setStatus({ type: 'isHideMenu', value: false })
   isShow.value = true
   size.value = !size.value
 
