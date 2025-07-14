@@ -37,7 +37,7 @@
                 </div>
               </template>
 
-              <div class="flex flex-col gap-2 p-4 bg-gray-50 rounded">
+              <div class="flex flex-col gap-2 p-4 rounded">
                 <TodoItem
                   v-for="(todo, index) in group.tasks"
                   :key="todo.id"
@@ -48,7 +48,7 @@
                   :collapsed="collapsed"
                   :delete-show="true"
                   :status-show="true"
-                  class="hover:bg-white rounded p-2 transition-colors"
+                  class="hover:bg-white rounded p-2 transition-colors hover:c-#3984F3"
                   @delete-todo="deleteTodo"
                   @toggle-details="toggleDetails"
                   @toggle-sub-items-selection="toggleSubItemsSelection"

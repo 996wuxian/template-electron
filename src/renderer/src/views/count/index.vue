@@ -258,7 +258,6 @@ onMounted(async () => {
     .section-title {
       font-size: 14px;
       font-weight: 600;
-      color: rgba(0, 0, 0, 0.8);
       margin-bottom: 10px;
       margin-left: 0;
     }
@@ -269,7 +268,6 @@ onMounted(async () => {
     padding-left: 40px;
     margin-bottom: 8px;
     font-size: 10px;
-    color: rgba(0, 0, 0, 0.6);
     font-weight: 500;
     gap: 40px;
 
@@ -287,7 +285,6 @@ onMounted(async () => {
     flex-direction: column;
     gap: 15px;
     font-size: 10px;
-    color: rgba(0, 0, 0, 0.6);
     width: 30px;
     font-weight: 500;
 
@@ -387,7 +384,6 @@ onMounted(async () => {
     justify-content: center;
     margin-top: 15px;
     font-size: 10px;
-    color: rgba(0, 0, 0, 0.6);
     font-weight: 500;
 
     .legend-items {
@@ -398,7 +394,6 @@ onMounted(async () => {
 
     .legend-text {
       font-size: 10px;
-      color: rgba(0, 0, 0, 0.6);
     }
   }
 }
