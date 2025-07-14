@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import useUserStore from '@renderer/stores/modules/user'
 
 interface Todo {
@@ -51,35 +51,61 @@ interface Todo {
   completed: boolean
   isRemove: boolean
   createdAt: string
+  completedAt: string
   subTodos: Todo[] // 子项
   level: number
   description: string
   status: number
   isLeave?: boolean
+  reminderTime?: string
+  reminderEnabled?: boolean
 }
 
 const useUser = useUserStore()
 
 const todos = ref<Todo[]>([])
+const historyData = ref<Todo[]>([])
 
+// 获取所有紧急的未完成待办（不限制今天）
 const todoList = computed(() => {
-  // 确保 todos.value 是数组，并且只获取未完成的紧急任务
-  if (!Array.isArray(todos.value)) {
-    return []
-  }
-  // 只获取未完成的紧急任务
-  return todos.value.filter((todo: Todo) => todo.status === 1 && !todo.completed).splice(0, 3)
+  // 合并今日待办和历史数据中的所有待办
+  const allTodos = [...todos.value, ...historyData.value]
+
+  // 去重（以id为准）
+  const uniqueTodos = allTodos.filter(
+    (todo, index, self) => index === self.findIndex((t) => t.id === todo.id)
+  )
+
+  // 只获取未完成的紧急任务，最多显示3个
+  return uniqueTodos.filter((todo: Todo) => todo.status === 1 && !todo.completed).slice(0, 3)
 })
+
+// 同步更新历史数据中的待办项
+const syncHistoryData = (updatedTodo: Todo) => {
+  const historyIndex = historyData.value.findIndex((item) => item.id === updatedTodo.id)
+  if (historyIndex !== -1) {
+    // 更新历史数据中的对应项
+    historyData.value[historyIndex] = { ...updatedTodo }
+  }
+}
 
 onMounted(async () => {
   const type = JSON.parse(localStorage.getItem('theme') as string) || { themeType: 'light' }
   window.document.documentElement.setAttribute('data-theme', type.themeType)
 
-  const data = (await window.store.get('todayTodos', []))
-    ? window.api.readFile(useUser.fileFullPath)
-    : []
+  try {
+    // 使用新的存储方式获取今日待办数据
+    const todayData = await window.store.get('todayTodos', [])
+    todos.value = Array.isArray(todayData) ? todayData : []
 
-  todos.value = data
+    // 获取历史数据
+    const historyDataValue = await window.store.get('historyData', [])
+    historyData.value = Array.isArray(historyDataValue) ? historyDataValue : []
+  } catch (error) {
+    console.error('获取数据失败:', error)
+    todos.value = []
+    historyData.value = []
+  }
 })
 
 const handleMouseDown = () => {
@@ -122,20 +148,29 @@ const completeTodo = async (todo: Todo) => {
 
   // 等待动画完成
   setTimeout(async () => {
-    // 在原数据中找到并更新这个 todo
-    const targetTodo = todos.value.find((item) => item.id === todo.id)
-    if (targetTodo) {
-      targetTodo.completed = true
-      delete targetTodo.isLeave // 移除临时标记
+    try {
+      // 在今日待办中查找并更新
+      const todayTodoIndex = todos.value.findIndex((item) => item.id === todo.id)
+      if (todayTodoIndex !== -1) {
+        todos.value[todayTodoIndex].completed = true
+        todos.value[todayTodoIndex].completedAt = new Date().toLocaleString()
+        delete todos.value[todayTodoIndex].isLeave
+      }
+
+      // 在历史数据中查找并更新
+      const historyTodoIndex = historyData.value.findIndex((item) => item.id === todo.id)
+      if (historyTodoIndex !== -1) {
+        historyData.value[historyTodoIndex].completed = true
+        historyData.value[historyTodoIndex].completedAt = new Date().toLocaleString()
+        delete historyData.value[historyTodoIndex].isLeave
+      }
+
+      // 使用新的存储方式保存数据
+      await window.store.set('todayTodos', JSON.parse(JSON.stringify(todos.value)))
+      await window.store.set('historyData', JSON.parse(JSON.stringify(historyData.value)))
+    } catch (error) {
+      console.error('保存数据失败:', error)
     }
-
-    // 写入更新后的数据
-    await window.api.writeFile(useUser.fileFullPath, JSON.stringify(todos.value))
-
-    // 重新获取数据以更新显示
-    todos.value = Array.isArray(window.api.readFile(useUser.fileFullPath))
-      ? window.api.readFile(useUser.fileFullPath)
-      : []
   }, 500)
 }
 </script>

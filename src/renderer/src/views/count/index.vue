@@ -1,57 +1,88 @@
 <template>
   <div class="p-10px flex flex-col gap-4 overflow-auto h-full">
-    <!-- 日历部分 -->
-    <n-card size="small" class="calendar-card max-h-360px overflow-auto">
-      <n-calendar
-        :value="selectedDate"
-        :is-date-disabled="isDateDisabled"
-        #="{ year, month, date }"
-        size="small"
-      >
-        <div class="w-full text-14px flex-center font-700 color-#71C9CE">
-          <div
-            v-if="Number(getTodoCount(year, month, date)) > 0"
-            class="w-30px h-30px rd-50% bg-#88B9F9 color-#fff text-center line-height-30px"
-          >
-            {{ getTodoCount(year, month, date) }}
-          </div>
-          <div v-else class="font-400">-</div>
-        </div>
-      </n-calendar>
-    </n-card>
-
     <!-- 热力图部分 -->
     <n-card title="活跃度统计" size="small">
       <div class="contribution-graph">
-        <!-- 月份标题 -->
-        <div class="months-header">
-          <div v-for="month in visibleMonths" :key="month" class="month-label">
-            {{ month }}
+        <!-- 上半年热力图 -->
+        <div class="half-year-section">
+          <h4 class="section-title">上半年 (1-6月)</h4>
+
+          <!-- 月份标题 -->
+          <div class="months-header">
+            <div v-for="month in firstHalfMonths" :key="month" class="month-label">
+              {{ month }}
+            </div>
+          </div>
+
+          <!-- 星期标签 -->
+          <div class="weekdays">
+            <span>周一</span>
+            <span>周三</span>
+            <span>周五</span>
+          </div>
+
+          <!-- 热力图网格 -->
+          <div class="grid-container">
+            <div v-for="(week, weekIndex) in firstHalfData" :key="weekIndex" class="week-column">
+              <div
+                v-for="(day, dayIndex) in week"
+                :key="dayIndex"
+                :class="[
+                  'day-cell',
+                  day
+                    ? day.isFuture
+                      ? 'future-day'
+                      : getActivityClass(day.count) + (day.isToday ? ' today-day' : '')
+                    : 'empty-day'
+                ]"
+                :title="day ? `${day.date}: ${day.count}次待办` : ''"
+              ></div>
+            </div>
           </div>
         </div>
 
-        <!-- 星期标签 -->
-        <div class="weekdays">
-          <span>周一</span>
-          <span>周三</span>
-          <span>周五</span>
-        </div>
+        <!-- 下半年热力图 -->
+        <div class="half-year-section">
+          <h4 class="section-title">下半年 (7-12月)</h4>
 
-        <!-- 热力图网格 -->
-        <div class="grid-container">
-          <div v-for="(week, weekIndex) in contributionData" :key="weekIndex" class="week-column">
-            <n-tooltip v-for="(day, dayIndex) in week" :key="dayIndex" trigger="hover">
-              <template #trigger>
-                <div class="day-cell" :class="getActivityClass(day.count)"></div>
-              </template>
-              {{ day.date }}: {{ day.count }}次提交
-            </n-tooltip>
+          <!-- 月份标题 -->
+          <div class="months-header">
+            <div v-for="month in secondHalfMonths" :key="month" class="month-label">
+              {{ month }}
+            </div>
+          </div>
+
+          <!-- 星期标签 -->
+          <div class="weekdays">
+            <span>周一</span>
+            <span>周三</span>
+            <span>周五</span>
+          </div>
+
+          <!-- 热力图网格 -->
+          <div class="grid-container">
+            <div v-for="(week, weekIndex) in secondHalfData" :key="weekIndex" class="week-column">
+              <div
+                v-for="(day, dayIndex) in week"
+                :key="dayIndex"
+                :class="[
+                  'day-cell',
+                  day
+                    ? day.isFuture
+                      ? 'future-day'
+                      : getActivityClass(day.count) + (day.isToday ? ' today-day' : '')
+                    : 'empty-day'
+                ]"
+                :title="
+                  day ? `${day.date}: ${day.isFuture ? '未来日期' : day.count + '次待办'}` : ''
+                "
+              ></div>
+            </div>
           </div>
         </div>
 
         <!-- 图例 -->
         <div class="legend">
-          <span>活跃度：</span>
           <span class="legend-text">少</span>
           <div class="legend-items">
             <div class="day-cell activity-0"></div>
@@ -69,68 +100,82 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import useUserStore from '@renderer/stores/modules/user'
 import dayjs from 'dayjs'
 
-const useUser = useUserStore()
 const todos = ref<any[]>([])
-const selectedDate = ref(dayjs(Date.now()).valueOf())
-const visibleMonths = computed(() => {
-  const startDate = contributionData.value[0]?.[0]?.date
-  const endDate = contributionData.value[contributionData.value.length - 1]?.[0]?.date
 
-  if (!startDate || !endDate) return []
-
-  const start = dayjs(startDate)
-  const end = dayjs(endDate)
-  const monthsArray = []
-
-  let current = start.startOf('month')
-  while (current.isBefore(end) || current.isSame(end, 'month')) {
-    monthsArray.push(current.format('M月'))
-    current = current.add(1, 'month')
-  }
-
-  return monthsArray
+// 上半年月份
+const firstHalfMonths = computed(() => {
+  return ['1月', '2月', '3月', '4月', '5月', '6月']
 })
 
-// 生成过去一年的贡献数据
-const contributionData = computed(() => {
+// 下半年月份
+const secondHalfMonths = computed(() => {
+  return ['7月', '8月', '9月', '10月', '11月', '12月']
+})
+
+// 生成指定时间范围的贡献数据
+const generateContributionData = (startMonth: number, endMonth: number) => {
   const weeks = []
-  const endDate = dayjs()
-  // 计算开始日期：从去年今天开始，如果不是周一则推到下个周一
-  let startDate = endDate.subtract(1, 'year')
-  const dayOfWeek = startDate.day()
-  if (dayOfWeek !== 1) {
-    // 如果不是周一
-    startDate = startDate.add(8 - dayOfWeek, 'day') // 推到下个周一
-  }
+  const currentYear = dayjs().year()
+  const startDate = dayjs(`${currentYear}-${startMonth.toString().padStart(2, '0')}-01`)
 
-  // 计算总天数
-  const totalDays = endDate.diff(startDate, 'day')
-  const totalWeeks = Math.ceil(totalDays / 7)
+  // 修改结束日期逻辑，显示到月份的最后一天
+  const endDate =
+    endMonth === 12
+      ? dayjs(`${currentYear}-12-31`) // 下半年显示到12月31日
+      : dayjs(`${currentYear}-${(endMonth + 1).toString().padStart(2, '0')}-01`).subtract(1, 'day') // 上半年显示到6月30日
 
-  // 初始化数据结构
-  for (let week = 0; week < totalWeeks; week++) {
+  let currentDate = startDate
+
+  // 生成每周的数据
+  while (currentDate.isBefore(endDate) || currentDate.isSame(endDate, 'day')) {
     const weekData = []
-    for (let day = 0; day < 7; day++) {
-      const currentDate = startDate.add(week * 7 + day, 'day')
-      // 如果超过今天，就不再添加数据
+    const startDayOfWeek = currentDate.day() // 0=周日, 1=周一, ..., 6=周六
+
+    // 第一周：可能不是从周一开始，前面用空白填充
+    if (currentDate.isSame(startDate, 'day')) {
+      const emptyDays = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1
+      for (let i = 0; i < emptyDays; i++) {
+        weekData.push(null)
+      }
+    }
+
+    // 添加这一周的实际天数
+    for (let day = weekData.length; day < 7; day++) {
       if (currentDate.isAfter(endDate)) {
         break
       }
+
+      // 判断是否是未来日期
+      const isToday = currentDate.isSame(dayjs(), 'day')
+      const isFuture = currentDate.isAfter(dayjs(), 'day')
+
       weekData.push({
         date: currentDate.format('YYYY/MM/DD'),
         count: getTodoCountByDate(currentDate),
-        dayOfWeek: day
+        dayOfWeek: day,
+        isToday: isToday,
+        isFuture: isFuture
       })
+      currentDate = currentDate.add(1, 'day')
     }
+
     if (weekData.length > 0) {
-      // 只添加有数据的周
       weeks.push(weekData)
     }
   }
   return weeks
+}
+
+// 上半年数据（1-6月）
+const firstHalfData = computed(() => {
+  return generateContributionData(1, 6)
+})
+
+// 下半年数据（7-12月）
+const secondHalfData = computed(() => {
+  return generateContributionData(7, 12)
 })
 
 // 获取指定日期的任务数量
@@ -181,30 +226,6 @@ const dailyTodos = computed(() => {
   return todoMap
 })
 
-// 获取日期的任务数量
-const getTodoCount = (year: number, month: number, date: number) => {
-  const dateStr = `${year}/${month}/${date}`
-  let count = 0
-
-  todos.value.forEach((todo) => {
-    // 使用 split 获取日期部分进行比较
-    const todoDate = todo.createdAt.split(' ')[0]
-    if (todoDate === dateStr) {
-      count++
-      if (todo.subTodos) {
-        count += todo.subTodos.length
-      }
-    }
-  })
-
-  return count || '-'
-}
-
-// 禁用未来日期
-const isDateDisabled = (timestamp: number) => {
-  return timestamp > Date.now()
-}
-
 onMounted(async () => {
   // 读取文件内容
   const data = await window.store.get('historyData')
@@ -223,99 +244,176 @@ onMounted(async () => {
 
 .contribution-graph {
   position: relative;
+  border-radius: 8px;
+  padding: 15px;
+
+  .half-year-section {
+    margin-bottom: 30px;
+    position: relative;
+
+    &:last-of-type {
+      margin-bottom: 15px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.8);
+      margin-bottom: 10px;
+      margin-left: 0;
+    }
+  }
 
   .months-header {
     display: flex;
-    padding-left: 30px;
-    margin-bottom: 10px;
-    font-size: 12px;
-    color: #666;
+    padding-left: 40px;
+    margin-bottom: 8px;
+    font-size: 10px;
+    color: rgba(0, 0, 0, 0.6);
+    font-weight: 500;
+    gap: 40px;
 
     .month-label {
-      width: 49px; // 固定宽度，与下方格子对应
-      text-align: center;
-      flex-shrink: 0; // 防止压缩
+      flex-shrink: 0;
+      padding-left: 10px;
     }
   }
 
   .weekdays {
     position: absolute;
-    left: -5px;
-    top: 30px; // 调整顶部距离
+    left: 10px;
+    top: 60px;
     display: flex;
     flex-direction: column;
-    gap: 18px; // 调整间距
-    font-size: 11px;
-    color: #666;
+    gap: 15px;
+    font-size: 10px;
+    color: rgba(0, 0, 0, 0.6);
     width: 30px;
+    font-weight: 500;
 
     span {
       text-align: center;
-      line-height: 10px; // 与格子高度对齐
+      line-height: 11px;
+      height: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 
   .grid-container {
     display: flex;
     gap: 2px;
-    padding-left: 30px;
+    padding-left: 40px;
     min-height: 100px;
-    overflow-x: auto; // 添加横向滚动
+    overflow-x: auto;
+    padding-top: 2px;
 
     .week-column {
       display: flex;
       flex-direction: column;
       gap: 2px;
-      min-width: 10px; // 确保最小宽度
+      min-width: 11px;
     }
   }
 
   .day-cell {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 2px;
-    background-color: #ebedf0;
-    transition: all 0.3s;
+    transition: all 0.2s ease;
     cursor: pointer;
+    position: relative;
+    background-color: #d1d5db;
 
+    // 修复悬停效果
     &:hover {
-      transform: scale(1.2);
+      transform: scale(1.1);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+      z-index: 10;
     }
   }
 
+  .empty-day {
+    background: transparent !important;
+    cursor: default;
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
+  // 参考GitHub风格的颜色方案
   .activity-0 {
     background-color: #ebedf0;
+
+    &:hover {
+      background-color: #d1d5db;
+    }
   }
   .activity-1 {
     background-color: #9be9a8;
+
+    &:hover {
+      background-color: #7dd3fc;
+    }
   }
   .activity-2 {
     background-color: #40c463;
+
+    &:hover {
+      background-color: #22d3ee;
+    }
   }
   .activity-3 {
     background-color: #30a14e;
+
+    &:hover {
+      background-color: #06b6d4;
+    }
   }
   .activity-4 {
     background-color: #216e39;
+
+    &:hover {
+      background-color: #0891b2;
+    }
   }
 
   .legend {
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin-top: 10px;
-    font-size: 12px;
-    color: #666;
+    justify-content: center;
+    margin-top: 15px;
+    font-size: 10px;
+    color: rgba(0, 0, 0, 0.6);
+    font-weight: 500;
 
     .legend-items {
       display: flex;
       gap: 2px;
+      margin: 0 8px;
     }
 
     .legend-text {
-      font-size: 12px;
-      color: #666;
+      font-size: 10px;
+      color: rgba(0, 0, 0, 0.6);
     }
+  }
+}
+
+.today-day {
+  border: 1px solid #3984f3;
+}
+
+// 未来日期样式
+.future-day {
+  background-color: #f3f4f6;
+  border: 1px dashed #d1d5db;
+
+  &:hover {
+    background-color: #e5e7eb;
   }
 }
 </style>

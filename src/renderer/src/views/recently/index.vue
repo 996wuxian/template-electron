@@ -46,7 +46,7 @@
                   :todos="group.tasks"
                   :check-box="false"
                   :collapsed="collapsed"
-                  :delete-show="false"
+                  :delete-show="true"
                   :status-show="true"
                   class="hover:bg-white rounded p-2 transition-colors"
                   @delete-todo="deleteTodo"
@@ -90,15 +90,15 @@
       v-if="detailVisible"
       class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 h-full"
       :class="[
-        detailAnimate ? 'animate__fadeInRight w-[360px] ml-4 p-4' : 'animate__fadeOutRight w-0',
+        detailAnimate ? 'animate__fadeInRight w-[300px] ml-4 p-4' : 'animate__fadeOutRight w-0',
         collapsed ? 'h-400px' : ''
       ]"
     >
       <!-- 头部区域 -->
-      <div class="p-3px bg-#CFCECD absolute top-42px right-10px flex-center rd-50%">
+      <div class="absolute top-42px right-10px flex-center">
         <i
-          i-solar-double-alt-arrow-right-line-duotone
-          class="w-20px h-20px cursor-pointer hover:text-red-500"
+          i-solar-round-alt-arrow-right-bold-duotone
+          class="text-30px c-#88B9F9 cursor-pointer hover:text-red-500 transition-all"
           @click="hideDetails"
         />
       </div>
@@ -293,15 +293,37 @@ const getGroupTitle = (dateKey: string, dateObj: dayjs.Dayjs) => {
 }
 
 // 删除 Todo 项
-const deleteTodo = (data: any, index: number) => {
+const deleteTodo = async (data: any, index: number) => {
+  const todoToDelete = data[index]
+
+  // 设置删除动画
   data[index].isRemove = true
-  setTimeout(() => {
-    data.splice(index, 1)
-    window.api.writeFile(useUser.historyFullPath, JSON.stringify(todos.value))
+
+  setTimeout(async () => {
+    try {
+      // 从当前分组数据中删除
+      data.splice(index, 1)
+
+      // 从主todos数组中删除
+      const todoIndex = todos.value.findIndex((todo) => todo.id === todoToDelete.id)
+      if (todoIndex !== -1) {
+        todos.value.splice(todoIndex, 1)
+      }
+
+      // 更新存储 - 使用新的存储方式
+      await window.store.set('historyData', JSON.parse(JSON.stringify(todos.value)))
+
+      console.log('删除成功')
+    } catch (error) {
+      console.error('删除失败:', error)
+      // 如果删除失败，恢复数据
+      data[index].isRemove = false
+    }
   }, 500)
+
+  // 隐藏详情页
   hided()
 }
-
 const hided = () => {
   detailVisible.value = false
   selectedTodo.value = null
@@ -429,13 +451,24 @@ const getGroupTimeInfo = (dateKey: string) => {
 
 // 添加到今日待办
 const addToToday = async () => {
-  if (!selectedTodo.value || !useUser.fileFullPath) return
+  if (!selectedTodo.value) return
 
   try {
-    // 读取当前的待办列表
-    const currentTodos = Array.isArray(window.api.readFile(useUser.fileFullPath))
-      ? window.api.readFile(useUser.fileFullPath)
-      : []
+    // 使用新的存储方式读取当前的待办列表
+    const currentTodos = await window.store.get('todayTodos', [])
+
+    // 检查今日是否已存在相同的待办（根据文本内容判断）
+    const existingTodo = currentTodos.find(
+      (todo: any) => todo.text.trim() === selectedTodo.value!.text.trim()
+    )
+
+    if (existingTodo) {
+      $msg({
+        type: 'warning',
+        msg: '今日已存在该待办项'
+      })
+      return
+    }
 
     // 创建新的待办项
     const newTodo = {
@@ -444,14 +477,16 @@ const addToToday = async () => {
       createdAt: new Date().toLocaleString(), // 更新创建时间为当前时间
       completed: false, // 重置完成状态
       isRemove: false,
-      sort: currentTodos.length // 添加到末尾
+      sort: currentTodos.length, // 添加到末尾
+      reminderTime: undefined, // 重置提醒时间
+      reminderEnabled: false // 重置提醒开关
     }
 
     // 添加到待办列表
-    currentTodos.push(newTodo)
+    const updatedTodos = [...currentTodos, newTodo]
 
-    // 保存到文件
-    await window.api.writeFile(useUser.fileFullPath, JSON.stringify(currentTodos))
+    // 使用新的存储方式保存
+    await window.store.set('todayTodos', JSON.parse(JSON.stringify(updatedTodos)))
 
     $msg({
       type: 'success',

@@ -112,7 +112,9 @@
       v-if="detailVisible && !collapsed"
       class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 h-full"
       :class="[
-        detailAnimate ? 'animate__fadeInRight w-[300px] ml-4 p-4' : 'animate__fadeOutRight w-0',
+        detailAnimate
+          ? 'animate__fadeInRight w-[300px] ml-4 p-4 pr-0'
+          : 'animate__fadeOutRight w-0',
         collapsed ? 'h-400px' : ''
       ]"
     >
