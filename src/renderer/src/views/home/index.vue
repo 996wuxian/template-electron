@@ -794,7 +794,7 @@ const groupedTodayTodos = computed(() => {
   todayTodos.value.forEach((todo) => {
     const isToday = isTodoCreatedToday(todo.createdAt)
     const dateKey = isToday ? 'today' : 'yesterday'
-    const title = isToday ? '今日任务' : '昨日未完成'
+    const title = isToday ? '今日任务' : '今日前未完成'
 
     if (!groups.has(dateKey)) {
       groups.set(dateKey, { dateKey, title, tasks: [] })
@@ -810,15 +810,58 @@ const groupedTodayTodos = computed(() => {
   return result
 })
 
+const handleCompleteTodoFromReminder = async (event: any, todoId: number) => {
+  try {
+    // 在todayTodos中查找对应的todo
+    const todoToComplete = todayTodos.value.find((todo) => todo.id === todoId)
+
+    if (todoToComplete && !todoToComplete.completed) {
+      // 标记为已完成
+      todoToComplete.completed = true
+      todoToComplete.completedAt = new Date().toLocaleString()
+
+      // 同步历史数据
+      syncHistoryData(todoToComplete)
+
+      // 保存数据
+      await window.store.set('todayTodos', JSON.parse(JSON.stringify(todayTodos.value)))
+      await window.store.set('historyData', JSON.parse(JSON.stringify(historyData.value)))
+
+      // 更新全选状态
+      if (todos.value.length > 0) {
+        const allSelected = todos.value.every((todo) => todo.completed)
+        selectAll.value = allSelected
+      }
+
+      $msg({
+        type: 'success',
+        msg: '任务已完成'
+      })
+    }
+  } catch (error) {
+    console.error('完成任务失败:', error)
+    $msg({
+      type: 'error',
+      msg: '完成任务失败'
+    })
+  }
+}
+
 onMounted(() => {
   fetchData()
   // 添加事件监听
   window.electron.ipcRenderer.on('main-window-show', handleShowMainWindow)
+  // 添加完成todo的事件监听器
+  window.electron.ipcRenderer.on('complete-todo-from-reminder', handleCompleteTodoFromReminder)
 })
 
 onBeforeUnmount(() => {
   // 移除事件监听
   window.electron.ipcRenderer.removeListener('main-window-show', handleShowMainWindow)
+  window.electron.ipcRenderer.removeListener(
+    'complete-todo-from-reminder',
+    handleCompleteTodoFromReminder
+  )
   // 清理详情页面状态，防止切换页面时动画闪烁
   detailVisible.value = false
   detailAnimate.value = false

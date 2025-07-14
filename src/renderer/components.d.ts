@@ -9,7 +9,6 @@ declare module 'vue' {
   export interface GlobalComponents {
     Loading: typeof import('./src/components/common/loading.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
-    NCalendar: typeof import('naive-ui')['NCalendar']
     NCard: typeof import('naive-ui')['NCard']
     NCheckbox: typeof import('naive-ui')['NCheckbox']
     NCollapse: typeof import('naive-ui')['NCollapse']

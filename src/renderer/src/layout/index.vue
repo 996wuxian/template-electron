@@ -178,7 +178,7 @@ window.electron.ipcRenderer.on('update-error', (event, error) => {
   updateInfo.show = false
   $msg({
     type: 'error',
-    msg: `更新出错：${error}`
+    msg: `更新出错, 清重试`
   })
 })
 </script>
