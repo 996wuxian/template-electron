@@ -50,7 +50,7 @@
                   :key="todo.id"
                   :todo="todo"
                   :index="index"
-                  :todos="todos"
+                  :todos="group.tasks"
                   :collapsed="collapsed"
                   :check-box="true"
                   :delete-show="true"
@@ -477,12 +477,23 @@ const addTodo = async () => {
 
 // 删除 Todo 项
 const deleteTodo = (data: any, index: number) => {
-  data[index].isRemove = true
+  const todoToDelete = data[index]
+  if (!todoToDelete) return
+
+  // 标记为删除状态
+  todoToDelete.isRemove = true
+
   setTimeout(async () => {
-    data.splice(index, 1)
-    // 使用新的存储方式
+    // 从原始todos数组中根据ID删除
+    const todoIndex = todos.value.findIndex((todo) => todo.id === todoToDelete.id)
+    if (todoIndex !== -1) {
+      todos.value.splice(todoIndex, 1)
+    }
+
+    // 保存数据
     await window.store.set('todayTodos', JSON.parse(JSON.stringify(todayTodos.value)))
   }, 500)
+
   hided()
 }
 
