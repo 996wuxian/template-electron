@@ -87,31 +87,29 @@
 
     <!-- 右侧区域：Todo 详情 -->
     <div
-      v-if="detailVisible"
-      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 h-full"
+      v-if="detailVisible && !collapsed"
+      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 h-full pr-10px"
       :class="[
-        detailAnimate ? 'animate__fadeInRight w-[300px] ml-4 p-4' : 'animate__fadeOutRight w-0',
+        detailAnimate
+          ? 'animate__fadeInRight w-[300px] ml-4 p-4 pr-0'
+          : 'animate__fadeOutRight w-0',
         collapsed ? 'h-400px' : ''
       ]"
     >
-      <!-- 头部区域 -->
-      <div class="absolute top-42px right-10px flex-center">
+      <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 no-drag">
+        <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-240px">
+          {{ selectedTodo?.text }}
+        </h2>
+
         <i
-          i-solar-round-alt-arrow-right-bold-duotone
-          class="text-30px c-#88B9F9 cursor-pointer hover:text-red-500 transition-all"
+          i-solar-close-circle-broken
+          class="text-18px cursor-pointer hover:text-red-500 transition-all"
           @click="hideDetails"
         />
       </div>
 
-      <!-- 头部区域 -->
-      <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
-        <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
-          {{ selectedTodo?.text }}
-        </h2>
-      </div>
-
       <!-- 主体内容 -->
-      <div class="flex-1 h-100%">
+      <div class="flex-1 h-[calc(100%-200px)] overflow-y-auto">
         <!-- 基本信息卡片 -->
         <div class="mb-3 bg-gray-50 rounded-lg">
           <div class="space-y-6 theme-page">
@@ -201,6 +199,7 @@ export interface Todo {
   level: number
   description: string
   status: number
+  deletedFromHome?: boolean // 标记是否从home页删除
 }
 
 const useTheme = useThemeStore()
@@ -479,7 +478,8 @@ const addToToday = async () => {
       isRemove: false,
       sort: currentTodos.length, // 添加到末尾
       reminderTime: undefined, // 重置提醒时间
-      reminderEnabled: false // 重置提醒开关
+      reminderEnabled: false, // 重置提醒开关
+      deletedFromHome: false // 确保不被标记为删除
     }
 
     // 添加到待办列表

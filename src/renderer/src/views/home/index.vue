@@ -110,7 +110,7 @@
     <!-- 右侧区域：Todo 详情 -->
     <div
       v-if="detailVisible && !collapsed"
-      class="todo-details border-l border-gray-200 animate__animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 h-full"
+      class="todo-details border-l border-gray-200 pr-10px animate __animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 h-full"
       :class="[
         detailAnimate
           ? 'animate__fadeInRight w-[300px] ml-4 p-4 pr-0'
@@ -118,19 +118,17 @@
         collapsed ? 'h-400px' : ''
       ]"
     >
-      <div class="absolute top-42px right-10px flex-center">
-        <i
-          i-solar-round-alt-arrow-right-bold-duotone
-          class="text-30px c-#88B9F9 cursor-pointer hover:text-red-500 transition-all"
-          @click="hideDetails"
-        />
-      </div>
-
       <!-- 头部区域 -->
-      <div class="flex justify-between items-start mb-4 pb-2 border-b border-gray-200">
-        <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-170px">
+      <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 no-drag">
+        <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-240px">
           {{ selectedTodo?.text }}
         </h2>
+
+        <i
+          i-solar-close-circle-broken
+          class="text-18px cursor-pointer hover:text-red-500 transition-all"
+          @click="hideDetails"
+        />
       </div>
 
       <!-- 主体内容 -->
@@ -330,6 +328,7 @@ export interface Todo {
   sort: number
   reminderTime?: string
   reminderEnabled?: boolean
+  deletedFromHome?: boolean // 标记是否从home页删除
 }
 
 const useTheme = useThemeStore()
@@ -352,6 +351,9 @@ const historyData = ref<Todo[]>([])
 
 const todayTodos = computed(() => {
   return todos.value.filter((todo) => {
+    // 过滤掉从home页删除的项目
+    if (todo.deletedFromHome) return false
+    
     const isToday = isTodoCreatedToday(todo.createdAt)
     // 如果是今天的任务，全部显示
     if (isToday) return true
@@ -455,7 +457,8 @@ const addTodo = async () => {
         sort: todos.value.length,
         completedAt: '',
         reminderTime: undefined,
-        reminderEnabled: false
+        reminderEnabled: false,
+        deletedFromHome: false
       }
 
       // 使用新的存储方式
@@ -480,8 +483,13 @@ const deleteTodo = (data: any, index: number) => {
   const todoToDelete = data[index]
   if (!todoToDelete) return
 
-  // 标记为删除状态
+  // 标记为删除状态  
   todoToDelete.isRemove = true
+
+  // 如果当前选中的是要删除的todo，关闭详情页
+  if (selectedTodo.value && selectedTodo.value.id === todoToDelete.id) {
+    hided()
+  }
 
   setTimeout(async () => {
     // 从原始todos数组中根据ID删除
@@ -490,11 +498,16 @@ const deleteTodo = (data: any, index: number) => {
       todos.value.splice(todoIndex, 1)
     }
 
+    // 在historyData中标记为从home页删除，而不是直接删除
+    const historyIndex = historyData.value.findIndex((todo) => todo.id === todoToDelete.id)
+    if (historyIndex !== -1) {
+      historyData.value[historyIndex].deletedFromHome = true
+    }
+
     // 保存数据
     await window.store.set('todayTodos', JSON.parse(JSON.stringify(todayTodos.value)))
+    await window.store.set('historyData', JSON.parse(JSON.stringify(historyData.value)))
   }, 500)
-
-  hided()
 }
 
 const hided = () => {
@@ -727,15 +740,12 @@ const isTodoCreatedToday = (createdAt: string) => {
 // 添加获取数据的方法
 const fetchData = async () => {
   try {
-    $msg({
-      type: 'success',
-      msg: '刷新成功'
-    })
     // 从新的存储系统读取数据
     const todayData = await window.store.get('todayTodos', [])
     const historyDataFromStore = await window.store.get('historyData', [])
 
-    todos.value = todayData
+    // 过滤掉从home页删除的项目
+    todos.value = todayData.filter((todo: Todo) => !todo.deletedFromHome)
     historyData.value = historyDataFromStore
   } catch (error) {
     console.error('读取数据失败:', error)
