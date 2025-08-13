@@ -505,7 +505,7 @@ const saveCycleTodos = async () => {
 }
 
 const getDayTodos = (day: DayInfo) => {
-  return allCycleTodos.value.filter((todo) => todo.date === day.date).slice(0, 3) // 最多显示3个
+  return allCycleTodos.value.filter((todo) => todo.date === day.date).slice(0, 4) // 最多显示3个
 }
 
 const openDayModal = (day: DayInfo) => {
