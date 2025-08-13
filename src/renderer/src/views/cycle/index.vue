@@ -1,34 +1,36 @@
 <template>
   <div class="page p-10px flex flex-1 flex-col">
     <!-- 头部操作区域 -->
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-4">
-        <n-button type="primary" @click="openAddCycleModal">
+    <div class="flex items-center justify-between mb-6 compact-header">
+      <div class="flex items-center gap-2">
+        <n-button type="primary" size="small" @click="openAddCycleModal">
           <template #icon>
             <i class="i-solar-add-circle-bold-duotone"></i>
           </template>
-          设置周期待办
+          <span class="hidden-in-small ml-5px">设置周期待办</span>
         </n-button>
-        <n-button type="error" @click="showDeleteConfirmModal = true">
+        <n-button type="error" size="small" @click="showDeleteConfirmModal = true">
           <template #icon>
             <i class="i-solar-trash-bin-minimalistic-2-bold-duotone"></i>
           </template>
-          删除周期待办
+          <span class="hidden-in-small ml-5px">删除周期待办</span>
         </n-button>
-        <n-tag type="info" size="medium"> {{ currentYear }}年 {{ currentMonth }}月 </n-tag>
+        <n-tag type="info" size="small" class="hidden-in-small">
+          {{ currentYear }}年 {{ currentMonth }}月
+        </n-tag>
       </div>
 
       <!-- 月份切换 -->
-      <div class="flex items-center gap-2">
-        <n-button circle @click="previousMonth">
+      <div class="flex items-center gap-1">
+        <n-button size="small" circle @click="previousMonth">
           <template #icon>
             <i class="i-solar-alt-arrow-left-line-duotone"></i>
           </template>
         </n-button>
-        <span class="text-16px font-600 min-w-120px text-center">
+        <span class="text-12px font-600 min-w-80px text-center compact-month-text">
           {{ currentYear }}年{{ currentMonth }}月
         </span>
-        <n-button circle @click="nextMonth">
+        <n-button size="small" circle @click="nextMonth">
           <template #icon>
             <i class="i-solar-alt-arrow-right-line-duotone"></i>
           </template>
@@ -37,20 +39,20 @@
     </div>
 
     <!-- 日历视图 -->
-    <n-scrollbar class="calendar-container flex-1">
-      <div v-for="week in monthWeeks" :key="week.weekNumber" class="week-container mb-3">
-        <div class="week-header flex items-center gap-2 mb-3">
-          <i class="i-solar-calendar-bold-duotone text-blue-500"></i>
-          <span class="text-14px font-600 text-gray-600">
+    <n-scrollbar class="calendar-container pb-20px flex-1">
+      <div v-for="week in monthWeeks" :key="week.weekNumber" class="week-container mb-2">
+        <div class="week-header flex items-center gap-2 mb-2">
+          <i class="i-solar-calendar-bold-duotone text-blue-500 text-12px"></i>
+          <span class="text-10px font-600 text-gray-600 compact-week-text">
             第{{ week.weekNumber }}周 ({{ formatWeekRange(week.days) }})
           </span>
         </div>
 
-        <div class="week-days grid grid-cols-7 gap-2">
+        <div class="week-days grid grid-cols-7 gap-1">
           <div
             v-for="day in week.days"
             :key="day.date"
-            class="day-cell border rounded-lg p-3 min-h-120px cursor-pointer transition-all hover:shadow-md"
+            class="day-cell border rounded-lg p-1 cursor-pointer transition-all hover:shadow-md compact-day-cell"
             :class="{
               'bg-blue-50 border-blue-200': day.isToday,
               'bg-gray-50': !day.isCurrentMonth,
@@ -58,9 +60,9 @@
             }"
             @click="openDayModal(day)"
           >
-            <div class="day-header flex items-center justify-between mb-2">
+            <div class="day-header flex items-center justify-between mb-1">
               <span
-                class="text-12px font-600"
+                class="text-10px font-600"
                 :class="{
                   'text-blue-600': day.isToday,
                   'text-gray-400': !day.isCurrentMonth,
@@ -69,7 +71,7 @@
               >
                 {{ day.dayNumber }}
               </span>
-              <span class="text-10px text-gray-400">
+              <span class="text-8px text-gray-400 compact-day-name">
                 {{ getDayName(day.dayOfWeek) }}
               </span>
             </div>
@@ -79,7 +81,7 @@
               <div
                 v-for="todo in getDayTodos(day)"
                 :key="todo.id"
-                class="text-10px p-1 rounded truncate"
+                class="text-8px p-1 rounded truncate compact-todo-item"
                 :class="{
                   'bg-green-100 text-green-700 line-through': todo.completed,
                   'bg-orange-100 text-orange-700': !todo.completed
@@ -87,9 +89,7 @@
               >
                 {{ todo.text }}
               </div>
-              <div v-if="getDayTodos(day).length === 0" class="text-10px text-gray-400">
-                暂无待办
-              </div>
+              <div v-if="getDayTodos(day).length === 0" class="text-8px text-gray-400">无</div>
             </div>
           </div>
         </div>
@@ -555,13 +555,66 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .calendar-container {
-  max-height: calc(100vh - 200px);
+  max-height: calc(100vh - 120px);
+}
+
+:deep(.n-button__icon) {
+  margin: 0;
+}
+
+/* 小窗口适配样式 */
+@media (max-width: 400px), (max-height: 400px) {
+  .calendar-container {
+    max-height: calc(100vh - 80px);
+  }
+
+  .compact-header {
+    margin-bottom: 8px !important;
+  }
+
+  .hidden-in-small {
+    display: none;
+  }
+
+  .compact-month-text {
+    font-size: 10px !important;
+    min-width: 60px !important;
+  }
+
+  .compact-week-text {
+    font-size: 8px !important;
+  }
+
+  .compact-day-name {
+    font-size: 6px !important;
+  }
+
+  .compact-day-cell {
+    min-height: 40px !important;
+    padding: 2px !important;
+  }
+
+  .compact-todo-item {
+    font-size: 6px !important;
+    padding: 1px !important;
+  }
+
+  .week-container {
+    padding: 8px !important;
+    margin-bottom: 4px !important;
+  }
+}
+
+/* 固定窗口模式特殊适配 */
+.page {
+  min-height: 100vh;
 }
 
 .day-cell {
   transition: all 0.2s ease;
+  min-height: 120px;
 }
 
 .day-cell:hover {
@@ -579,5 +632,21 @@ onMounted(() => {
   border-radius: 8px;
   padding: 12px;
   background: #f9fafb;
+}
+
+/* 响应式布局优化 */
+@media (max-width: 350px) {
+  .week-days {
+    gap: 1px !important;
+  }
+
+  .compact-day-cell {
+    min-height: 30px !important;
+    padding: 1px !important;
+  }
+
+  .day-header {
+    margin-bottom: 0 !important;
+  }
 }
 </style>
