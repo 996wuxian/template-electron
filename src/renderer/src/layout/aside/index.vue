@@ -33,7 +33,7 @@
     ></i>
 
     <div
-      class="absolute bottom-10px -right-13px bg-gray-400 rounded-50% p-4px flex-center shadow-lg cursor-pointer hover:scale-150% transition transition-duration-[.3s]"
+      class="absolute bottom-10px -right-13px bg-gray-400 rounded-50% p-4px flex-center shadow-lg cursor-pointer hover:scale-150% transition transition-duration-[.3s] z-999"
       @click="showMenu"
     >
       <i

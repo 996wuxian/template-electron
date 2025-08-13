@@ -1,5 +1,5 @@
 <template>
-  <div class="page p-10px flex flex-1">
+  <div class="page p-10px flex flex-1" @click="handleOutsideClick">
     <!-- 左侧区域：Todo 列表和操作 -->
     <div class="w-100% item-transition">
       <!-- 输入框 -->
@@ -55,6 +55,7 @@
                   :check-box="true"
                   :delete-show="true"
                   :status-show="true"
+                  @click.stop
                   @delete-todo="deleteTodo"
                   @toggle-details="toggleDetails"
                   @toggle-sub-items-selection="toggleSubItemsSelection"
@@ -120,7 +121,7 @@
     >
       <!-- 头部区域 -->
       <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 no-drag">
-        <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-240px">
+        <h2 class="text-18px text-gray-600 truncate w-full max-w-240px">
           {{ selectedTodo?.text }}
         </h2>
 
@@ -353,7 +354,7 @@ const todayTodos = computed(() => {
   return todos.value.filter((todo) => {
     // 过滤掉从home页删除的项目
     if (todo.deletedFromHome) return false
-    
+
     const isToday = isTodoCreatedToday(todo.createdAt)
     // 如果是今天的任务，全部显示
     if (isToday) return true
@@ -483,7 +484,7 @@ const deleteTodo = (data: any, index: number) => {
   const todoToDelete = data[index]
   if (!todoToDelete) return
 
-  // 标记为删除状态  
+  // 标记为删除状态
   todoToDelete.isRemove = true
 
   // 如果当前选中的是要删除的todo，关闭详情页
@@ -865,6 +866,12 @@ const handleCompleteTodoFromReminder = async (event: any, todoId: number) => {
       type: 'error',
       msg: '完成任务失败'
     })
+  }
+}
+
+const handleOutsideClick = () => {
+  if (detailVisible.value) {
+    hided()
   }
 }
 

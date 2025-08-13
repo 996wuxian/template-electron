@@ -1,5 +1,7 @@
 <template>
-  <div class="rd-10px">
+  <div
+    class="rd-10px w-[calc(100%-5px)] h-[calc(100vh-7px)] overflow-hidden box mx-auto my-auto mt-2px"
+  >
     <div :style="{ height: headerHeight + 'px' }">
       <Header>
         <template #left>
@@ -184,6 +186,10 @@ window.electron.ipcRenderer.on('update-error', (event, error) => {
 </script>
 
 <style lang="scss" scoped>
+.box {
+  box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+}
+
 .update-progress {
   animation: slideUp 0.3s ease-out;
 }

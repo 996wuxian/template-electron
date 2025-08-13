@@ -34,7 +34,7 @@ export const asyncRoutes = [
     redirect: '/home',
     meta: {
       title: '今日计划',
-      icon: 'i-solar-sun-2-bold',
+      icon: 'i-solar-bill-broken',
       hide: false
     },
     children: [
@@ -54,7 +54,7 @@ export const asyncRoutes = [
     component: Layout,
     meta: {
       title: '最近待办',
-      icon: 'i-solar-widget-5-bold-duotone',
+      icon: 'i-solar-calendar-minimalistic-broken',
       hide: false
     },
     children: [
@@ -69,12 +69,32 @@ export const asyncRoutes = [
     ]
   },
   {
+    path: '/cycle-page',
+    name: 'CyclePage',
+    component: Layout,
+    meta: {
+      title: '周期待办',
+      icon: 'i-solar-history-2-broken',
+      hide: false
+    },
+    children: [
+      {
+        path: '/cycle',
+        name: 'Cycle',
+        component: () => import('@renderer/views/cycle/index.vue'),
+        meta: {
+          title: '周期待办'
+        }
+      }
+    ]
+  },
+  {
     path: '/count-page',
     name: 'CountPage',
     component: Layout,
     meta: {
       title: '统计',
-      icon: 'i-solar-checklist-minimalistic-bold-duotone',
+      icon: 'i-solar-pie-chart-broken',
       hide: false
     },
     children: [

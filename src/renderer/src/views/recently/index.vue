@@ -1,5 +1,5 @@
 <template>
-  <div class="page p-10px flex flex-1">
+  <div class="page p-10px flex flex-1" @click="handleOutsideClick">
     <!-- 左侧区域：Todo 列表和操作 -->
     <div class="w-100% item-transition">
       <!-- Todo 列表 -->
@@ -27,7 +27,7 @@
               <template #header>
                 <div class="group-header flex items-center px-2">
                   <div class="flex items-center">
-                    <span class="text-16px font-600 text-gray-700 max-w-100px line-clamp-1">{{
+                    <span class="text-14px text-gray-700 max-w-100px line-clamp-1">{{
                       group.title
                     }}</span>
                     <n-tag size="small" :bordered="false" type="info" class="ml-2">
@@ -37,7 +37,7 @@
                 </div>
               </template>
 
-              <div class="flex flex-col gap-2 p-4 rounded">
+              <div class="flex flex-col gap-2 p-2 rounded">
                 <TodoItem
                   v-for="(todo, index) in group.tasks"
                   :key="todo.id"
@@ -49,6 +49,7 @@
                   :delete-show="true"
                   :status-show="true"
                   class="hover:bg-white rounded p-2 transition-colors hover:c-#3984F3"
+                  @click.stop
                   @delete-todo="deleteTodo"
                   @toggle-details="toggleDetails"
                   @toggle-sub-items-selection="toggleSubItemsSelection"
@@ -60,7 +61,7 @@
                   v-if="!useUser.$state.isRightTop"
                   class="flex items-center justify-between text-gray-400 text-12px"
                 >
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2 mr-5px">
                     <span>完成：{{ getCompletedCount(group.tasks) }}</span>
                     <span>进行中：{{ group.tasks.length - getCompletedCount(group.tasks) }}</span>
                   </div>
@@ -97,7 +98,7 @@
       ]"
     >
       <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 no-drag">
-        <h2 class="text-20px font-semibold text-gray-600 truncate w-full max-w-240px">
+        <h2 class="text-18px text-gray-600 truncate w-full max-w-240px">
           {{ selectedTodo?.text }}
         </h2>
 
@@ -409,6 +410,12 @@ const deleteAllTodos = async () => {
   }
 }
 
+const handleOutsideClick = () => {
+  if (detailVisible.value) {
+    hided()
+  }
+}
+
 onMounted(async () => {
   // 读取文件内容
   const data = await window.store.get('historyData')
@@ -502,7 +509,7 @@ const addToToday = async () => {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .item-transition {
   transition: all 0.3s;
 }
@@ -572,6 +579,12 @@ const addToToday = async () => {
 
   &::-webkit-scrollbar-thumb:hover {
     background: #d1d5db;
+  }
+}
+
+:deep(.n-collapse-item__content-wrapper) {
+  .n-collapse-item__content-inner {
+    padding-top: 0 !important;
   }
 }
 </style>

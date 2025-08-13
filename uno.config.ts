@@ -11,7 +11,11 @@ export default defineConfig({
   safelist: [
     'i-solar-sun-2-bold',
     'i-solar-widget-5-bold-duotone',
-    'i-solar-checklist-minimalistic-bold-duotone'
+    'i-solar-checklist-minimalistic-bold-duotone',
+    'i-solar-pie-chart-broken',
+    'i-solar-calendar-minimalistic-broken',
+    'i-solar-history-2-broken',
+    'i-solar-bill-broken'
   ],
   shortcuts: [['flex-center', 'flex items-center justify-center']],
   rules: [
