@@ -4,6 +4,16 @@
     :class="todo?.isRemove ? 'animate__fadeOutUp' : 'animate__fadeInDown'"
   >
     <div class="flex items-center w-100%" @click="toggleDetails(todo, index)">
+      <!-- 添加完成并删除图标 -->
+      <div
+        v-show="checkBox"
+        title="完成并删除"
+        class="mr-2 cursor-pointer hover:scale-110 transition-transform"
+        @click.stop="completeAndDelete(todo)"
+      >
+        <svg-icon name="finished" width="16" height="16" fill="#22C55E" />
+      </div>
+
       <n-checkbox
         v-show="checkBox"
         v-model:checked="todo!.completed"
@@ -51,6 +61,7 @@
         @delete-todo="deleteTodo"
         @toggle-details="toggleDetails"
         @toggle-sub-items-selection="toggleSubItemsSelection"
+        @complete-and-delete="completeAndDelete"
       />
     </div>
   </div>
@@ -88,7 +99,12 @@ interface Props {
 
 defineProps<Props>()
 
-const emit = defineEmits(['delete-todo', 'toggle-details', 'toggle-sub-items-selection'])
+const emit = defineEmits([
+  'delete-todo',
+  'toggle-details',
+  'toggle-sub-items-selection',
+  'complete-and-delete'
+])
 
 const toggleSubItemsSelection = (todo: Todo) => {
   emit('toggle-sub-items-selection', todo)
@@ -100,5 +116,10 @@ const toggleDetails = (todo: Todo, index: number) => {
 
 const deleteTodo = (todos: Todo[], index: number) => {
   emit('delete-todo', todos, index)
+}
+
+// 新增：完成并删除功能
+const completeAndDelete = (todo: Todo) => {
+  emit('complete-and-delete', todo)
 }
 </script>

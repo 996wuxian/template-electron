@@ -59,6 +59,7 @@
                   @delete-todo="deleteTodo"
                   @toggle-details="toggleDetails"
                   @toggle-sub-items-selection="toggleSubItemsSelection"
+                  @complete-and-delete="completeAndDelete"
                 />
               </VueDraggable>
             </div>
@@ -873,6 +874,41 @@ const handleOutsideClick = () => {
   if (detailVisible.value) {
     hided()
   }
+}
+
+const completeAndDelete = async (todo: Todo) => {
+  // 先标记为完成
+  todo.completed = true
+  todo.completedAt = new Date().toLocaleString()
+
+  // 同步历史数据
+  syncHistoryData(todo)
+
+  // 如果当前选中的是要删除的todo，关闭详情页
+  if (selectedTodo.value && selectedTodo.value.id === todo.id) {
+    hided()
+  }
+
+  // 标记为删除状态并添加动画
+  todo.isRemove = true
+
+  setTimeout(async () => {
+    // 从原始todos数组中根据ID删除
+    const todoIndex = todos.value.findIndex((t) => t.id === todo.id)
+    if (todoIndex !== -1) {
+      todos.value.splice(todoIndex, 1)
+    }
+
+    // 在historyData中标记为从home页删除
+    const historyIndex = historyData.value.findIndex((t) => t.id === todo.id)
+    if (historyIndex !== -1) {
+      historyData.value[historyIndex].deletedFromHome = true
+    }
+
+    // 保存数据
+    await window.store.set('todayTodos', JSON.parse(JSON.stringify(todayTodos.value)))
+    await window.store.set('historyData', JSON.parse(JSON.stringify(historyData.value)))
+  }, 500)
 }
 
 onMounted(() => {
