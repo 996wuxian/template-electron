@@ -16,7 +16,7 @@
         <!-- 更新进度条 -->
         <div
           v-if="updateInfo.show"
-          class="update-progress fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur p-6 shadow-lg z-50 border-t border-gray-100"
+          class="update-progress fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur p-6 shadow-lg z-50 border-t border-gray-100 z-99999"
         >
           <div class="max-w-2xl mx-auto">
             <!-- 更新确认对话框 -->

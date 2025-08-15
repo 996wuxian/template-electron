@@ -24,19 +24,32 @@
           <!-- 热力图网格 -->
           <div class="grid-container">
             <div v-for="(week, weekIndex) in firstHalfData" :key="weekIndex" class="week-column">
-              <div
+              <n-tooltip
                 v-for="(day, dayIndex) in week"
                 :key="dayIndex"
-                :class="[
-                  'day-cell',
-                  day
-                    ? day.isFuture
-                      ? 'future-day'
-                      : getActivityClass(day.count) + (day.isToday ? ' today-day' : '')
-                    : 'empty-day'
-                ]"
-                :title="day ? `${day.date}: ${day.count}次待办` : ''"
-              ></div>
+                trigger="hover"
+                placement="top"
+                :disabled="!day"
+              >
+                <template #trigger>
+                  <div
+                    :class="[
+                      'day-cell',
+                      day
+                        ? day.isFuture
+                          ? 'future-day'
+                          : getActivityClass(day.count) + (day.isToday ? ' today-day' : '')
+                        : 'empty-day'
+                    ]"
+                  ></div>
+                </template>
+                <div v-if="day" class="tooltip-conntent">
+                  <div class="tooltip-date">{{ formatTooltipDate(day.date) }}</div>
+                  <div class="tooltip-count">
+                    {{ day.isFuture ? '未来日期' : `${day.count} 次待办` }}
+                  </div>
+                </div>
+              </n-tooltip>
             </div>
           </div>
         </div>
@@ -62,21 +75,32 @@
           <!-- 热力图网格 -->
           <div class="grid-container">
             <div v-for="(week, weekIndex) in secondHalfData" :key="weekIndex" class="week-column">
-              <div
+              <n-tooltip
                 v-for="(day, dayIndex) in week"
                 :key="dayIndex"
-                :class="[
-                  'day-cell',
-                  day
-                    ? day.isFuture
-                      ? 'future-day'
-                      : getActivityClass(day.count) + (day.isToday ? ' today-day' : '')
-                    : 'empty-day'
-                ]"
-                :title="
-                  day ? `${day.date}: ${day.isFuture ? '未来日期' : day.count + '次待办'}` : ''
-                "
-              ></div>
+                trigger="hover"
+                placement="top"
+                :disabled="!day"
+              >
+                <template #trigger>
+                  <div
+                    :class="[
+                      'day-cell',
+                      day
+                        ? day.isFuture
+                          ? 'future-day'
+                          : getActivityClass(day.count) + (day.isToday ? ' today-day' : '')
+                        : 'empty-day'
+                    ]"
+                  ></div>
+                </template>
+                <div v-if="day" class="tooltip-content">
+                  <div class="tooltip-date">{{ formatTooltipDate(day.date) }}</div>
+                  <div class="tooltip-count">
+                    {{ day.isFuture ? '未来日期' : `${day.count} 次待办` }}
+                  </div>
+                </div>
+              </n-tooltip>
             </div>
           </div>
         </div>
@@ -233,6 +257,11 @@ onMounted(async () => {
     todos.value = data
   }
 })
+
+// 格式化tooltip日期显示
+const formatTooltipDate = (dateStr: string) => {
+  return dayjs(dateStr).format('YYYY年MM月DD日 dddd')
+}
 </script>
 
 <style scoped lang="scss">
@@ -409,6 +438,22 @@ onMounted(async () => {
 
   &:hover {
     background-color: #e5e7eb;
+  }
+}
+
+// 新增tooltip样式
+.tooltip-content {
+  text-align: center;
+  font-size: 12px;
+
+  .tooltip-date {
+    margin-bottom: 4px;
+    color: var(--n-text-color);
+  }
+
+  .tooltip-count {
+    font-size: 12px;
+    color: var(--n-text-color-2);
   }
 }
 </style>
