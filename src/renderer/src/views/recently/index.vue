@@ -15,7 +15,6 @@
         <div v-else class="h-[calc(100%-20px)] overflow-y-auto px-4">
           <n-collapse
             v-model:expanded-names="expandedNames"
-            accordion
             class="animate__animated animate__fadeInDown"
           >
             <n-collapse-item
@@ -75,12 +74,30 @@
           </n-collapse>
         </div>
 
-        <div v-if="todos.length > 0" class="flex p-4 border-t border-gray-200">
-          <n-button type="error" size="medium" :loading="deleteLoading" @click="deleteAllTodos">
+        <div v-if="todos.length > 0" class="flex gap-5px p-4 border-t border-gray-200">
+          <n-button type="error" size="small" :loading="deleteLoading" @click="deleteAllTodos">
             <template #icon>
               <i class="i-solar-trash-bin-minimalistic-2-linear"></i>
             </template>
             全部删除历史记录
+          </n-button>
+
+          <n-button
+            type="primary"
+            size="small"
+            @click="toggleAllExpanded"
+            :disabled="groupedTodos.length === 0"
+          >
+            <template #icon>
+              <i
+                :class="
+                  isAllExpanded
+                    ? 'i-solar-minimize-square-3-broken'
+                    : 'i-solar-maximize-square-3-broken'
+                "
+              ></i>
+            </template>
+            {{ isAllExpanded ? '全部收起' : '全部展开' }}
           </n-button>
         </div>
       </div>
@@ -525,11 +542,6 @@ const addToToday = async () => {
         : []
     }
 
-    console.log(plainTodo, 'plainTodo')
-    console.log(selectedTodo.value, 'selectedTodo.value')
-
-    console.log('创建的新待办项:', plainTodo)
-
     // 添加到待办列表
     const updatedTodos = [...currentTodos, plainTodo]
 
@@ -546,6 +558,22 @@ const addToToday = async () => {
       type: 'error',
       msg: '添加失败'
     })
+  }
+}
+
+const isAllExpanded = computed(() => {
+  if (groupedTodos.value.length === 0) return false
+  return expandedNames.value.length === groupedTodos.value.length
+})
+
+// 切换全部展开/收起
+const toggleAllExpanded = () => {
+  if (isAllExpanded.value) {
+    // 全部收起
+    expandedNames.value = []
+  } else {
+    // 全部展开
+    expandedNames.value = groupedTodos.value.map((group) => group.dateKey)
   }
 }
 </script>
