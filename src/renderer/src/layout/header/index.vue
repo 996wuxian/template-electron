@@ -23,34 +23,48 @@
             </n-tooltip>
           </template>
 
-          <template v-if="!isShow && isFixed">
+          <!-- 锁定按钮 -->
+          <template v-if="!isShow">
             <n-tooltip trigger="hover">
               <template #trigger>
                 <i
-                  ref="allowedButton"
-                  i-solar-pin-bold
-                  @click="handleFixedDesktop('unfix-window')"
+                  :class="
+                    isLocked ? 'i-solar-lock-keyhole-bold' : 'i-solar-lock-keyhole-unlocked-broken'
+                  "
+                  :style="{ color: isLocked ? '#f0a020' : '' }"
+                  @click="toggleLock"
                 ></i>
               </template>
-              取消固定
+              {{ isLocked ? '解除锁定' : '锁定窗口' }}
             </n-tooltip>
           </template>
 
-          <template v-if="!isShow && !isFixed">
+          <!-- 置顶按钮 -->
+          <template v-if="!isShow">
             <n-tooltip trigger="hover">
               <template #trigger>
-                <i i-solar-pin-broken @click="handleFixedDesktop('fix-window')"></i>
+                <i
+                  :class="isAlwaysOnTop ? 'i-solar-pin-bold' : 'i-solar-pin-broken'"
+                  :style="{ color: isAlwaysOnTop ? '#20a0f0' : '' }"
+                  @click="toggleAlwaysOnTop"
+                ></i>
               </template>
-              锁定并置顶且限制
+              {{ isAlwaysOnTop ? '取消置顶' : '窗口置顶' }}
             </n-tooltip>
           </template>
 
-          <template v-if="!isShow && !isFixed">
+          <!-- 限制按钮 -->
+          <template v-if="!isShow">
             <n-tooltip trigger="hover">
               <template #trigger>
-                <i i-solar-pin-circle-broken @click="handleFixedNoDesktop('no-fix-window')"></i>
+                <i
+                  ref="restrictionButton"
+                  :class="isRestricted ? 'i-solar-shield-check-bold' : 'i-solar-shield-broken'"
+                  :style="{ color: isRestricted ? '#f02020' : '' }"
+                  @click="toggleRestriction"
+                ></i>
               </template>
-              锁定不置顶不限制
+              {{ isRestricted ? '解除限制' : '限制操作' }}
             </n-tooltip>
           </template>
 
@@ -147,8 +161,14 @@ const drawerVisible = ref(false)
 const isShow = ref(true)
 const isFixed = ref(false)
 
+const isLocked = ref(false)
+const isAlwaysOnTop = ref(false)
+const isRestricted = ref(false)
+
 const header = ref<HTMLElement | null>(null)
 const allowedButton = ref()
+
+const restrictionButton = ref()
 
 const handleDrawer = () => {
   drawerVisible.value = !drawerVisible.value
@@ -298,19 +318,68 @@ const handleFullScreen = async () => {
   await animateWindow(targetX, targetY, targetWidth, targetHeight, 5)
 }
 
-const handleFixedDesktop = async (type: string) => {
-  isFixed.value = !isFixed.value
-  await window.electron.ipcRenderer.invoke(type)
-  if (isFixed.value) {
-    document.addEventListener('click', interceptClicks, true)
+const toggleLock = async () => {
+  isLocked.value = !isLocked.value
+
+  if (isLocked.value) {
+    // 启用锁定：禁用窗口拖拽和调整大小
+    await window.electron.ipcRenderer.invoke('set-window-draggable', false)
+    toggleDragState(false)
   } else {
-    document.removeEventListener('click', interceptClicks, true)
+    // 解除锁定：恢复窗口拖拽和调整大小
+    await window.electron.ipcRenderer.invoke('set-window-draggable', true)
+    toggleDragState(true)
   }
+
+  updateFixedState()
 }
 
-const handleFixedNoDesktop = async (type: string) => {
-  isFixed.value = !isFixed.value
-  await window.electron.ipcRenderer.invoke(type)
+const toggleAlwaysOnTop = async () => {
+  isAlwaysOnTop.value = !isAlwaysOnTop.value
+
+  if (isAlwaysOnTop.value) {
+    await window.electron.ipcRenderer.invoke('fix-window')
+  } else {
+    await window.electron.ipcRenderer.invoke('unfix-window')
+  }
+
+  updateFixedState()
+}
+
+const toggleRestriction = async () => {
+  isRestricted.value = !isRestricted.value
+
+  if (isRestricted.value) {
+    // 启用限制：拦截点击事件
+    document.addEventListener('click', interceptClicks, true)
+  } else {
+    // 解除限制：移除事件拦截
+    document.removeEventListener('click', interceptClicks, true)
+  }
+
+  updateFixedState()
+}
+
+// 更新整体固定状态
+const updateFixedState = () => {
+  isFixed.value = isLocked.value || isAlwaysOnTop.value || isRestricted.value
+}
+
+// 取消所有固定状态
+const handleUnfixAll = async () => {
+  // 重置所有状态
+  isLocked.value = false
+  isAlwaysOnTop.value = false
+  isRestricted.value = false
+  isFixed.value = false
+
+  // 恢复所有设置
+  await window.electron.ipcRenderer.invoke('set-window-draggable', true)
+  await window.electron.ipcRenderer.invoke('set-window-resizable', true)
+  await window.electron.ipcRenderer.invoke('set-always-on-top', false)
+  await window.electron.ipcRenderer.invoke('set-window-opacity', 1.0)
+  toggleDragState(true)
+  document.removeEventListener('click', interceptClicks, true)
 }
 
 const size = ref(false)
@@ -356,8 +425,9 @@ const handleClose = () => {
 
 // 全局事件拦截
 const interceptClicks = (event: any) => {
-  if (isFixed.value) {
-    if (event.target !== allowedButton.value) {
+  if (isRestricted.value) {
+    // 允许点击解除限制按钮和取消所有固定按钮
+    if (event.target !== allowedButton.value && event.target !== restrictionButton.value) {
       event.preventDefault()
       event.stopPropagation()
     }

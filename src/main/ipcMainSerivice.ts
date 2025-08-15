@@ -102,8 +102,6 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   ipcMain.handle('fix-window', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (win) {
-      disableWindowResizingAndDragging(win, false)
-
       // 禁止最大化
       win.setMaximizable(false)
 
@@ -131,7 +129,7 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
       win.setFullScreenable(false)
 
       // 设置窗口置顶
-      win.setAlwaysOnTop(true)
+      win.setAlwaysOnTop(false)
 
       // 设置窗口半透明
       win.setOpacity(0.8) // 透明度为 0.8（范围：0 完全透明，1 完全不透明）
@@ -198,8 +196,6 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
   ipcMain.handle('unfix-window', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (win) {
-      disableWindowResizingAndDragging(win, true)
-
       // 允许最大化
       win.setMaximizable(true)
 

@@ -457,16 +457,34 @@ const getGroupTimeInfo = (dateKey: string) => {
 
 // 添加到今日待办
 const addToToday = async () => {
-  if (!selectedTodo.value) return
+  console.log(selectedTodo.value, 'selectedTodo.value')
+
+  // 立即保存 selectedTodo 的引用，避免在异步操作中被清空
+  const todoToAdd = selectedTodo.value
+
+  // 更严格的检查，确保 selectedTodo 和 text 都存在
+  if (!todoToAdd || !todoToAdd.text) {
+    $msg({
+      type: 'warning',
+      msg: '请先选择一个有效的待办项'
+    })
+    return
+  }
 
   try {
     // 使用新的存储方式读取当前的待办列表
     const currentTodos = await window.store.get('todayTodos', [])
 
-    // 检查今日是否已存在相同的待办（根据文本内容判断）
-    const existingTodo = currentTodos.find(
-      (todo: any) => todo.text.trim() === selectedTodo.value!.text.trim()
-    )
+    // 检查今日是否已存在相同的待办（使用保存的引用）
+    const existingTodo = currentTodos.find((todo: any) => {
+      return (
+        todo &&
+        todo.text &&
+        todoToAdd &&
+        todoToAdd.text &&
+        todo.text.trim() === todoToAdd.text.trim()
+      )
+    })
 
     if (existingTodo) {
       $msg({
@@ -476,24 +494,46 @@ const addToToday = async () => {
       return
     }
 
-    // 创建新的待办项
-    const newTodo = {
-      ...selectedTodo.value,
+    // 将 Proxy 对象转换为普通对象，避免克隆错误
+    const plainTodo = {
       id: Date.now(), // 生成新的 ID
-      createdAt: new Date().toLocaleString(), // 更新创建时间为当前时间
+      text: todoToAdd.text,
+      description: todoToAdd.description || '',
+      status: todoToAdd.status || 4,
+      level: todoToAdd.level || 1,
       completed: false, // 重置完成状态
+      completedAt: '',
       isRemove: false,
+      createdAt: new Date().toLocaleString(), // 更新创建时间为当前时间
       sort: currentTodos.length, // 添加到末尾
       reminderTime: undefined, // 重置提醒时间
       reminderEnabled: false, // 重置提醒开关
-      deletedFromHome: false // 确保不被标记为删除
+      deletedFromHome: false, // 确保不被标记为删除
+      subTodos: Array.isArray(todoToAdd.subTodos)
+        ? todoToAdd.subTodos.map((subTodo: any) => ({
+            id: subTodo.id,
+            text: subTodo.text,
+            completed: subTodo.completed,
+            description: subTodo.description || '',
+            status: subTodo.status || 4,
+            level: subTodo.level || 1,
+            isRemove: false,
+            createdAt: subTodo.createdAt,
+            subTodos: [] // 简化处理，不支持多层嵌套
+          }))
+        : []
     }
 
+    console.log(plainTodo, 'plainTodo')
+    console.log(selectedTodo.value, 'selectedTodo.value')
+
+    console.log('创建的新待办项:', plainTodo)
+
     // 添加到待办列表
-    const updatedTodos = [...currentTodos, newTodo]
+    const updatedTodos = [...currentTodos, plainTodo]
 
     // 使用新的存储方式保存
-    await window.store.set('todayTodos', JSON.parse(JSON.stringify(updatedTodos)))
+    await window.store.set('todayTodos', updatedTodos)
 
     $msg({
       type: 'success',

@@ -11,7 +11,12 @@
         class="mr-2 cursor-pointer hover:scale-110 transition-transform"
         @click.stop="completeAndDelete(todo)"
       >
-        <svg-icon name="finished" width="16" height="16" fill="#22C55E" />
+        <svg-icon
+          name="finished"
+          width="16"
+          height="16"
+          :fill="theme.themeType === 'dark' ? '#fff' : '#333'"
+        />
       </div>
 
       <n-checkbox
@@ -46,8 +51,7 @@
         @click.stop="deleteTodo(todos, index)"
       ></i>
     </div>
-
-    <div v-if="todo.subTodos.length > 0" class="todo-subitems pl-6 mt-2 w-100%">
+    <div v-if="todo.subTodos && todo.subTodos.length > 0" class="todo-subitems pl-6 mt-2 w-100%">
       <TodoItem
         v-for="(subTodo, i) in todo.subTodos"
         :key="subTodo.id"
@@ -70,6 +74,8 @@
 <script setup lang="ts">
 import useUserStore from '@renderer/stores/modules/user'
 const useUser = useUserStore()
+import useTheme from '@renderer/stores/modules/theme'
+const theme = useTheme()
 
 const isHideMenu = computed(() => useUser.$state.isHideMenu)
 

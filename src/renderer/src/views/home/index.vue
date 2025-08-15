@@ -748,6 +748,7 @@ const fetchData = async () => {
 
     // 过滤掉从home页删除的项目
     todos.value = todayData.filter((todo: Todo) => !todo.deletedFromHome)
+    console.log('🚀 ~ fetchData ~ todos.value:', todos.value)
     historyData.value = historyDataFromStore
   } catch (error) {
     console.error('读取数据失败:', error)
