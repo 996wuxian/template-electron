@@ -119,6 +119,7 @@
           : 'animate__fadeOutRight w-0',
         collapsed ? 'h-400px' : ''
       ]"
+      @click.stop
     >
       <!-- 头部区域 -->
       <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 no-drag">

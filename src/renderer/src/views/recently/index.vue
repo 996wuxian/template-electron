@@ -96,6 +96,7 @@
           : 'animate__fadeOutRight w-0',
         collapsed ? 'h-400px' : ''
       ]"
+      @click.stop
     >
       <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 no-drag">
         <h2 class="text-18px text-gray-600 truncate w-full max-w-240px">
