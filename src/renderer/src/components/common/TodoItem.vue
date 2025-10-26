@@ -32,7 +32,22 @@
           'max-w-200px': isHideMenu
         }"
       >
-        <div class="truncate max-w-600px">{{ todo.text }}</div>
+        <div class="truncate max-w-600px">
+          <n-input
+            v-if="collapsed && useUser.$state.isRightTop && isEditing"
+            v-model:value="todo.text"
+            size="small"
+            :style="{ '--n-border-radius': '6px' }"
+            @blur.stop="onNameBlur(todo)"
+            @keyup.enter.stop="onNameEnter(todo)"
+          />
+          <div v-else class="truncate">
+            <span v-if="collapsed && useUser.$state.isRightTop" @click.stop="onNameClick">
+              {{ todo.text }}
+            </span>
+            <span v-else>{{ todo.text }}</span>
+          </div>
+        </div>
         <div class="text-12px text-gray truncate">{{ todo.description }}</div>
       </div>
 
@@ -109,8 +124,26 @@ const emit = defineEmits([
   'delete-todo',
   'toggle-details',
   'toggle-sub-items-selection',
-  'complete-and-delete'
+  'complete-and-delete',
+  'save-todo'
 ])
+
+const isEditing = ref(false)
+
+const onNameClick = () => {
+  // 折叠+右上角模式下启用内联编辑
+  isEditing.value = true
+}
+
+const onNameBlur = (todo: Todo) => {
+  isEditing.value = false
+  emit('save-todo', todo)
+}
+
+const onNameEnter = (todo: Todo) => {
+  isEditing.value = false
+  emit('save-todo', todo)
+}
 
 const toggleSubItemsSelection = (todo: Todo) => {
   emit('toggle-sub-items-selection', todo)

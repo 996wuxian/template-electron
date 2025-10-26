@@ -60,6 +60,7 @@
                   @toggle-details="toggleDetails"
                   @toggle-sub-items-selection="toggleSubItemsSelection"
                   @complete-and-delete="completeAndDelete"
+                  @save-todo="saveTodoInline"
                 />
               </VueDraggable>
             </div>
@@ -708,6 +709,21 @@ const saveTodo = async () => {
   await window.store.set('historyData', JSON.parse(JSON.stringify(historyData.value)))
 }
 
+const saveTodoInline = async (todo: Todo) => {
+  const newText = (todo.text || '').trim()
+  if (newText.length === 0) {
+    $msg({ type: 'warning', msg: '名称不能为空' })
+    const original = historyData.value.find((t) => t.id === todo.id)
+    if (original) {
+      todo.text = original.text
+    }
+    return
+  }
+  // 名称修改：同步到历史记录并保存
+  syncHistoryData(todo)
+  await saveTodo()
+}
+
 const textInputVisible = ref(false)
 
 // 添加编辑文本的方法
@@ -719,8 +735,17 @@ const editText = () => {
 const textChange = async () => {
   textInputVisible.value = false
 
-  // 同步历史数据
   if (selectedTodo.value) {
+    const newText = (selectedTodo.value.text || '').trim()
+    if (newText.length === 0) {
+      $msg({ type: 'warning', msg: '名称不能为空' })
+      const original = historyData.value.find((t) => t.id === selectedTodo.value!.id)
+      if (original) {
+        selectedTodo.value.text = original.text
+      }
+      return
+    }
+    // 同步历史数据
     syncHistoryData(selectedTodo.value)
   }
   await saveTodo()
