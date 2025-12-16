@@ -92,11 +92,8 @@ const useRoutesStore = defineStore(
           return {
             // key, path 对齐 n-menu的options
             key:
-              (children.length === 1 && children[0]?.meta?.title) ||
-              children[0].label === route?.meta?.title
-                ? children[0].path
-                  ? children[0].path
-                  : children[0].key
+              children.length === 1 && children[0]?.label === route?.meta?.title
+                ? children[0].key
                 : route.redirect || route.path,
             label: route.meta?.title,
             children: children.length > 1 ? children : undefined,

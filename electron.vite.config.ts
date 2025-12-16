@@ -7,6 +7,8 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 
 import UnoCSS from 'unocss/vite'
+import { presetUno, presetAttributify, presetIcons } from 'unocss'
+import transformerDirective from '@unocss/transformer-directives'
 
 export default defineConfig({
   main: {
@@ -23,7 +25,19 @@ export default defineConfig({
     },
     plugins: [
       vue(),
-      UnoCSS(),
+      UnoCSS({
+        // 显式禁用外部 uno.config.* 文件的自动加载，避免 unconfig/jiti 递归问题
+        configFile: false,
+        presets: [presetUno(), presetAttributify(), presetIcons()],
+        content: {
+          pipeline: {
+            exclude: ['node_modules', 'dist']
+          }
+        },
+        safelist: ['i-solar-sun-2-bold'],
+        shortcuts: [['flex-center', 'flex items-center justify-center']],
+        transformers: [transformerDirective()]
+      }),
       AutoImport({
         imports: ['vue']
       }),
