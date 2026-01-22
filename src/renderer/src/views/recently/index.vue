@@ -26,9 +26,12 @@
               <template #header>
                 <div class="group-header flex items-center px-2">
                   <div class="flex items-center">
-                    <span class="text-14px text-gray-700 max-w-100px line-clamp-1">{{
-                      group.title
-                    }}</span>
+                    <span
+                      class="text-14px max-w-100px line-clamp-1"
+                      :class="themeType === 'dark' ? 'text-gray-100' : 'text-gray-700'"
+                    >
+                      {{ group.title }}
+                    </span>
                     <n-tag size="small" :bordered="false" type="info" class="ml-2">
                       {{ group.tasks.length }}项
                     </n-tag>
@@ -58,7 +61,8 @@
               <template #header-extra>
                 <div
                   v-if="!useUser.$state.isRightTop"
-                  class="flex items-center justify-between text-gray-400 text-12px"
+                  class="flex items-center justify-between text-12px"
+                  :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-400'"
                 >
                   <div class="flex items-center gap-2 mr-5px">
                     <span>完成：{{ getCompletedCount(group.tasks) }}</span>
@@ -115,8 +119,11 @@
       ]"
       @click.stop
     >
-      <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 no-drag">
-        <h2 class="text-18px text-gray-600 truncate w-full max-w-240px">
+      <div
+        class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 no-drag"
+        :class="themeType === 'dark' ? 'text-gray-100' : 'text-gray-600'"
+      >
+        <h2 class="text-18px truncate w-full max-w-240px">
           {{ selectedTodo?.text }}
         </h2>
 
@@ -132,11 +139,24 @@
         <!-- 基本信息卡片 -->
         <div class="mb-3 bg-gray-50 rounded-lg">
           <div class="space-y-6 theme-page">
-            <div class="text-gray-600 text-14px">{{ selectedTodo?.text }}</div>
+            <div
+              class="text-14px"
+              :class="themeType === 'dark' ? 'text-gray-100' : 'text-gray-600'"
+            >
+              {{ selectedTodo?.text }}
+            </div>
             <div>
-              <label class="text-sm font-medium text-gray-500">详细描述</label>
+              <label
+                class="text-sm font-medium"
+                :class="themeType === 'dark' ? 'text-gray-200' : 'text-gray-500'"
+              >
+                详细描述
+              </label>
 
-              <div class="mt-1 text-gray-400 flex items-center gap-1">
+              <div
+                class="mt-1 flex items-center gap-1"
+                :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-400'"
+              >
                 <div class="flex items-center gap-1">
                   <p v-if="selectedTodo?.description" @click="inputVisible = true">
                     {{ selectedTodo?.description }}
@@ -149,7 +169,10 @@
             </div>
 
             <div class="flex items-center gap-1">
-              <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
+              <span
+                class="text-sm font-medium flex items-center gap-1"
+                :class="themeType === 'dark' ? 'text-gray-200' : 'text-gray-500'"
+              >
                 <i i-solar-fire-minimalistic-broken></i>
                 紧急程度：</span
               >
@@ -165,7 +188,10 @@
             </div>
 
             <div class="flex items-center gap-1">
-              <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
+              <span
+                class="text-sm font-medium flex items-center gap-1"
+                :class="themeType === 'dark' ? 'text-gray-200' : 'text-gray-500'"
+              >
                 <i i-solar-tea-cup-broken></i>
                 状态：</span
               >
@@ -175,12 +201,16 @@
             </div>
 
             <div>
-              <label class="text-sm font-medium text-gray-500 flex items-center gap-1">
+              <label
+                class="text-sm font-medium flex items-center gap-1"
+                :class="themeType === 'dark' ? 'text-gray-200' : 'text-gray-500'"
+              >
                 <i i-solar-history-2-outline></i>
                 创建时间</label
               >
               <div
-                class="mt-1 text-sm text-gray-400 max-w-140px overflow-hidden text-ellipsis text-nowrap"
+                class="mt-1 text-sm max-w-140px overflow-hidden text-ellipsis text-nowrap"
+                :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-400'"
               >
                 {{ selectedTodo?.createdAt }}
               </div>
@@ -228,6 +258,7 @@ const todos = ref<Todo[]>([])
 const selectedTodo = ref<Todo | null>(null)
 const selectIndex = ref(0)
 const collapsed = computed(() => useTheme.$state.collapsed)
+const themeType = computed(() => useTheme.$state.themeType)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)

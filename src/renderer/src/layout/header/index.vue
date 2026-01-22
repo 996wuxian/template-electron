@@ -192,7 +192,7 @@ const handleWindowResizeAndAnimate = async () => {
   if (!currentDisplay) return
   const { width: screenWidth } = currentDisplay.workAreaSize
   // 设置窗口目标位置和大小
-  const targetWidth = 300
+  const targetWidth = 360
   const targetHeight = 400
   const targetX = currentDisplay.bounds.x + screenWidth - targetWidth - 100
   const targetY = currentDisplay.bounds.y - 390
@@ -250,12 +250,16 @@ const handlePinToDesktop = async () => {
   const { width: screenWidth } = currentDisplay.workAreaSize
 
   // 设置窗口目标位置和大小
-  const targetWidth = 300
+  const targetWidth = 360
   const targetHeight = 400
   const targetX = currentDisplay.bounds.x + screenWidth - targetWidth - 100
   const targetY = currentDisplay.bounds.y + 50
 
   // 调用公共动画方法
+  await window.electron.ipcRenderer.invoke('set-window-min-size', {
+    width: targetWidth,
+    height: targetHeight
+  })
   await animateWindow(targetX, targetY, targetWidth, targetHeight, 15)
 }
 
@@ -282,6 +286,10 @@ const handleDeskCenter = async () => {
   const targetY = screenY + (screenHeight - 670) / 2
 
   // 调用公共动画方法
+  await window.electron.ipcRenderer.invoke('set-window-min-size', {
+    width: targetWidth,
+    height: targetHeight
+  })
   await animateWindow(targetX, targetY, targetWidth, targetHeight, 10)
 
   // 移除鼠标进入事件

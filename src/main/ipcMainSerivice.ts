@@ -65,6 +65,13 @@ export function setupIpcMainHandlers(mainWindow: BrowserWindow | null): void {
     }
   })
 
+  ipcMain.handle('set-window-min-size', (event, { width, height }) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (win) {
+      win.setMinimumSize(Math.round(width), Math.round(height))
+    }
+  })
+
   // 设置窗口位置
   ipcMain.handle('set-window-position', (event, { x, y }) => {
     const win = BrowserWindow.fromWebContents(event.sender)

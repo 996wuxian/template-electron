@@ -1,5 +1,5 @@
 <template>
-  <div class="page p-10px flex flex-1 flex-col">
+  <div class="page p-10px flex flex-1 flex-col theme-page">
     <!-- 头部操作区域 -->
     <div class="flex items-center justify-between mb-6 compact-header">
       <div class="flex items-center gap-2">
@@ -40,10 +40,18 @@
 
     <!-- 日历视图 -->
     <n-scrollbar class="calendar-container pb-20px flex-1">
-      <div v-for="week in monthWeeks" :key="week.weekNumber" class="week-container mb-2">
+      <div
+        v-for="week in monthWeeks"
+        :key="week.weekNumber"
+        class="week-container mb-2"
+        :class="themeType === 'dark' ? 'bg-#1f2422 border border-#2f3330' : 'bg-#fafafa'"
+      >
         <div class="week-header flex items-center gap-2 mb-2">
           <i class="i-solar-calendar-bold-duotone text-blue-500 text-12px"></i>
-          <span class="text-10px font-600 text-gray-600 compact-week-text">
+          <span
+            class="text-10px font-600 compact-week-text"
+            :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-600'"
+          >
             第{{ week.weekNumber }}周 ({{ formatWeekRange(week.days) }})
           </span>
         </div>
@@ -53,25 +61,44 @@
             v-for="day in week.days"
             :key="day.date"
             class="day-cell border rounded-lg p-1 cursor-pointer transition-all hover:shadow-md compact-day-cell"
-            :class="{
-              'bg-blue-50 border-blue-200': day.isToday,
-              'bg-gray-50': !day.isCurrentMonth,
-              'bg-white border-gray-200': day.isCurrentMonth && !day.isToday
-            }"
+            :class="[
+              themeType === 'dark'
+                ? day.isToday
+                  ? 'bg-blue-900/30 border-blue-700'
+                  : day.isCurrentMonth
+                    ? 'bg-#1f2422 border-#2f3330'
+                    : 'bg-#161a18 border-#2a2e2b'
+                : day.isToday
+                  ? 'bg-blue-50 border-blue-200'
+                  : day.isCurrentMonth
+                    ? 'bg-white border-gray-200'
+                    : 'bg-gray-50'
+            ]"
             @click="openDayModal(day)"
           >
             <div class="day-header flex items-center justify-between mb-1">
               <span
                 class="text-10px font-600"
-                :class="{
-                  'text-blue-600': day.isToday,
-                  'text-gray-400': !day.isCurrentMonth,
-                  'text-gray-700': day.isCurrentMonth && !day.isToday
-                }"
+                :class="[
+                  day.isToday ? (themeType === 'dark' ? 'text-blue-400' : 'text-blue-600') : '',
+                  !day.isCurrentMonth
+                    ? themeType === 'dark'
+                      ? 'text-gray-500'
+                      : 'text-gray-400'
+                    : '',
+                  day.isCurrentMonth && !day.isToday
+                    ? themeType === 'dark'
+                      ? 'text-gray-200'
+                      : 'text-gray-700'
+                    : ''
+                ]"
               >
                 {{ day.dayNumber }}
               </span>
-              <span class="text-8px text-gray-400 compact-day-name">
+              <span
+                class="text-8px compact-day-name"
+                :class="themeType === 'dark' ? 'text-gray-500' : 'text-gray-400'"
+              >
                 {{ getDayName(day.dayOfWeek) }}
               </span>
             </div>
@@ -82,14 +109,25 @@
                 v-for="todo in getDayTodos(day)"
                 :key="todo.id"
                 class="text-8px p-1 rounded truncate compact-todo-item"
-                :class="{
-                  'bg-green-100 text-green-700 line-through': todo.completed,
-                  'bg-orange-100 text-orange-700': !todo.completed
-                }"
+                :class="[
+                  todo.completed
+                    ? themeType === 'dark'
+                      ? 'bg-green-900/40 text-green-300 line-through'
+                      : 'bg-green-100 text-green-700 line-through'
+                    : themeType === 'dark'
+                      ? 'bg-orange-900/40 text-orange-300'
+                      : 'bg-orange-100 text-orange-700'
+                ]"
               >
                 {{ todo.text }}
               </div>
-              <div v-if="getDayTodos(day).length === 0" class="text-8px text-gray-400">无</div>
+              <div
+                v-if="getDayTodos(day).length === 0"
+                class="text-8px"
+                :class="themeType === 'dark' ? 'text-gray-500' : 'text-gray-400'"
+              >
+                无
+              </div>
             </div>
           </div>
         </div>
@@ -106,11 +144,21 @@
       class="no-drag"
     >
       <div class="space-y-4">
-        <div class="text-12px text-gray-600 mb-4">
+        <div
+          class="text-12px mb-4"
+          :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-600'"
+        >
           为每个工作日设置重复的待办事项，这些待办将自动应用到每周的对应日期。
         </div>
         <n-scrollbar class="max-h-400px">
-          <div v-for="(dayName, index) in weekDays" :key="index" class="day-section">
+          <div
+            v-for="(dayName, index) in weekDays"
+            :key="index"
+            class="day-section"
+            :class="
+              themeType === 'dark' ? 'border-#2f3330 bg-#1b1f1d' : 'border-#e5e7eb bg-#f9fafb'
+            "
+          >
             <div class="flex items-center gap-2 mb-2">
               <i class="i-solar-calendar-date-bold-duotone text-[#4BBBC1]"></i>
               <span class="text-14px font-600">{{ dayName }}</span>
@@ -126,7 +174,8 @@
               <div
                 v-for="(todo, todoIndex) in cycleTodos[index]"
                 :key="todoIndex"
-                class="flex items-center gap-2 p-2 bg-gray-50 rounded"
+                class="flex items-center gap-2 p-2 rounded"
+                :class="themeType === 'dark' ? 'bg-#242a27' : 'bg-gray-50'"
               >
                 <n-input
                   v-model:value="todo.text"
@@ -168,30 +217,45 @@
       size="small"
     >
       <div class="space-y-4">
-        <div class="text-14px text-gray-600">{{ selectedDay?.date }} 的待办事项</div>
+        <div class="text-14px" :class="themeType === 'dark' ? 'text-gray-200' : 'text-gray-600'">
+          {{ selectedDay?.date }} 的待办事项
+        </div>
 
         <n-scrollbar class="space-y-2 max-h-400px">
           <div
             v-for="todo in selectedDayTodos"
             :key="todo.id"
             class="flex items-center gap-3 p-3 border rounded-lg"
-            :class="{
-              'bg-green-50 border-green-200': todo.completed,
-              'bg-white border-gray-200': !todo.completed
-            }"
+            :class="[
+              todo.completed
+                ? themeType === 'dark'
+                  ? 'bg-green-900/30 border-green-700'
+                  : 'bg-green-50 border-green-200'
+                : themeType === 'dark'
+                  ? 'bg-#1f2422 border-#2f3330'
+                  : 'bg-white border-gray-200'
+            ]"
           >
             <n-checkbox v-model:checked="todo.completed" @update:checked="updateTodoStatus(todo)" />
             <div class="flex-1">
               <div
                 class="text-14px"
-                :class="{
-                  'line-through text-gray-500': todo.completed,
-                  'text-gray-700': !todo.completed
-                }"
+                :class="[
+                  todo.completed
+                    ? themeType === 'dark'
+                      ? 'line-through text-gray-400'
+                      : 'line-through text-gray-500'
+                    : themeType === 'dark'
+                      ? 'text-gray-200'
+                      : 'text-gray-700'
+                ]"
               >
                 {{ todo.text }}
               </div>
-              <div class="text-12px text-gray-400 mt-1">
+              <div
+                class="text-12px mt-1"
+                :class="themeType === 'dark' ? 'text-gray-400' : 'text-gray-400'"
+              >
                 优先级: {{ getPriorityLabel(todo.status) }}
               </div>
             </div>
@@ -201,7 +265,11 @@
           </div>
         </n-scrollbar>
 
-        <div v-if="selectedDayTodos.length === 0" class="text-center py-8 text-gray-400">
+        <div
+          v-if="selectedDayTodos.length === 0"
+          class="text-center py-8"
+          :class="themeType === 'dark' ? 'text-gray-400' : 'text-gray-400'"
+        >
           <i class="i-solar-clipboard-list-bold-duotone text-48px mb-2"></i>
           <div>今天暂无待办事项</div>
         </div>
@@ -249,6 +317,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import useThemeStore from '@renderer/stores/modules/theme'
 import dayjs from 'dayjs'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import isoWeek from 'dayjs/plugin/isoWeek'
@@ -298,6 +367,8 @@ const showDeleteConfirmModal = ref(false)
 const selectedDay = ref<DayInfo | null>(null)
 const cycleTodos = ref<CycleTodo[][]>(Array.from({ length: 7 }, () => []))
 const allCycleTodos = ref<CycleTodo[]>([])
+const useTheme = useThemeStore()
+const themeType = computed(() => useTheme.$state.themeType)
 
 // 工作日名称
 const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
@@ -622,7 +693,6 @@ onMounted(() => {
 }
 
 .week-container {
-  background: #fafafa;
   border-radius: 8px;
   padding: 16px;
 }
@@ -631,7 +701,6 @@ onMounted(() => {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 12px;
-  background: #f9fafb;
 }
 
 /* 响应式布局优化 */

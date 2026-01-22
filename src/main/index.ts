@@ -24,6 +24,8 @@ function createWindow(): void {
     transparent: true
   })
 
+  mainWindow.setMinimumSize(900, 670)
+
   mainWindow.on('minimize', () => {
     if (process.platform === 'win32') {
       mainWindow?.webContents.setBackgroundThrottling(true)

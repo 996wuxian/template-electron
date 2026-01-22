@@ -116,15 +116,18 @@
       class="todo-details border-l border-gray-200 pr-10px animate __animated overflow-y-auto item-transition bg-white shadow-xl theme-page absolute top-0 right-0 h-full"
       :class="[
         detailAnimate
-          ? 'animate__fadeInRight w-[300px] ml-4 p-4 pr-0'
-          : 'animate__fadeOutRight w-0',
+          ? 'animate__fadeInRight w-[300px] ml-4 p-4 pr-0 opacity-100 visible'
+          : 'animate__fadeOutRight w-0 p-0 pr-0 overflow-hidden pointer-events-none opacity-0 invisible',
         collapsed ? 'h-400px' : ''
       ]"
       @click.stop
     >
       <!-- 头部区域 -->
-      <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 no-drag">
-        <h2 class="text-18px text-gray-600 truncate w-full max-w-240px">
+      <div
+        class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 no-drag"
+        :class="themeType === 'dark' ? 'text-gray-100' : 'text-gray-600'"
+      >
+        <h2 class="text-18px truncate w-full max-w-240px">
           {{ selectedTodo?.text }}
         </h2>
 
@@ -141,7 +144,10 @@
         <div class="mb-3 bg-gray-50 rounded-lg">
           <div class="space-y-4 theme-page">
             <!-- 修改这部分 -->
-            <div class="text-gray-600 text-14px">
+            <div
+              class="text-14px"
+              :class="themeType === 'dark' ? 'text-gray-100' : 'text-gray-600'"
+            >
               <n-input
                 v-if="textInputVisible && selectedTodo"
                 v-model:value="selectedTodo.text"
@@ -160,9 +166,17 @@
             </div>
 
             <div>
-              <label class="text-sm font-medium text-gray-500">详细描述</label>
+              <label
+                class="text-sm font-medium"
+                :class="themeType === 'dark' ? 'text-gray-200' : 'text-gray-500'"
+              >
+                详细描述
+              </label>
 
-              <div class="mt-1 text-gray-400 flex items-center gap-1">
+              <div
+                class="mt-1 flex items-center gap-1"
+                :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-400'"
+              >
                 <n-input
                   v-if="inputVisible && selectedTodo"
                   v-model:value="selectedTodo.description"
@@ -170,7 +184,11 @@
                   size="medium"
                   @blur="descChange"
                 />
-                <div v-else class="flex items-center gap-1 text-13px">
+                <div
+                  v-else
+                  class="flex items-center gap-1 text-13px"
+                  :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-400'"
+                >
                   <p v-if="selectedTodo?.description" @click="inputVisible = true">
                     {{ selectedTodo?.description }}
                   </p>
@@ -183,7 +201,10 @@
             </div>
 
             <div class="flex items-center gap-1">
-              <span class="text-sm font-medium text-gray-500 flex items-center gap-1 flex-1">
+              <span
+                class="text-sm font-medium flex items-center gap-1 flex-1"
+                :class="themeType === 'dark' ? 'text-gray-200' : 'text-gray-500'"
+              >
                 <i i-solar-fire-minimalistic-broken></i>
                 紧急程度：</span
               >
@@ -198,7 +219,10 @@
             </div>
 
             <div class="flex items-center gap-1">
-              <span class="text-sm font-medium text-gray-500 flex items-center gap-1">
+              <span
+                class="text-sm font-medium flex items-center gap-1"
+                :class="themeType === 'dark' ? 'text-gray-200' : 'text-gray-500'"
+              >
                 <i i-solar-tea-cup-broken></i>
                 状态：</span
               >
@@ -208,19 +232,26 @@
             </div>
 
             <div>
-              <label class="text-sm font-medium text-gray-500 flex items-center gap-1">
+              <label
+                class="text-sm font-medium flex items-center gap-1"
+                :class="themeType === 'dark' ? 'text-gray-200' : 'text-gray-500'"
+              >
                 <i i-solar-history-2-outline></i>
                 创建时间</label
               >
               <div
-                class="mt-1 text-sm text-gray-400 max-w-140px overflow-hidden text-ellipsis text-nowrap"
+                class="mt-1 text-sm max-w-140px overflow-hidden text-ellipsis text-nowrap"
+                :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-400'"
               >
                 {{ selectedTodo?.createdAt }}
               </div>
             </div>
             <div>
               <div class="flex items-center gap-2 mb-2">
-                <label class="text-sm font-medium text-gray-500 flex items-center gap-1">
+                <label
+                  class="text-sm font-medium flex items-center gap-1"
+                  :class="themeType === 'dark' ? 'text-gray-200' : 'text-gray-500'"
+                >
                   <i i-solar-bell-bing-bold-duotone></i>
                   待办提醒
                 </label>
@@ -242,7 +273,11 @@
                   class="w-full"
                   @update:value="updateReminderTime"
                 />
-                <div v-if="selectedTodo?.reminderTime" class="mt-1 text-xs text-gray-400">
+                <div
+                  v-if="selectedTodo?.reminderTime"
+                  class="mt-1 text-xs"
+                  :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-400'"
+                >
                   提醒时间: {{ formatReminderTime(selectedTodo.reminderTime) }}
                 </div>
               </div>
@@ -253,11 +288,24 @@
         <!-- 子任务区域 -->
         <div class="border-t pt-4 h-[calc(100%-250px)]">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="font-medium flex items-center gap-2">
-              <i i-solar-paperclip-bold-duotone class="w-4 h-4 text-blue-500" />
+            <h3
+              class="font-medium flex items-center gap-2"
+              :class="themeType === 'dark' ? 'text-gray-100' : 'text-gray-700'"
+            >
+              <i
+                i-solar-paperclip-bold-duotone
+                class="w-4 h-4"
+                :class="themeType === 'dark' ? 'text-blue-400' : 'text-blue-500'"
+              />
               子任务 ({{ selectedTodo?.subTodos?.length || 0 }})
             </h3>
-            <span v-if="!collapsed" class="text-xs text-gray-400">最大支持4级嵌套</span>
+            <span
+              v-if="!collapsed"
+              class="text-xs"
+              :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-400'"
+            >
+              最大支持4级嵌套
+            </span>
           </div>
 
           <!-- 添加子项 -->
@@ -270,7 +318,10 @@
               @keyup.enter="addSubTodo"
             >
               <template #suffix>
-                <i class="i-solar-add-circle-line-duotone text-gray-400" />
+                <i
+                  class="i-solar-add-circle-line-duotone"
+                  :class="themeType === 'dark' ? 'text-gray-300' : 'text-gray-400'"
+                />
               </template>
             </n-input>
           </div>
@@ -288,17 +339,22 @@
                 :class="{ 'opacity-50': subTodo.completed }"
               />
               <span
-                class="flex-1 text-gray-500 transition-all"
-                :class="{
-                  'line-through text-gray-400': subTodo.completed,
-                  'opacity-75 hover:opacity-100': !subTodo.completed
-                }"
+                class="flex-1 transition-all"
+                :class="[
+                  themeType === 'dark' ? 'text-gray-200' : 'text-gray-500',
+                  subTodo.completed
+                    ? themeType === 'dark'
+                      ? 'line-through text-gray-400'
+                      : 'line-through text-gray-400'
+                    : 'opacity-75 hover:opacity-100'
+                ]"
               >
                 {{ subTodo.text }}
               </span>
               <i
                 v-if="subTodo.subTodos?.length"
-                class="i-solar-arrow-right-line-duotone ml-2 text-gray-300 group-hover:text-blue-500"
+                class="i-solar-arrow-right-line-duotone ml-2 group-hover:text-blue-500"
+                :class="themeType === 'dark' ? 'text-gray-400' : 'text-gray-300'"
               />
             </div>
           </div>
@@ -345,6 +401,7 @@ const selectIndex = ref(0)
 const newSubTodoText = ref('')
 const selectAll = ref(false)
 const collapsed = computed(() => useTheme.$state.collapsed)
+const themeType = computed(() => useTheme.$state.themeType)
 const detailVisible = ref(false)
 const detailAnimate = ref(false)
 const inputVisible = ref(false)
